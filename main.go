@@ -8,8 +8,6 @@
 package main
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -92,13 +90,4 @@ func main() {
 
 	// beego.Run()
 
-}
-
-func URL(x string) string {
-	return x
-}
-
-func MD5(in string) (string, error) {
-	hash := md5.Sum([]byte(in))
-	return hex.EncodeToString(hash[:]), nil
 }

@@ -273,7 +273,7 @@
         });
 
         form.on('radio(notify_type)', function (data) {
-            $.post('{{urlfor "TaskController.AjaxNotifyType"}}', {notify_type: data.value}, function (out) {
+            $.post('notify/type', {notify_type: data.value}, function (out) {
                 if (out.code == 0) {
                     $('select[name="notify_tpl_id"]').empty();
                     $('<option value="0" selected>请选择</option>').appendTo('select[name="notify_tpl_id"]');

@@ -83,7 +83,7 @@ func InitRouter(engine *gin.Engine) {
 		r.GET("/task/ajaxpause", taskC.AjaxPause)
 		r.GET("/task/ajaxrun", taskC.AjaxRun)
 		r.GET("/task/ajaxdel", taskC.AjaxDel)
-		r.GET("/task/ajaxnotifytype", taskC.AjaxNotifyType)
+		r.POST("/task/notify/type", taskC.AjaxNotifyType)
 
 		r.GET("/task/ajaxbatchstart", taskC.AjaxBatchStart)
 		r.GET("/task/ajaxbatchpause", taskC.AjaxBatchPause)

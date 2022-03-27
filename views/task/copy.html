@@ -264,14 +264,14 @@
                     }
                 }
 
-                $.post('{{urlfor "TaskController.AjaxSave"}}', form_data, function (out) {
+                $.post('save', form_data, function (out) {
                     if (out.status == 0) {
                         layer.msg(okmsg,{icon: 1,shade:0.3,time:1000},function () {
                             // self.location=document.referrer;
                             window.parent.deleteCurrentTab();
                         })
                     } else {
-                        layer.msg(out.message);
+                        layer.msg(out.msg);
                         return  false;
                     }
                 }, "json");
@@ -284,7 +284,7 @@
         });
 
         form.on('radio(notify_type)', function (data) {
-            $.post('{{urlfor "TaskController.AjaxNotifyType"}}', {notify_type: data.value}, function (out) {
+            $.post('notify/type', {notify_type: data.value}, function (out) {
                 if (out.code == 0) {
                     $('select[name="notify_tpl_id"]').empty();
                     $('<option value="0" selected>请选择</option>').appendTo('select[name="notify_tpl_id"]');
@@ -294,7 +294,7 @@
 
                     form.render();
                 } else {
-                    layer.msg(out.message)
+                    layer.msg(out.msg)
                 }
             }, "json");
         });

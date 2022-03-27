@@ -9,11 +9,15 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/astaxie/beego"
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/pjob/common"
 	"github.com/voioc/pjob/libs"
 	"github.com/voioc/pjob/models"
+	"github.com/voioc/pjob/service"
 
 	"strings"
 	"time"
@@ -23,39 +27,45 @@ type TaskLogController struct {
 	BaseController
 }
 
-func (self *TaskLogController) List() {
-	taskId, err := self.GetInt("task_id")
-	if err != nil {
-		taskId = 1
-	}
+func (self *TaskLogController) List(c *gin.Context) {
+	taskId, _ := strconv.Atoi(c.DefaultQuery("task_id", "0"))
+	// if err != nil {
+	// 	taskId = 1
+	// }
 
 	task, err := models.TaskGetById(taskId)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.Data["pageTitle"] = "日志管理 - " + task.TaskName + "(#" + strconv.Itoa(task.Id) + ")"
-	self.Data["task_id"] = task.Id
-	self.display()
+
+	data := map[string]interface{}{}
+	data["pageTitle"] = "日志管理 - " + task.TaskName + "(#" + strconv.Itoa(task.Id) + ")"
+	data["task_id"] = task.Id
+
+	c.HTML(http.StatusOK, "tasklog/list.html", data)
 }
 
-func (self *TaskLogController) Table() {
+func (self *TaskLogController) Table(c *gin.Context) {
 	//列表
-	page, err := self.GetInt("page")
-	if err != nil {
-		page = 1
-	}
-	limit, err := self.GetInt("limit")
-	if err != nil {
-		limit = 30
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	// if err != nil {
+	// 	page = 1
+	// }
 
-	self.pageSize = limit
+	pageSize, err := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	// if err != nil {
+	// 	limit = 30
+	// }
+
+	// self.pageSize = limit
 	//查询条件
 	filters := make([]interface{}, 0)
-	taskId, err := self.GetInt("task_id")
-	if err != nil {
-		taskId = 1
-	}
+	taskId, err := strconv.Atoi(c.DefaultQuery("task_id", "0"))
+	// if err != nil {
+	// 	taskId = 1
+	// }
 
 	TextStatus := []string{
 		"<font color='orange'><i class='fa fa-question-circle'></i> 超时</font>",
@@ -63,14 +73,15 @@ func (self *TaskLogController) Table() {
 		"<font color='green'><i class='fa fa-check-square'></i> 正常</font>",
 	}
 
-	Status, err := self.GetInt("status")
-
+	// Status, err := self.GetInt("status")
+	Status, err := strconv.Atoi(c.DefaultQuery("status", "0"))
 	if err == nil && Status != 9 {
 		filters = append(filters, "status", Status)
 	}
+
 	filters = append(filters, "task_id", taskId)
 
-	result, count := models.TaskLogGetList(page, self.pageSize, filters...)
+	result, count := models.TaskLogGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
@@ -96,25 +107,30 @@ func (self *TaskLogController) Table() {
 		list[k] = row
 	}
 
-	self.ajaxList("成功", MSG_OK, count, list)
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
-func (self *TaskLogController) Detail() {
+func (self *TaskLogController) Detail(c *gin.Context) {
 
 	//日志内容
-	id, _ := self.GetInt("id")
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	tasklog, err := models.TaskLogGetById(id)
 
 	fmt.Println(tasklog)
 	if err != nil {
-		self.Ctx.WriteString("日志不存在")
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "日志不存在"))
 		return
 	}
+
 	LogTextStatus := []string{
 		"<font color='orange'><i class='fa fa-question-circle'></i>超时</font>",
 		"<font color='red'><i class='fa fa-times-circle'></i> 错误</font>",
 		"<font color='green'><i class='fa fa-check-square'></i> 正常</font>",
 	}
+
+	data := map[string]interface{}{}
 	row := make(map[string]interface{})
 	row["id"] = tasklog.Id
 	row["task_id"] = tasklog.TaskId
@@ -137,13 +153,16 @@ func (self *TaskLogController) Detail() {
 	}
 	row["status"] = LogTextStatus[index]
 
-	self.Data["taskLog"] = row
+	data["taskLog"] = row
 
 	//任务详情
 	task, err := models.TaskGetById(tasklog.TaskId)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
+
 	TextStatus := []string{
 		"<font color='red'><i class='fa fa-minus-square'></i> 暂停</font>",
 		"<font color='green'><i class='fa fa-check-square'></i> 运行中</font>",
@@ -151,18 +170,18 @@ func (self *TaskLogController) Detail() {
 		"<font color='blue'><i class='fa fa-times-circle'></i> 审核失败</font>",
 	}
 
-	self.Data["TextStatus"] = TextStatus[task.Status]
-	self.Data["CreateTime"] = beego.Date(time.Unix(task.CreateTime, 0), "Y-m-d H:i:s")
-	self.Data["UpdateTime"] = beego.Date(time.Unix(task.UpdateTime, 0), "Y-m-d H:i:s")
-	self.Data["task"] = task
+	data["TextStatus"] = TextStatus[task.Status]
+	data["CreateTime"] = beego.Date(time.Unix(task.CreateTime, 0), "Y-m-d H:i:s")
+	data["UpdateTime"] = beego.Date(time.Unix(task.UpdateTime, 0), "Y-m-d H:i:s")
+	data["task"] = task
 	// 分组列表
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
+	tg, _ := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	data["taskGroup"] = taskGroupLists(tg, c.GetInt("uid"))
 
 	serverName := ""
 	if task.ServerIds == "0" {
 		serverName = "本地服务器"
 	} else {
-
 		serverIdSli := strings.Split(task.ServerIds, ",")
 		for _, v := range serverIdSli {
 			if v == "0" {
@@ -183,7 +202,7 @@ func (self *TaskLogController) Detail() {
 		}
 	}
 
-	self.Data["serverName"] = serverName
+	data["serverName"] = serverName
 
 	//任务分组
 	groupName := "默认分组"
@@ -193,7 +212,7 @@ func (self *TaskLogController) Detail() {
 			groupName = group.GroupName
 		}
 	}
-	self.Data["GroupName"] = groupName
+	data["GroupName"] = groupName
 
 	//创建人和修改人
 	createName := "未知"
@@ -213,32 +232,36 @@ func (self *TaskLogController) Detail() {
 	}
 
 	//是否出错通知
-	self.Data["adminInfo"] = []int{0}
+	data["adminInfo"] = []int{0}
 	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
-		self.Data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
+		data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
 	}
-	self.Data["CreateName"] = createName
-	self.Data["UpdateName"] = updateName
-	self.Data["pageTitle"] = "日志详细" + "(#" + strconv.Itoa(id) + ")"
 
-	self.Data["NotifyTplName"] = "未知"
+	data["CreateName"] = createName
+	data["UpdateName"] = updateName
+	data["pageTitle"] = "日志详细" + "(#" + strconv.Itoa(id) + ")"
+
+	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
 		notifyTpl, err := models.NotifyTplGetById(task.NotifyTplId)
 		if err == nil {
-			self.Data["NotifyTplName"] = notifyTpl.TplName
+			data["NotifyTplName"] = notifyTpl.TplName
 		}
 	}
 
-	self.display()
+	// self.display()
+	c.HTML(http.StatusOK, "tasklog/detail.html", data)
 }
 
 // 批量操作日志
-func (self *TaskLogController) AjaxDel() {
-	ids := self.GetStrings("ids")
-	idArr := strings.Split(ids[0], ",")
+func (self *TaskLogController) AjaxDel(c *gin.Context) {
+	ids := c.DefaultQuery("ids", "")
+	idArr := strings.Split(ids, ",")
 
 	if len(idArr) < 1 {
-		self.ajaxMsg("请选择要操作的项目", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的项目", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要操作的项目"))
+		return
 	}
 
 	for _, v := range idArr {
@@ -249,5 +272,6 @@ func (self *TaskLogController) AjaxDel() {
 		models.TaskLogDelById(id)
 	}
 
-	self.ajaxMsg("", MSG_OK)
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }

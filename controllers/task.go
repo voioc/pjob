@@ -40,12 +40,14 @@ func (self *TaskController) List(c *gin.Context) {
 	//}
 	// self.display()
 
-	c.HTML(http.StatusOK, "list.html", data)
+	c.HTML(http.StatusOK, "task/list.html", data)
 }
 
-func (self *TaskController) AuditList() {
-	self.Data["pageTitle"] = "任务审核"
-	self.display()
+func (self *TaskController) AuditList(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["pageTitle"] = "任务审核"
+	// self.display()
+	c.HTML(http.StatusOK, "task/auditlist.html", data)
 }
 
 func (self *TaskController) Add(c *gin.Context) {
@@ -63,26 +65,34 @@ func (self *TaskController) Add(c *gin.Context) {
 	c.HTML(http.StatusOK, "task/add.html", data)
 }
 
-func (self *TaskController) Edit() {
-	self.Data["pageTitle"] = "编辑任务"
+func (self *TaskController) Edit(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["pageTitle"] = "编辑任务"
 
-	id, _ := self.GetInt("id")
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	task, err := models.TaskGetById(id)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
 
 	if task.Status == 1 {
-		self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
+		// self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "运行状态无法编辑任务，请先暂停任务"))
+		return
 	}
-	self.Data["task"] = task
 
-	self.Data["adminInfo"] = AllAdminInfo("")
+	data["task"] = task
+	data["adminInfo"] = AllAdminInfo("")
 
+	uid := c.GetInt("uid")
+	tg, sg := service.TaskGroups(uid, c.GetString("role_id"))
 	// 分组列表
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
-	self.Data["serverGroup"] = serverLists(self.serverGroups, self.userId)
-	self.Data["isAdmin"] = self.userId
+	data["taskGroup"] = taskGroupLists(tg, uid)
+	data["serverGroup"] = serverLists(sg, uid)
+	data["isAdmin"] = uid
+
 	var notifyUserIds []int
 	if task.NotifyUserIds != "0" {
 		notifyUserIdsStr := strings.Split(task.NotifyUserIds, ",")
@@ -92,7 +102,7 @@ func (self *TaskController) Edit() {
 		}
 	}
 
-	self.Data["notify_user_ids"] = notifyUserIds
+	data["notify_user_ids"] = notifyUserIds
 
 	server_ids := strings.Split(task.ServerIds, ",")
 	var server_ids_arr []int
@@ -101,7 +111,7 @@ func (self *TaskController) Edit() {
 		server_ids_arr = append(server_ids_arr, i)
 	}
 
-	self.Data["service_ids"] = server_ids_arr
+	data["service_ids"] = server_ids_arr
 
 	notifyTplList, _, err := models.NotifyTplGetByTplTypeList(task.NotifyType)
 	tplList := make([]map[string]interface{}, len(notifyTplList))
@@ -116,32 +126,41 @@ func (self *TaskController) Edit() {
 		}
 	}
 
-	self.Data["notifyTpl"] = tplList
+	data["notifyTpl"] = tplList
 
-	self.display()
+	// self.display()
+	c.HTML(http.StatusOK, "task/edit.html", data)
 }
 
-func (self *TaskController) Copy() {
-	self.Data["pageTitle"] = "复制任务"
-	self.Data["adminInfo"] = AllAdminInfo("")
+func (self *TaskController) Copy(c *gin.Context) {
+	data := map[string]interface{}{}
 
-	id, _ := self.GetInt("id")
+	data["pageTitle"] = "复制任务"
+	data["adminInfo"] = AllAdminInfo("")
+
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	task, err := models.TaskGetById(id)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
+
+	uid := c.GetInt("uid")
 
 	//if task.Status == 1 {
 	//	self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
 	//}
-	self.Data["task"] = task
+	data["task"] = task
 
-	self.Data["adminInfo"] = AllAdminInfo("")
+	data["adminInfo"] = AllAdminInfo("")
 
 	// 分组列表
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
-	self.Data["serverGroup"] = serverLists(self.serverGroups, self.userId)
-	self.Data["isAdmin"] = self.userId
+	tg, sg := service.TaskGroups(uid, c.GetString("role_id"))
+	data["taskGroup"] = taskGroupLists(tg, uid)
+	data["serverGroup"] = serverLists(sg, uid)
+	data["isAdmin"] = uid
+
 	var notifyUserIds []int
 	if task.NotifyUserIds != "0" {
 		notifyUserIdsStr := strings.Split(task.NotifyUserIds, ",")
@@ -151,7 +170,7 @@ func (self *TaskController) Copy() {
 		}
 	}
 
-	self.Data["notify_user_ids"] = notifyUserIds
+	data["notify_user_ids"] = notifyUserIds
 
 	server_ids := strings.Split(task.ServerIds, ",")
 	var server_ids_arr []int
@@ -160,7 +179,7 @@ func (self *TaskController) Copy() {
 		server_ids_arr = append(server_ids_arr, i)
 	}
 
-	self.Data["service_ids"] = server_ids_arr
+	data["service_ids"] = server_ids_arr
 
 	notifyTplList, _, err := models.NotifyTplGetByTplTypeList(task.NotifyType)
 	tplList := make([]map[string]interface{}, len(notifyTplList))
@@ -175,9 +194,10 @@ func (self *TaskController) Copy() {
 		}
 	}
 
-	self.Data["notifyTpl"] = tplList
+	data["notifyTpl"] = tplList
 
-	self.display()
+	// self.display()
+	c.HTML(http.StatusOK, "task/copy.html", data)
 }
 
 // Detail dd
@@ -189,7 +209,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	task, err := models.TaskGetById(id)
 	if err != nil {
-		common.Error(c, MSG_ERR, err.Error())
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		return
 	}
@@ -419,50 +439,73 @@ func checkCommand(command string) (string, bool) {
 	return "", true
 }
 
-func (self *TaskController) AjaxAudit() {
+func (self *TaskController) AjaxAudit(c *gin.Context) {
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
 
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+	// taskId, _ := self.GetInt("id")
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
-	res := changeStatus(taskId, 0, self.userId)
+
+	res := changeStatus(taskID, 0, c.GetInt("uid"))
 	if !res {
-		self.ajaxMsg("审核失败", MSG_ERR)
+		// self.ajaxMsg("审核失败", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "审核失败"))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxNopass() {
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+func (self *TaskController) AjaxNopass(c *gin.Context) {
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
-	res := changeStatus(taskId, 3, self.userId)
+
+	res := changeStatus(taskID, 3, c.GetInt("uid"))
 	if !res {
-		self.ajaxMsg("操作失败", MSG_ERR)
+		// self.ajaxMsg("操作失败", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "操作失败"))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxStart() {
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+func (self *TaskController) AjaxStart(c *gin.Context) {
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
 
-	task, err := models.TaskGetById(taskId)
+	task, err := models.TaskGetById(taskID)
 	if err != nil {
-		self.ajaxMsg("查不到该任务", MSG_ERR)
+		// self.ajaxMsg("查不到该任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
+		return
 	}
 
 	if task.Status != 0 {
-		self.ajaxMsg("任务状态有误", MSG_ERR)
+		// self.ajaxMsg("任务状态有误", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务状态有误"))
+		return
 	}
 
 	jobArr, err := jobs.NewJobFromTask(task)
 
 	if err != nil {
-		self.ajaxMsg("创建任务失败", MSG_ERR)
+		// self.ajaxMsg("创建任务失败", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "创建任务失败"))
+		return
 	}
 
 	for _, job := range jobArr {
@@ -472,23 +515,27 @@ func (self *TaskController) AjaxStart() {
 		}
 	}
 
-	self.ajaxMsg("", MSG_OK)
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxPause() {
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+func (self *TaskController) AjaxPause(c *gin.Context) {
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
 
-	task, err := models.TaskGetById(taskId)
+	task, err := models.TaskGetById(taskID)
 	if err != nil {
-		self.ajaxMsg("查不到该任务", MSG_ERR)
+		// self.ajaxMsg("查不到该任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
+		return
 	}
 
 	//移出任务
 	TaskServerIdsArr := strings.Split(task.ServerIds, ",")
-
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
 		jobKey := libs.JobKey(task.Id, server_id_int)
@@ -498,35 +545,43 @@ func (self *TaskController) AjaxPause() {
 	task.Status = 0
 	task.Update()
 
-	self.ajaxMsg("", MSG_OK)
-
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-// 立即执行
-func (self *TaskController) AjaxRun() {
-	id, _ := self.GetInt("id")
+// AjaxRun ss
+func (self *TaskController) AjaxRun(c *gin.Context) {
+	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	task, err := models.TaskGetById(id)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
 
 	jobArr, err := jobs.NewJobFromTask(task)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
+
 	for _, job := range jobArr {
 		job.Run()
 	}
 
-	self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchStart() {
-	idArr := self.GetStrings("ids")
-	ids := strings.Split(idArr[0], ",")
+// AjaxBatchStart sdf
+func (self *TaskController) AjaxBatchStart(c *gin.Context) {
+	ids := strings.Split(c.Query("ids"), ",")
+	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
-		self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要操作的任务"))
+		return
 	}
+
 	for _, v := range ids {
 		id, _ := strconv.Atoi(v)
 		if id < 1 {
@@ -545,15 +600,21 @@ func (self *TaskController) AjaxBatchStart() {
 			}
 		}
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchPause() {
-	idArr := self.GetStrings("ids")
-	ids := strings.Split(idArr[0], ",")
+// AjaxBatchPause kkk
+func (self *TaskController) AjaxBatchPause(c *gin.Context) {
+	ids := strings.Split(c.Query("ids"), ",")
+	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
-		self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要暂停的任务"))
+		return
 	}
+
 	for _, v := range ids {
 		id, _ := strconv.Atoi(v)
 		if id < 1 {
@@ -574,15 +635,21 @@ func (self *TaskController) AjaxBatchPause() {
 			task.Update()
 		}
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchDel() {
-	idArr := self.GetStrings("ids")
-	ids := strings.Split(idArr[0], ",")
+// AjaxBatchDel kddd
+func (self *TaskController) AjaxBatchDel(c *gin.Context) {
+	ids := strings.Split(c.Query("ids"), ",")
+	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
-		self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要删除的任务"))
+		return
 	}
+
 	for _, v := range ids {
 		id, _ := strconv.Atoi(v)
 		if id < 1 {
@@ -602,15 +669,20 @@ func (self *TaskController) AjaxBatchDel() {
 		models.TaskDel(id)
 		models.TaskLogDelByTaskId(id)
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchAudit() {
-	idArr := self.GetStrings("ids")
-	ids := strings.Split(idArr[0], ",")
+func (self *TaskController) AjaxBatchAudit(c *gin.Context) {
+	ids := strings.Split(c.Query("ids"), ",")
+	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
-		self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要审核的任务"))
+		return
 	}
+
 	for _, v := range ids {
 		id, _ := strconv.Atoi(v)
 		if id < 1 {
@@ -618,15 +690,20 @@ func (self *TaskController) AjaxBatchAudit() {
 		}
 		changeStatus(id, 0, self.userId)
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchNoPass() {
-	idArr := self.GetStrings("ids")
-	ids := strings.Split(idArr[0], ",")
+func (self *TaskController) AjaxBatchNoPass(c *gin.Context) {
+	ids := strings.Split(c.Query("ids"), ",")
+	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
-		self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要操作的任务"))
+		return
 	}
+
 	for _, v := range ids {
 		id, _ := strconv.Atoi(v)
 		if id < 1 {
@@ -634,14 +711,15 @@ func (self *TaskController) AjaxBatchNoPass() {
 		}
 		changeStatus(id, 3, self.userId)
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
 func changeStatus(taskId, status, userId int) bool {
-
 	if taskId == 0 {
 		return false
 	}
+
 	task, _ := models.TaskGetById(taskId)
 	//修改
 	task.Id = taskId
@@ -655,24 +733,30 @@ func changeStatus(taskId, status, userId int) bool {
 	return true
 }
 
-func (self *TaskController) AjaxDel() {
-	id, _ := self.GetInt("id")
+// AjaxDel ddd
+func (self *TaskController) AjaxDel(c *gin.Context) {
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	task, _ := models.TaskGetById(id)
 
+	uid := c.GetInt("uid")
 	task.UpdateTime = time.Now().Unix()
-	task.UpdateId = self.userId
+	task.UpdateId = uid
 	task.Status = -1
 	task.Id = id
 
 	//TODO 查询服务器是否用于定时任务
 	if err := task.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("操作成功", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxNotifyType() {
-	notifyType, _ := self.GetInt("notify_type")
+func (self *TaskController) AjaxNotifyType(c *gin.Context) {
+	notifyType, _ := strconv.Atoi(c.DefaultQuery("notify_type", "0"))
 	result, count, _ := models.NotifyTplGetByTplTypeList(notifyType)
 
 	list := make([]map[string]interface{}, len(result))
@@ -685,7 +769,9 @@ func (self *TaskController) AjaxNotifyType() {
 		list[k] = row
 	}
 
-	self.ajaxList("成功", MSG_OK, count, list)
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
 func (self *TaskController) Table(c *gin.Context) {
@@ -826,31 +912,36 @@ func (self *TaskController) Table(c *gin.Context) {
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
-func (self *TaskController) ApiTask() {
-	task_id, _ := self.GetInt("id")
-	if task_id == 0 {
+func (self *TaskController) ApiTask(c *gin.Context) {
+	// uid := c.GetInt("uid")
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	if taskID == 0 {
 		task := new(models.Task)
-		task.CreateId, _ = self.GetInt("create_id")
-		task.GroupId, _ = self.GetInt("group_id")
-		task.TaskName = strings.TrimSpace(self.GetString("task_name"))
-		task.Description = strings.TrimSpace(self.GetString("description"))
-		task.Concurrent, _ = self.GetInt("concurrent")
-		task.ServerIds = strings.TrimSpace(self.GetString("server_ids"))
-		task.CronSpec = strings.TrimSpace(self.GetString("cron_spec"))
-		task.Command = strings.TrimSpace(self.GetString("command"))
-		task.Timeout, _ = self.GetInt("timeout")
-		task.IsNotify, _ = self.GetInt("is_notify")
-		task.NotifyType, _ = self.GetInt("notify_type")
-		task.NotifyTplId, _ = self.GetInt("notify_tpl_id")
-		task.NotifyUserIds = strings.TrimSpace(self.GetString("notify_user_ids"))
+		task.CreateId, _ = strconv.Atoi(c.DefaultPostForm("create_id", "0"))
+		task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+		task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
+		task.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
+		task.Concurrent, _ = strconv.Atoi(c.DefaultPostForm("concurrent", "0"))
+		task.ServerIds = strings.TrimSpace(c.DefaultPostForm("server_ids", ""))
+		task.CronSpec = strings.TrimSpace(c.DefaultPostForm("cron_spec", ""))
+		task.Command = strings.TrimSpace(c.DefaultPostForm("command", ""))
+		task.Timeout, _ = strconv.Atoi(c.DefaultPostForm("timeout", "0"))
+		task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
+		task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
+		task.NotifyTplId, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
+		task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
 
 		if task.IsNotify == 1 && task.NotifyTplId <= 0 {
-			self.ajaxMsg("请选择通知模板", MSG_ERR)
+			// self.ajaxMsg("请选择通知模板", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择通知模板"))
+			return
 		}
 
 		msg, isBan := checkCommand(task.Command)
 		if !isBan {
-			self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+			// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
+			return
 		}
 
 		task.CreateTime = time.Now().Unix()
@@ -858,81 +949,111 @@ func (self *TaskController) ApiTask() {
 		task.Status = 0 //接口不需要审核
 
 		if task.TaskName == "" || task.CronSpec == "" || task.Command == "" {
-			self.ajaxMsg("请填写完整信息", MSG_ERR)
+			// self.ajaxMsg("请填写完整信息", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请填写完整信息"))
+			return
 		}
 		var id int64
 		var err error
 		if _, err = cron.Parse(task.CronSpec); err != nil {
-			self.ajaxMsg("cron表达式无效", MSG_ERR)
+			// self.ajaxMsg("cron表达式无效", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
+			return
 		}
 
 		if id, err = models.TaskAdd(task); err != nil {
 			self.ajaxMsg(err.Error(), MSG_ERR)
 		}
-		task_id = int(id)
-		self.ajaxMsg(task_id, MSG_OK)
+
+		taskID = int(id)
+		// self.ajaxMsg(task_id, MSG_OK)
+		c.JSON(http.StatusOK, common.Success(c, map[string]int{"task_id": taskID}))
+		return
 	}
 
-	task, _ := models.TaskGetById(task_id)
+	task, _ := models.TaskGetById(taskID)
 
 	if task.Status == 1 {
-		self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
+		// self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "运行状态无法编辑任务，请先暂停任务"))
+		return
 	}
+
 	//修改
-	task.Id = task_id
+	task.Id = taskID
 	task.UpdateTime = time.Now().Unix()
-	task.TaskName = strings.TrimSpace(self.GetString("task_name"))
-	task.Description = strings.TrimSpace(self.GetString("description"))
-	task.GroupId, _ = self.GetInt("group_id")
-	task.Concurrent, _ = self.GetInt("concurrent")
-	task.ServerIds = strings.TrimSpace(self.GetString("server_ids"))
-	task.CronSpec = strings.TrimSpace(self.GetString("cron_spec"))
-	task.Command = strings.TrimSpace(self.GetString("command"))
-	task.Timeout, _ = self.GetInt("timeout")
-	task.IsNotify, _ = self.GetInt("is_notify")
-	task.NotifyType, _ = self.GetInt("notify_type")
-	task.NotifyTplId, _ = self.GetInt("notify_tpl_id")
-	task.NotifyUserIds = strings.TrimSpace(self.GetString("notify_user_ids"))
-	task.UpdateId, _ = self.GetInt("update_id")
+	task.TaskName = strings.TrimSpace(c.PostForm("task_name"))
+	task.Description = strings.TrimSpace(c.PostForm("description"))
+	task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+	task.Concurrent, _ = strconv.Atoi(c.DefaultPostForm("concurrent", "0"))
+	task.ServerIds = strings.TrimSpace(c.PostForm("server_ids"))
+	task.CronSpec = strings.TrimSpace(c.PostForm("cron_spec"))
+	task.Command = strings.TrimSpace(c.PostForm("command"))
+	task.Timeout, _ = strconv.Atoi(c.DefaultPostForm("timeout", "0"))
+	task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
+	task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
+	task.NotifyTplId, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
+	task.NotifyUserIds = strings.TrimSpace(c.PostForm("notify_user_ids"))
+	task.UpdateId, _ = strconv.Atoi(c.DefaultPostForm("update_id", "0"))
 	task.Status = 0 //接口不需要
 
 	if task.IsNotify == 1 && task.NotifyTplId <= 0 {
-		self.ajaxMsg("请选择通知模板", MSG_ERR)
+		// self.ajaxMsg("请选择通知模板", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择通知模板"))
+		return
 	}
 
 	msg, isBan := checkCommand(task.Command)
 	if !isBan {
-		self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+		// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
+		return
 	}
 
 	if _, err := cron.Parse(task.CronSpec); err != nil {
-		self.ajaxMsg("cron表达式无效", MSG_ERR)
+		// self.ajaxMsg("cron表达式无效", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
+		return
 	}
 
 	if err := task.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg(task_id, MSG_OK)
+
+	// self.ajaxMsg(task_id, MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c, map[string]int{"task_id": taskID}))
+	return
 }
 
-func (self *TaskController) ApiStart() {
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+func (self *TaskController) ApiStart(c *gin.Context) {
+	// taskId, _ := self.GetInt("id")
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
 
-	task, err := models.TaskGetById(taskId)
+	task, err := models.TaskGetById(taskID)
 	if err != nil {
-		self.ajaxMsg("查不到该任务", MSG_ERR)
+		// self.ajaxMsg("查不到该任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
+		return
 	}
 
 	if task.Status != 0 {
-		self.ajaxMsg("任务状态有误", MSG_ERR)
+		// self.ajaxMsg("任务状态有误", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务状态有误"))
+		return
 	}
 
 	jobArr, err := jobs.NewJobFromTask(task)
 	if err != nil {
-		self.ajaxMsg("创建任务失败", MSG_ERR)
+		// self.ajaxMsg("创建任务失败", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "创建任务失败"))
+		return
 	}
 
 	for _, job := range jobArr {
@@ -942,18 +1063,24 @@ func (self *TaskController) ApiStart() {
 		}
 	}
 
-	self.ajaxMsg("", MSG_OK)
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) ApiPause() {
-	taskId, _ := self.GetInt("id")
-	if taskId == 0 {
-		self.ajaxMsg("任务不存在", MSG_ERR)
+func (self *TaskController) ApiPause(c *gin.Context) {
+	// taskId, _ := self.GetInt("id")
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	if taskID == 0 {
+		// self.ajaxMsg("任务不存在", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
+		return
 	}
 
-	task, err := models.TaskGetById(taskId)
+	task, err := models.TaskGetById(taskID)
 	if err != nil {
-		self.ajaxMsg("查不到该任务", MSG_ERR)
+		// self.ajaxMsg("查不到该任务", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
+		return
 	}
 
 	//移出任务
@@ -967,6 +1094,7 @@ func (self *TaskController) ApiPause() {
 
 	task.Status = 0
 	task.Update()
-	self.ajaxMsg("", MSG_OK)
 
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }

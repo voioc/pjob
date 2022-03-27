@@ -38,6 +38,11 @@ func InitRouter(engine *gin.Engine) {
 		"views/task/list.html",
 		"views/task/detail.html",
 		"views/task/add.html",
+		"views/task/auditlist.html",
+		"views/task/edit.html",
+		"views/task/copy.html",
+		"views/tasklog/list.html",
+		"views/tasklog/detail.html",
 	)
 
 	loginC := controllers.LoginController{}
@@ -63,10 +68,39 @@ func InitRouter(engine *gin.Engine) {
 
 		taskC := controllers.TaskController{}
 		r.GET("/task/list", taskC.List)
-		r.GET("/task/table", taskC.Table)
-		r.GET("/task/detail", taskC.Detail)
+		r.GET("/task/auditlist", taskC.AuditList)
 		r.GET("/task/add", taskC.Add)
+		r.GET("/task/edit", taskC.Edit)
+		r.GET("/task/copy", taskC.Copy)
 		r.POST("/task/save", taskC.Save)
+		r.GET("/task/detail", taskC.Detail)
+
+		r.GET("/task/table", taskC.Table)
+
+		r.GET("/task/ajaxaudit", taskC.AjaxAudit)
+		r.GET("/task/ajaxnopass", taskC.AjaxBatchNoPass)
+		r.GET("/task/ajaxstart", taskC.AjaxStart)
+		r.GET("/task/ajaxpause", taskC.AjaxPause)
+		r.GET("/task/ajaxrun", taskC.AjaxRun)
+		r.GET("/task/ajaxdel", taskC.AjaxDel)
+		r.GET("/task/ajaxnotifytype", taskC.AjaxNotifyType)
+
+		r.GET("/task/ajaxbatchstart", taskC.AjaxBatchStart)
+		r.GET("/task/ajaxbatchpause", taskC.AjaxBatchPause)
+		r.GET("/task/ajaxbatchdel", taskC.AjaxBatchDel)
+		r.GET("/task/ajaxbatchaudit", taskC.AjaxAudit)
+		r.GET("/task/ajaxbatchnopass", taskC.AjaxBatchNoPass)
+
+		r.POST("/task/apitask", taskC.ApiTask)
+		r.GET("/task/apistart", taskC.ApiStart)
+		r.GET("/task/apipause", taskC.ApiPause)
+
+		taskLogC := controllers.TaskLogController{}
+		r.GET("/tasklog/list", taskLogC.List)
+		r.GET("/tasklog/table", taskLogC.Table)
+		r.GET("/tasklog/detail", taskLogC.Detail)
+		r.GET("/tasklog/ajaxdel", taskLogC.AjaxDel)
+
 	}
 
 }

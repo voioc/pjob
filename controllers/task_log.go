@@ -9,10 +9,11 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
 	"strconv"
+
+	"github.com/astaxie/beego"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
 
 	"strings"
 	"time"

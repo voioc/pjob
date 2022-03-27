@@ -11,9 +11,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
 	"io/ioutil"
 	"net"
 	"net/rpc"
@@ -23,14 +20,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/astaxie/beego/logs"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
+
 	"runtime"
 	"strconv"
 	"strings"
 
 	"encoding/json"
+
 	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/notify"
-	"github.com/linxiaozhi/go-telnet"
+	gote "github.com/linxiaozhi/go-telnet"
+	"github.com/voioc/pjob/notify"
 	"golang.org/x/crypto/ssh"
 )
 

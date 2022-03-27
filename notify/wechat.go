@@ -1,12 +1,13 @@
 package notify
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/libs"
+	"encoding/json"
 	"log"
 	"time"
-	"encoding/json"
+
+	"github.com/astaxie/beego"
 	"github.com/pkg/errors"
+	"github.com/voioc/pjob/libs"
 )
 
 type WechatAjaxReturn struct {
@@ -17,7 +18,7 @@ type WechatAjaxReturn struct {
 
 type Wechat struct {
 	Accounts map[string]string
-	Param   map[string]string
+	Param    map[string]string
 }
 
 var WechatChan chan *Wechat
@@ -49,7 +50,7 @@ func init() {
 func SendWechatToChan(accounts map[string]string, param map[string]string) bool {
 	wechat := &Wechat{
 		Accounts: accounts,
-		Param:   param,
+		Param:    param,
 	}
 
 	select {

@@ -2,9 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/george518/PPGo_Job/agent/server"
 	"log"
 	"runtime"
+
+	"github.com/voioc/pjob/agent/server"
 )
 
 //文件配置路径

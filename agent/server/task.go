@@ -9,8 +9,8 @@ package server
 
 import (
 	"github.com/astaxie/beego/logs"
-	"github.com/george518/PPGo_Job/jobs"
-	"github.com/george518/PPGo_Job/models"
+	"github.com/voioc/pjob/jobs"
+	"github.com/voioc/pjob/models"
 )
 
 type RpcTask struct {

@@ -33,9 +33,9 @@ func (a *Auth) TableName() string {
 	return TableName("uc_auth")
 }
 
-func AuthGetList(page, pageSize int, filters ...interface{}) ([]*Auth, int64) {
+func AuthGetList(page, pageSize int, filters ...interface{}) ([]Auth, int64) {
 	offset := (page - 1) * pageSize
-	list := make([]*Auth, 0)
+	list := make([]Auth, 0)
 	query := orm.NewOrm().QueryTable(TableName("uc_auth"))
 	if len(filters) > 0 {
 		l := len(filters)

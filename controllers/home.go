@@ -12,24 +12,35 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/models"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/pjob/jobs"
 	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
+	"github.com/voioc/pjob/service"
 )
 
 type HomeController struct {
 	BaseController
 }
 
-// func (self *HomeController) Index() {
-// 	self.Data["pageTitle"] = "系统首页"
-// 	//self.display()
-// 	self.TplName = "public/main.html"
-// }
+// Index dk
+func (self *HomeController) Index(c *gin.Context) {
+	// self.Data["pageTitle"] = "系统首页"
+	//self.display()
+	// self.TplName = "public/main.html"
+
+	uid := c.GetInt("uid")
+	menu, _ := service.Menu(uid)
+	c.HTML(http.StatusOK, "main.html", template.FuncMap{
+		"siteName":  "系统首页",
+		"SideMenu1": menu["SideMenu1"],
+		"SideMenu2": menu["SideMenu2"],
+	})
+}
 
 func (self *HomeController) Help() {
 	self.Data["pageTitle"] = "Cron表达式说明"

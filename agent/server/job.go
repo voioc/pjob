@@ -10,15 +10,16 @@ package server
 import (
 	"bytes"
 	"fmt"
-	"github.com/astaxie/beego/logs"
-	. "github.com/george518/PPGo_Job/jobs"
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
 	"os/exec"
 	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	. "github.com/voioc/pjob/jobs"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
 )
 
 //执行句柄map

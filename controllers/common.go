@@ -12,8 +12,9 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
 )
 
 const (
@@ -36,7 +37,7 @@ type BaseController struct {
 }
 
 //前期准备
-func (self *BaseController) Prepare() {
+func (self *BaseController) Prepare(c *gin.Context) {
 	self.pageSize = 20
 	controllerName, actionName := self.GetControllerAndAction()
 	self.controllerName = strings.ToLower(controllerName[0 : len(controllerName)-10])
@@ -53,14 +54,17 @@ func (self *BaseController) Prepare() {
 	//
 	//}
 
-	self.Auth()
+	self.Auth(c)
 	self.Data["loginUserId"] = self.userId
 	self.Data["loginUserName"] = self.userName
 }
 
 //登录权限验证
-func (self *BaseController) Auth() {
-	arr := strings.Split(self.Ctx.GetCookie("auth"), "|")
+func (self *BaseController) Auth(c *gin.Context) {
+	// arr := strings.Split(self.Ctx.GetCookie("auth"), "|")
+	cookie, _ := c.Cookie("auth")
+	arr := strings.Split(cookie, "|")
+
 	self.userId = 0
 	if len(arr) == 2 {
 		idstr, password := arr[0], arr[1]

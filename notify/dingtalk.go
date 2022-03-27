@@ -11,10 +11,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/libs"
 	"log"
 	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/voioc/pjob/libs"
 )
 
 type Dingtalk struct {

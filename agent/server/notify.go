@@ -10,8 +10,9 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/george518/PPGo_Job/libs"
 	"strconv"
+
+	"github.com/voioc/pjob/libs"
 )
 
 //启动时注册

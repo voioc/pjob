@@ -9,30 +9,38 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/george518/PPGo_Job/libs"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/pjob/common"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/service"
+
 	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/crons"
-	"github.com/george518/PPGo_Job/jobs"
-	"github.com/george518/PPGo_Job/models"
+	cron "github.com/voioc/pjob/crons"
+	"github.com/voioc/pjob/jobs"
+	"github.com/voioc/pjob/models"
 )
 
 type TaskController struct {
 	BaseController
 }
 
-func (self *TaskController) List() {
-	self.Data["pageTitle"] = "任务管理"
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
-	self.Data["groupId"] = 0
+func (self *TaskController) List(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["pageTitle"] = "任务管理"
+	data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
+	data["groupId"] = 0
 	//arr := strings.Split(self.Ctx.GetCookie("groupid"), "|")
 	//if len(arr) > 0 {
 	//	self.Data["groupId"], _ = strconv.Atoi(arr[0])
 	//}
-	self.display()
+	// self.display()
+
+	c.HTML(http.StatusOK, "list.html", data)
 }
 
 func (self *TaskController) AuditList() {
@@ -40,13 +48,19 @@ func (self *TaskController) AuditList() {
 	self.display()
 }
 
-func (self *TaskController) Add() {
-	self.Data["pageTitle"] = "新增任务"
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
-	self.Data["serverGroup"] = serverLists(self.serverGroups, self.userId)
-	self.Data["isAdmin"] = self.userId
-	self.Data["adminInfo"] = AllAdminInfo("")
-	self.display()
+func (self *TaskController) Add(c *gin.Context) {
+	data := map[string]interface{}{}
+
+	uid := c.GetInt("uid")
+	tg, _ := service.TaskGroups(uid, c.GetString("role_id"))
+	data["pageTitle"] = "新增任务"
+	data["taskGroup"] = taskGroupLists(tg, uid)
+	data["serverGroup"] = serverLists(tg, uid)
+	data["isAdmin"] = uid
+	data["adminInfo"] = AllAdminInfo("")
+	// self.display()
+
+	c.HTML(http.StatusOK, "task/add.html", data)
 }
 
 func (self *TaskController) Edit() {
@@ -166,13 +180,18 @@ func (self *TaskController) Copy() {
 	self.display()
 }
 
-func (self *TaskController) Detail() {
-	self.Data["pageTitle"] = "任务详细"
+// Detail dd
+func (self *TaskController) Detail(c *gin.Context) {
+	uid := c.GetInt("uid")
+	data := map[string]interface{}{}
+	data["pageTitle"] = "任务详细"
 
-	id, _ := self.GetInt("id")
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	task, err := models.TaskGetById(id)
 	if err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		common.Error(c, MSG_ERR, err.Error())
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		return
 	}
 
 	TextStatus := []string{
@@ -182,12 +201,15 @@ func (self *TaskController) Detail() {
 		"<font color='red'><i class='fa fa-times-circle'></i> 审核失败</font>",
 	}
 
-	self.Data["TextStatus"] = TextStatus[task.Status]
-	self.Data["CreateTime"] = beego.Date(time.Unix(task.CreateTime, 0), "Y-m-d H:i:s")
-	self.Data["UpdateTime"] = beego.Date(time.Unix(task.UpdateTime, 0), "Y-m-d H:i:s")
-	self.Data["task"] = task
+	data["TextStatus"] = TextStatus[task.Status]
+	data["CreateTime"] = beego.Date(time.Unix(task.CreateTime, 0), "Y-m-d H:i:s")
+	data["UpdateTime"] = beego.Date(time.Unix(task.UpdateTime, 0), "Y-m-d H:i:s")
+	data["task"] = task
+
+	tg, _ := service.TaskGroups(uid, c.GetString("role_ids"))
+
 	// 分组列表
-	self.Data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
+	data["taskGroup"] = taskGroupLists(tg, uid)
 
 	serverName := ""
 	if task.ServerIds == "0" {
@@ -215,9 +237,9 @@ func (self *TaskController) Detail() {
 	}
 
 	//执行策略
-	self.Data["ServerType"] = "同时执行"
+	data["ServerType"] = "同时执行"
 	if task.ServerType == 1 {
-		self.Data["ServerType"] = "轮询执行"
+		data["ServerType"] = "轮询执行"
 	}
 
 	//任务分组
@@ -229,7 +251,7 @@ func (self *TaskController) Detail() {
 		}
 	}
 
-	self.Data["GroupName"] = groupName
+	data["GroupName"] = groupName
 
 	//创建人和修改人
 	createName := "未知"
@@ -249,15 +271,15 @@ func (self *TaskController) Detail() {
 	}
 
 	//是否出错通知
-	self.Data["adminInfo"] = []*AdminInfo{}
+	data["adminInfo"] = []*AdminInfo{}
 	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
-		self.Data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
+		data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
 	}
-	self.Data["CreateName"] = createName
-	self.Data["UpdateName"] = updateName
-	self.Data["serverName"] = serverName
+	data["CreateName"] = createName
+	data["UpdateName"] = updateName
+	data["serverName"] = serverName
 
-	self.Data["NotifyTplName"] = "未知"
+	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
 		notifyTpl, err := models.NotifyTplGetById(task.NotifyTplId)
 		if err == nil {
@@ -265,80 +287,98 @@ func (self *TaskController) Detail() {
 		}
 	}
 
-	self.display()
+	c.HTML(http.StatusOK, "detail.html", data)
 }
 
-func (self *TaskController) AjaxSave() {
-	task_id, _ := self.GetInt("id")
+func (self *TaskController) Save(c *gin.Context) {
+	uid := c.GetInt("uid")
+	task_id, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
 	if task_id == 0 {
 		task := new(models.Task)
-		task.CreateId = self.userId
-		task.GroupId, _ = self.GetInt("group_id")
-		task.TaskName = strings.TrimSpace(self.GetString("task_name"))
-		task.Description = strings.TrimSpace(self.GetString("description"))
-		task.Concurrent, _ = self.GetInt("concurrent")
-		task.ServerIds = strings.TrimSpace(self.GetString("server_ids"))
-		task.CronSpec = strings.TrimSpace(self.GetString("cron_spec"))
-		task.Command = strings.TrimSpace(self.GetString("command"))
-		task.Timeout, _ = self.GetInt("timeout")
-		task.IsNotify, _ = self.GetInt("is_notify")
-		task.ServerType, _ = self.GetInt("server_type")
+		task.CreateId = c.GetInt("uid")
+		task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+		task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
+		task.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
+		task.Concurrent, _ = strconv.Atoi(c.DefaultPostForm("concurrent", "0"))
+		task.ServerIds = strings.TrimSpace(c.DefaultPostForm("server_ids", ""))
+		task.CronSpec = strings.TrimSpace(c.DefaultPostForm("cron_spec", ""))
+		task.Command = strings.TrimSpace(c.DefaultPostForm("command", ""))
+		task.Timeout, _ = strconv.Atoi(c.DefaultPostForm("timeout", "0"))
+		task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
+		task.ServerType, _ = strconv.Atoi(c.DefaultPostForm("server_type", "0"))
 
-		task.NotifyType, _ = self.GetInt("notify_type")
-		task.NotifyTplId, _ = self.GetInt("notify_tpl_id")
-		task.NotifyUserIds = strings.TrimSpace(self.GetString("notify_user_ids"))
+		task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
+		task.NotifyTplId, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
+		task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
 
 		if task.IsNotify == 1 && task.NotifyTplId <= 0 {
-			self.ajaxMsg("请选择通知模板", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择通知模板"))
+			// self.ajaxMsg("请选择通知模板", MSG_ERR)
+			return
 		}
 
 		msg, isBan := checkCommand(task.Command)
 		if !isBan {
-			self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+			// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
+			return
 		}
 
 		task.CreateTime = time.Now().Unix()
 		task.UpdateTime = time.Now().Unix()
 		task.Status = 2 //审核中
-		if self.userId == 1 {
+		if uid == 1 {
 			task.Status = 0 //审核中,超级管理员不需要
 		}
 		if task.TaskName == "" || task.CronSpec == "" || task.Command == "" {
-			self.ajaxMsg("请填写完整信息", MSG_ERR)
+			// self.ajaxMsg("", MSG_ERR)
+			fmt.Println("11111")
+			fmt.Println(task.TaskName, task.CronSpec, task.Command)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请填写完整信息!"))
+			return
 		}
 
 		if _, err := cron.Parse(task.CronSpec); err != nil {
-			self.ajaxMsg("cron表达式无效", MSG_ERR)
-		}
-		if _, err := models.TaskAdd(task); err != nil {
-			self.ajaxMsg(err.Error(), MSG_ERR)
+			// self.ajaxMsg("cron表达式无效", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
+			return
 		}
 
-		self.ajaxMsg("", MSG_OK)
+		if _, err := models.TaskAdd(task); err != nil {
+			// self.ajaxMsg(err.Error(), MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+			return
+		}
+
+		// self.ajaxMsg("", MSG_OK)
+		c.JSON(http.StatusOK, common.Success(c))
+		return
 	}
 
 	task, _ := models.TaskGetById(task_id)
 	//修改
 	task.Id = task_id
 	task.UpdateTime = time.Now().Unix()
-	task.TaskName = strings.TrimSpace(self.GetString("task_name"))
-	task.Description = strings.TrimSpace(self.GetString("description"))
-	task.GroupId, _ = self.GetInt("group_id")
-	task.Concurrent, _ = self.GetInt("concurrent")
-	task.ServerIds = strings.TrimSpace(self.GetString("server_ids"))
-	task.CronSpec = strings.TrimSpace(self.GetString("cron_spec"))
-	task.Command = strings.TrimSpace(self.GetString("command"))
-	task.Timeout, _ = self.GetInt("timeout")
-	task.ServerType, _ = self.GetInt("server_type")
-	task.IsNotify, _ = self.GetInt("is_notify")
-	task.NotifyType, _ = self.GetInt("notify_type")
-	task.NotifyTplId, _ = self.GetInt("notify_tpl_id")
-	task.NotifyUserIds = strings.TrimSpace(self.GetString("notify_user_ids"))
-	task.UpdateId = self.userId
+	task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
+	task.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
+	task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+	task.Concurrent, _ = strconv.Atoi(c.DefaultPostForm("concurrent", "0"))
+	task.ServerIds = strings.TrimSpace(c.DefaultPostForm("server_ids", ""))
+	task.CronSpec = strings.TrimSpace(c.DefaultPostForm("cron_spec", ""))
+	task.Command = strings.TrimSpace(c.DefaultPostForm("command", ""))
+	task.Timeout, _ = strconv.Atoi(c.DefaultPostForm("timeout", "0"))
+	task.ServerType, _ = strconv.Atoi(c.DefaultPostForm("server_type", "0"))
+	task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
+	task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
+	task.NotifyTplId, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
+	task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
+	task.UpdateId = uid
 	task.Status = 2 //审核中,超级管理员不需要
 
 	if task.IsNotify == 1 && task.NotifyTplId <= 0 {
-		self.ajaxMsg("请选择通知模板", MSG_ERR)
+		// self.ajaxMsg("请选择通知模板", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择通知模板"))
+		return
 	}
 
 	if self.userId == 1 {
@@ -346,17 +386,23 @@ func (self *TaskController) AjaxSave() {
 	}
 	msg, isBan := checkCommand(task.Command)
 	if !isBan {
-		self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+		// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
+		return
 	}
 
 	if _, err := cron.Parse(task.CronSpec); err != nil {
-		self.ajaxMsg("cron表达式无效", MSG_ERR)
+		// self.ajaxMsg("cron表达式无效", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
+		return
 	}
 
 	if err := task.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
 //检查是否含有禁用命令
@@ -642,18 +688,24 @@ func (self *TaskController) AjaxNotifyType() {
 	self.ajaxList("成功", MSG_OK, count, list)
 }
 
-func (self *TaskController) Table() {
-	//列表
-	page, err := self.GetInt("page")
-	if err != nil {
-		page = 1
-	}
-	limit, err := self.GetInt("limit")
-	if err != nil {
-		limit = 30
-	}
+func (self *TaskController) Table(c *gin.Context) {
 
-	groupId, _ := self.GetInt("group_id", 0)
+	pagesize, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+
+	// 列表
+	// page, err := c.DefaultQuery("page")
+	// if err != nil {
+	// 	page = 1
+	// }
+
+	// limit, err := self.GetInt("limit")
+	// if err != nil {
+	// 	limit = 30
+	// }
+
+	// groupId, _ := self.GetInt("group_id", 0)
+	groupId := 0
 
 	//0-全部，-1如果存在，n,如果不存在，0
 
@@ -669,8 +721,9 @@ func (self *TaskController) Table() {
 	//	self.Ctx.SetCookie("groupid", strconv.Itoa(groupId)+"|job")
 	//}
 
-	status, _ := self.GetInt("status")
-	taskName := strings.TrimSpace(self.GetString("task_name"))
+	// status, _ := self.GetInt("status")
+	status := 0
+	taskName := "" //strings.TrimSpace(self.GetString("task_name"))
 
 	StatusText := []string{
 		"<font color='red'><i class='fa fa-minus-square'></i></font>",
@@ -679,9 +732,12 @@ func (self *TaskController) Table() {
 		"<font color='red'><i class='fa fa-times-circle'></i></font>",
 	}
 
-	taskGroup := taskGroupLists(self.taskGroups, self.userId)
-	self.pageSize = limit
-	//查询条件
+	uid := c.GetInt("uid")
+	taskGroups, _ := service.TaskGroups(uid, "0")
+	taskGroup := taskGroupLists(taskGroups, uid)
+	self.pageSize = pagesize
+
+	// 查询条件
 	filters := make([]interface{}, 0)
 
 	if status == 2 {
@@ -692,10 +748,11 @@ func (self *TaskController) Table() {
 		ids := []int{0, 1}
 		filters = append(filters, "status__in", ids)
 	}
-	//搜索全部
+
+	// 搜索全部
 	if groupId == 0 {
-		if self.userId != 1 {
-			groups := strings.Split(self.taskGroups, ",")
+		if uid != 1 {
+			groups := strings.Split(taskGroups, ",")
 			groupsIds := make([]int, 0)
 			for _, v := range groups {
 				id, _ := strconv.Atoi(v)
@@ -706,11 +763,12 @@ func (self *TaskController) Table() {
 	} else if groupId > 0 {
 		filters = append(filters, "group_id", groupId)
 	}
+
 	if taskName != "" {
 		filters = append(filters, "task_name__icontains", taskName)
 	}
 
-	result, count := models.TaskGetList(page, self.pageSize, filters...)
+	result, count := models.TaskGetList(page, pagesize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
@@ -763,7 +821,9 @@ func (self *TaskController) Table() {
 		list[k] = row
 	}
 
-	self.ajaxList("成功", MSG_OK, count, list)
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
 func (self *TaskController) ApiTask() {

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
 )
 
 type UserController struct {

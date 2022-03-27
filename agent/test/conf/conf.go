@@ -9,7 +9,7 @@ package main
 
 import (
 	"github.com/astaxie/beego/logs"
-	"github.com/george518/PPGo_Job/agent/server"
+	"github.com/voioc/pjob/agent/server"
 )
 
 func main() {

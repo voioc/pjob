@@ -48,7 +48,8 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	// 			user.LastLogin = time.Now().Unix()
 	// 			user.Update()
 	// 			authkey := libs.Md5([]byte(self.getClientIp() + "|" + user.Password + user.Salt))
-	// 			self.Ctx.SetCookie("auth", strconv.Itoa(user.Id)+"|"+authkey, 7*86400)
+	// self.Ctx.SetCookie("auth", strconv.Itoa(user.Id)+"|"+authkey, 7*86400)
+	c.SetCookie("auth", "1|authkey", 7*86400, "/", "localhost", false, true)
 
 	// 			self.ajaxMsg("登录成功", MSG_OK)
 	// 		}

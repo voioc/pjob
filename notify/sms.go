@@ -8,12 +8,13 @@
 package notify
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/george518/PPGo_Job/libs"
+	"encoding/json"
 	"log"
 	"time"
-	"encoding/json"
+
+	"github.com/astaxie/beego"
 	"github.com/pkg/errors"
+	"github.com/voioc/pjob/libs"
 )
 
 type SmsAjaxReturn struct {

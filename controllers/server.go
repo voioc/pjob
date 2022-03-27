@@ -8,12 +8,13 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego/logs"
-	"github.com/george518/PPGo_Job/libs"
-	"github.com/george518/PPGo_Job/models"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/voioc/pjob/libs"
+	"github.com/voioc/pjob/models"
 )
 
 type ServerController struct {

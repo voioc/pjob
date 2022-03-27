@@ -8,11 +8,12 @@
 package controllers
 
 import (
-	"github.com/george518/PPGo_Job/models"
+	"encoding/json"
 	"strings"
 	"time"
+
 	"github.com/astaxie/beego"
-	"encoding/json"
+	"github.com/voioc/pjob/models"
 )
 
 type NotifyTplController struct {

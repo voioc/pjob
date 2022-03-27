@@ -7,7 +7,7 @@
 *************************************************************/
 package main
 
-import "github.com/george518/PPGo_Job/models"
+import "github.com/voioc/pjob/models"
 
 func main() {
 

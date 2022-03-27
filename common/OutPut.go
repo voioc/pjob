@@ -34,7 +34,7 @@ func Success(c *gin.Context, params ...interface{}) gin.H {
 	}
 
 	if len(params) > 1 {
-		ext = params[0]
+		ext = params[1]
 	}
 
 	return SetOutput(c, STATUS_OK, "success", data, ext)

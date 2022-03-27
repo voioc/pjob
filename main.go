@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/fvbock/endless"
-	"github.com/george518/PPGo_Job/models"
-	_ "github.com/george518/PPGo_Job/routers"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/pjob/models"
 	"github.com/voioc/pjob/routers"
+	_ "github.com/voioc/pjob/routers"
 )
 
 func init() {
@@ -68,7 +68,7 @@ func main() {
 
 	//router.LoadHTMLFiles("templates/index.tmpl")
 	//router.LoadHTMLFiles("templates/index.tmpl", "templates/goods.hmpl"
-	//router.LoadHTMLGlob("templates/*")
+	r.LoadHTMLGlob("views/**/*")
 	//多层目录，多文件重名，在html文件中声明即可 {{defind "goods/list.html"}} {{end}}
 
 	// r.SetFuncMap(template.FuncMap{
@@ -82,7 +82,6 @@ func main() {
 	// 	})
 	// })
 
-	routers.ViewRouter(r)
 	routers.InitRouter(r)
 
 	fmt.Println("The service is running...")

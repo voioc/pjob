@@ -122,7 +122,7 @@
             }
             console.log($("form").serialize());
 
-            // $.post('{{urlfor "AuthController.AjaxSave"}}', $("form").serialize(), function (out) {
+            // $.post('urlfor "AuthController.AjaxSave"', $("form").serialize(), function (out) {
             $.post('save', $("form").serialize(), function (out) {
                 if (out.status == 0) {
                     // layer.msg("操作成功")
@@ -292,7 +292,7 @@
                 return false;
             }
             layer.confirm('确认要删除吗？', {icon: 3, title:'提示'}, function(index){
-                // $.post('{{urlfor "AuthController.AjaxDel"}}', {id:id}, function (out) {
+                // $.post('urlfor "AuthController.AjaxDel"', {id:id}, function (out) {
                 $.post('del', {id:id}, function (out) {
                     if (out.status == 0) {
                         // layer.msg("操作成功")

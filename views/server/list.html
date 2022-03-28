@@ -105,7 +105,7 @@
             } else if(obj.event === 'del'){
                 layer.confirm('真的删除【'+data.server_name+'】服务器资源么', function(index){
                     var jsData = {'id':data.id}
-                    // $.post('{{urlfor "ServerController.AjaxDel"}}', jsData, function (out) {
+                    // $.post('urlfor "ServerController.AjaxDel"', jsData, function (out) {
                     $.post('del', jsData, function (out) {
                         if (out.status == 0) {
                             layer.alert(out.msg, {icon: 1},function(index){

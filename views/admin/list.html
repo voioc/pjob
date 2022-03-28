@@ -114,7 +114,7 @@
                 layer.confirm('真的'+acts+'【'+data.login_name+'】账号么', function(index){
                     var jsData = {'id':data.id,'status':status}
                     $.post('del', jsData, function (out) {
-                    // $.post('{{urlfor "AdminController.AjaxDel"}}', jsData, function (out) {
+                    // $.post('urlfor "AdminController.AjaxDel"', jsData, function (out) {
                         if (out.status == 0) {
                             layer.alert(out.msg, {icon: 1},function(index){
                                 layer.close(index);

@@ -159,7 +159,7 @@ var $,form;
             var data = {'role_name':role_name,'id':id,'detail':detail,'nodes_data':nodes_data,'server_group_ids':server_group_ids,'task_group_ids':task_group_ids}
             // console.log(data);
             // return;
-            // $.post('{{urlfor "RoleController.AjaxSave"}}', data, function (out) {
+            // $.post('urlfor "RoleController.AjaxSave"', data, function (out) {
             $.post('save', data, function (out) {
                 if (out.status == 0) {
                     layer.msg('保存成功了,去列表页查看', {icon: 1,shade:0.3,time:1000},function(index){

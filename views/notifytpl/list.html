@@ -82,14 +82,15 @@
             } else if (obj.event === 'del') {
                 layer.confirm('真的删除【' + data.tpl_name + '】模板么', function (index) {
                     var jsData = {'id': data.id}
-                    $.post('{{urlfor "NotifyTplController.AjaxDel"}}', jsData, function (out) {
+                    // $.post('{{urlfor "NotifyTplController.AjaxDel"}}', jsData, function (out) {
+                    $.post('del', jsData, function (out) {
                         if (out.status == 0) {
-                            layer.alert(out.message, {icon: 1}, function (index) {
+                            layer.alert(out.msg, {icon: 1}, function (index) {
                                 layer.close(index);
                                 window.location.reload();
                             });
                         } else {
-                            layer.msg(out.message)
+                            layer.msg(out.msg)
                         }
                     }, "json");
                     // obj.del();

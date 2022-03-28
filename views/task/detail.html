@@ -202,7 +202,7 @@
                                 window.parent.deleteCurrentTab();
                             })
                         } else {
-                            layer.msg(out.message);
+                            layer.msg(out.msg);
                             return
                         }
                     }, "json");
@@ -224,7 +224,7 @@
 
                             })
                         } else {
-                            layer.msg(out.message)
+                            layer.msg(out.msg)
                             return
                         }
                     }, "json");
@@ -240,7 +240,7 @@
                             window.location.reload()
                         })
                     } else {
-                        layer.msg(out.message)
+                        layer.msg(out.msg)
                         return
                     }
                 }, "json");

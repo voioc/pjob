@@ -266,7 +266,8 @@
                     }
                 }
 
-                $.post('{{urlfor "TaskController.AjaxSave"}}', form_data, function (out) {
+                // $.post('{{urlfor "TaskController.AjaxSave"}}', form_data, function (out) {
+                $.post('save', form_data, function (out) {
                     if (out.status == 0) {
                         layer.msg(okmsg,{icon: 1,shade:0.3,time:1000},function () {
                             // self.location=document.referrer;
@@ -286,7 +287,8 @@
         });
 
         form.on('radio(notify_type)', function (data) {
-            $.post('{{urlfor "TaskController.AjaxNotifyType"}}', {notify_type: data.value}, function (out) {
+            // $.post('{{urlfor "TaskController.AjaxNotifyType"}}', {notify_type: data.value}, function (out) {
+            $.post('ajax/notify/type', {notify_type: data.value}, function (out) {
                 if (out.code == 0) {
                     $('select[name="notify_tpl_id"]').empty();
                     $('<option value="0" selected>请选择</option>').appendTo('select[name="notify_tpl_id"]');

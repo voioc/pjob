@@ -122,15 +122,15 @@
             }
             console.log($("form").serialize());
 
-            $.post('{{urlfor "AuthController.AjaxSave"}}', $("form").serialize(), function (out) {
-
+            // $.post('{{urlfor "AuthController.AjaxSave"}}', $("form").serialize(), function (out) {
+            $.post('save', $("form").serialize(), function (out) {
                 if (out.status == 0) {
                     // layer.msg("操作成功")
                     layer.msg('你成功了', {icon: 1,shade:0.3,time:2000},function(index){
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(out.message)
+                    layer.msg(out.msg)
                 }
             }, "json");
             return false;
@@ -292,14 +292,15 @@
                 return false;
             }
             layer.confirm('确认要删除吗？', {icon: 3, title:'提示'}, function(index){
-                $.post('{{urlfor "AuthController.AjaxDel"}}', {id:id}, function (out) {
+                // $.post('{{urlfor "AuthController.AjaxDel"}}', {id:id}, function (out) {
+                $.post('del', {id:id}, function (out) {
                     if (out.status == 0) {
                         // layer.msg("操作成功")
                         layer.alert('你删除成功了', {icon: 1},function(index){
                             window.location.reload();
                         });
                     } else {
-                        layer.msg(out.message)
+                        layer.msg(out.msg)
                     }
                 }, "json");
             });

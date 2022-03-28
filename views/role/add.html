@@ -1,8 +1,21 @@
-<script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
-<script type="text/javascript" src="/static/zTree3/js/jquery.ztree.core.js"></script>
-<script type="text/javascript" src="/static/zTree3/js/jquery.ztree.excheck.js"></script>
-<script type="text/javascript" src="/static/zTree3/js/jquery.ztree.exedit.js"></script>
+{{ define "role/add.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{.siteName}}</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/admin/css/app.css?t=2">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" media="all">
+    <script src="/static/layui/layui.js"></script>
 
+    <script type="text/javascript" src="/static/admin/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/zTree3/js/jquery.ztree.core.js"></script>
+    <script type="text/javascript" src="/static/zTree3/js/jquery.ztree.excheck.js"></script>
+    <script type="text/javascript" src="/static/zTree3/js/jquery.ztree.exedit.js"></script>
+</head>
+<body>
 <div class="layui-row">
     <div style="margin: 10px 20px">
         <blockquote class="layui-elem-quote">
@@ -142,14 +155,15 @@ var $,form;
 
 
             var data = {'role_name':role_name,'detail':detail,'nodes_data':nodes_data,'server_group_ids':server_group_ids,'task_group_ids':task_group_ids}
-            $.post('{{urlfor "RoleController.AjaxSave"}}', data, function (out) {
+            $.post('save', data, function (out) {
+            // $.post('{{urlfor "RoleController.AjaxSave"}}', data, function (out) {
                 if (out.status == 0) {
                     layer.alert('保存成功了', {icon: 1,shade:0.3,time:1000},function(index){
                         // window.history.go(-1)
                         window.location.reload();
                     });
                 } else {
-                    layer.msg(out.message)
+                    layer.msg(out.msg)
                 }
             }, "json");
             return false;
@@ -234,3 +248,6 @@ var $,form;
 
     // });
 </script>
+</body>
+</html>
+{{ end }}

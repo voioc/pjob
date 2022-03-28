@@ -1,3 +1,16 @@
+{{ define "group/edit.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{.siteName}}</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/admin/css/app.css?t=2">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" media="all">
+    <script src="/static/layui/layui.js"></script>
+</head>
+<body>
 <div class="layui-layout layui-layout-admin" style="padding-left: 40px;margin-top: 20px;">
 
     <form class="layui-form" action="" method="post" >
@@ -41,7 +54,7 @@
         }
         form.on('submit(sub)', function(data){
             var form_data = $("form").serialize();
-            $.post('{{urlfor "GroupController.AjaxSave"}}', form_data, function (out) {
+            $.post('save', form_data, function (out) {
                 if (out.status == 0) {
                     layer.msg("操作成功",{icon: 1,shade:0.5,time:1000},function () {
                         // window.history.go(-1)
@@ -49,7 +62,7 @@
                         window.parent.location.reload();
                     })
                 } else {
-                    layer.msg(out.message)
+                    layer.msg(out.msg)
                 }
             }, "json");
             return false;
@@ -60,3 +73,6 @@
         form.render();
     });
 </script>
+</body>
+</html>
+{{ end }}

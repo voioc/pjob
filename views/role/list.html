@@ -52,7 +52,7 @@
                 //方法级渲染
         table.render({
             elem: '#table_list'
-            ,url: '/role/table'
+            ,url: '{{.uri}}/role/table'
             ,size: 'sm' //小尺寸的表格
             ,cols: [[
                 // {checkbox: true, fixed: true},
@@ -82,7 +82,7 @@
     });
 
     $("#add").on("click",function() {
-        window.parent.openTab("/role/add",'新增角色',"admin_role_add-0",'fa-plus');
+        window.parent.openTab("{{.uri}}/role/add",'新增角色',"admin_role_add-0",'fa-plus');
     })
     //监听工具条
     table.on('tool(table_filter)', function(obj){
@@ -94,7 +94,7 @@
             layer.confirm('真的删除【'+data.role_name+'】角色么', function(index){
             var jsData = {'id':data.id}
             // $.post('urlfor "RoleController.AjaxDel"', jsData, function (out) {
-            $.post('del', jsData, function (out) {
+            $.post('{{.uri}}/role/del', jsData, function (out) {
                 if (out.status == 0) {
                     layer.alert('删除成功了', {icon: 1,shade:0.3,time:1000},function(index){
                         layer.close(index);
@@ -108,7 +108,7 @@
             layer.close(index);
         });
         } else if(obj.event === 'edit'){
-            window.parent.openTab("/role/edit?id="+data.id,role_name+' 角色编辑',"admin_role-"+data.id,'fa-edit');
+            window.parent.openTab("{{.uri}}/role/edit?id="+data.id,role_name+' 角色编辑',"admin_role-"+data.id,'fa-edit');
         }
     });
 });

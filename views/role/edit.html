@@ -160,7 +160,7 @@ var $,form;
             // console.log(data);
             // return;
             // $.post('urlfor "RoleController.AjaxSave"', data, function (out) {
-            $.post('save', data, function (out) {
+            $.post('{{.uri}}/role/save', data, function (out) {
                 if (out.status == 0) {
                     layer.msg('保存成功了,去列表页查看', {icon: 1,shade:0.3,time:1000},function(index){
                         // layer.close(index);
@@ -204,7 +204,7 @@ var $,form;
             var time   = Date.parse(new Date());
             $.ajax({
                 type: "POST",
-                url: "/auth/getnodes",
+                url: "{{.uri}}/auth/getnodes",
                 data: {time:time},
                 dataType: 'json',
                 success: function(data) {

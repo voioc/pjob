@@ -8,6 +8,7 @@
 package controllers
 
 import (
+	"net/http"
 	"strings"
 	"time"
 
@@ -15,71 +16,109 @@ import (
 
 	"strconv"
 
-	"github.com/astaxie/beego"
-	"github.com/voioc/pjob/models"
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/service"
+	"github.com/voioc/cjob/utils"
 )
 
 type GroupController struct {
 	BaseController
 }
 
-func (self *GroupController) List() {
-	self.Data["pageTitle"] = "任务分组管理"
-	self.display()
+func (self *GroupController) List(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+	data["pageTitle"] = "任务分组管理"
+
+	// self.display()
+
+	c.HTML(http.StatusOK, "group/list.html", data)
 }
 
-func (self *GroupController) Add() {
-	self.Data["pageTitle"] = "新增分组"
-	self.Data["hideTop"] = true
-	self.display()
+func (self *GroupController) Add(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+	data["pageTitle"] = "新增分组"
+	data["hideTop"] = true
+	// self.display()
+
+	c.HTML(http.StatusOK, "group/add.html", data)
 }
-func (self *GroupController) Edit() {
-	self.Data["pageTitle"] = "编辑分组"
-	self.Data["hideTop"] = true
-	id, _ := self.GetInt("id", 0)
+func (self *GroupController) Edit(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
+	data["pageTitle"] = "编辑分组"
+	data["hideTop"] = true
+
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	group, _ := models.GroupGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = group.Id
 	row["group_name"] = group.GroupName
 	row["description"] = group.Description
-	self.Data["group"] = row
-	self.display()
+	data["group"] = row
+
+	// self.display()
+	c.HTML(http.StatusOK, "group/edit.html", data)
 }
 
-func (self *GroupController) AjaxSave() {
+func (self *GroupController) AjaxSave(c *gin.Context) {
+
 	group := new(models.Group)
-	group.GroupName = strings.TrimSpace(self.GetString("group_name"))
-	group.Description = strings.TrimSpace(self.GetString("description"))
+	group.GroupName = strings.TrimSpace(c.DefaultPostForm("group_name", ""))
+	group.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	group.Status = 1
 
-	group_id, _ := self.GetInt("id")
-
+	group_id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	fmt.Println(group_id)
+
+	uid := c.GetInt("uid")
 	if group_id == 0 {
 		//新增
 		group.CreateTime = time.Now().Unix()
 		group.UpdateTime = time.Now().Unix()
-		group.CreateId = self.userId
-		group.UpdateId = self.userId
+		group.CreateId = uid
+		group.UpdateId = uid
 		if _, err := models.GroupAdd(group); err != nil {
-			self.ajaxMsg(err.Error(), MSG_ERR)
+			// self.ajaxMsg(err.Error(), MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+			return
 		}
-		self.ajaxMsg("", MSG_OK)
+		// self.ajaxMsg("", MSG_OK)
+		c.JSON(http.StatusOK, common.Success(c))
+		return
 	}
 	//修改
 	group.Id = group_id
 	group.UpdateTime = time.Now().Unix()
 	group.UpdateId = self.userId
 	if err := group.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *GroupController) AjaxDel() {
+func (self *GroupController) AjaxDel(c *gin.Context) {
 
-	group_id, _ := self.GetInt("id")
-	group, _ := models.GroupGetById(group_id)
+	group_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	group, err := models.GroupGetById(group_id)
+	if err != nil || group.Id == 0 {
+		msg := "内部错误"
+		if err != nil {
+			msg = err.Error()
+		}
+
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, msg))
+		return
+	}
+
 	group.Status = 0
 	group.Id = group_id
 	group.UpdateTime = time.Now().Unix()
@@ -91,31 +130,33 @@ func (self *GroupController) AjaxDel() {
 	//if n > 0 {
 	//	self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 	//}
+
 	if err := group.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+	// self.ajaxMsg("", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *GroupController) Table() {
-	//列表
-	page, err := self.GetInt("page")
-	if err != nil {
-		page = 1
-	}
-	limit, err := self.GetInt("limit")
-	if err != nil {
-		limit = 30
-	}
+func (self *GroupController) Table(c *gin.Context) {
+	uid := c.GetInt("uid")
 
-	groupName := strings.TrimSpace(self.GetString("groupName"))
-	self.pageSize = limit
+	//列表
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pagesize", "20"))
+
+	groupName := strings.TrimSpace(c.DefaultQuery("groupName", ""))
+	// self.pageSize = limit
+
 	//查询条件
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
 
-	if self.userId != 1 {
-		groups := strings.Split(self.taskGroups, ",")
+	if uid != 1 {
+		tg, _ := service.TaskGroups(uid, c.GetString("role_id"))
+		groups := strings.Split(tg, ",")
 
 		groupsIds := make([]int, 0)
 		for _, v := range groups {
@@ -127,16 +168,19 @@ func (self *GroupController) Table() {
 	if groupName != "" {
 		filters = append(filters, "group_name__contains", groupName)
 	}
-	result, count := models.GroupGetList(page, self.pageSize, filters...)
+	result, count := models.GroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["id"] = v.Id
 		row["group_name"] = v.GroupName
 		row["description"] = v.Description
-		row["create_time"] = beego.Date(time.Unix(v.CreateTime, 0), "Y-m-d H:i:s")
-		row["update_time"] = beego.Date(time.Unix(v.UpdateTime, 0), "Y-m-d H:i:s")
+		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
-	self.ajaxList("成功", MSG_OK, count, list)
+
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }

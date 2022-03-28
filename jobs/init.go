@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/models"
 )
 
 func InitJobs() {

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/voioc/pjob/libs"
+	"github.com/voioc/cjob/libs"
 )
 
 type Dingtalk struct {

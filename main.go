@@ -13,9 +13,9 @@ import (
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/models"
-	"github.com/voioc/pjob/routers"
-	_ "github.com/voioc/pjob/routers"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/routers"
+	_ "github.com/voioc/cjob/routers"
 )
 
 func init() {

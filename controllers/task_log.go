@@ -14,10 +14,10 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/common"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
-	"github.com/voioc/pjob/service"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/service"
 
 	"strings"
 	"time"

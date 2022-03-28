@@ -1,4 +1,17 @@
-<div class="layui-layout layui-layout-admin" style="padding-left: 40px;margin-top: 20px;">
+{{ define "notify/edit.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{.siteName}}</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/admin/css/app.css?t=2">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" media="all">
+    <script src="/static/layui/layui.js"></script>
+</head>
+<body>
+    <div class="layui-layout layui-layout-admin" style="padding-left: 40px;margin-top: 20px;">
 
     <form class="layui-form" action="" method="post">
 
@@ -88,7 +101,7 @@
         form.on('submit(sub)', function (data) {
             var form_data = $("form").serialize();
             // $.post('urlfor "NotifyTplController.AjaxSave"', form_data, function (out) {
-            $.post('save', form_data, function (out) {
+            $.post('{{.uri}}/notify/save', form_data, function (out) {
                 if (out.status == 0) {
                     layer.msg("操作成功", {icon: 1, shade: 0.3, time: 1000}, function () {
                         window.parent.deleteCurrentTab();
@@ -114,3 +127,6 @@
         form.render();
     });
 </script>
+</body>
+</html>
+{{ end }}

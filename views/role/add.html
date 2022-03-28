@@ -155,7 +155,7 @@ var $,form;
 
 
             var data = {'role_name':role_name,'detail':detail,'nodes_data':nodes_data,'server_group_ids':server_group_ids,'task_group_ids':task_group_ids}
-            $.post('save', data, function (out) {
+            $.post('{{.uri}}/role/save', data, function (out) {
             // $.post('urlfor "RoleController.AjaxSave"', data, function (out) {
                 if (out.status == 0) {
                     layer.alert('保存成功了', {icon: 1,shade:0.3,time:1000},function(index){
@@ -196,8 +196,8 @@ var $,form;
         {
             var time   = Date.parse(new Date());
             $.ajax({
-                type: "POST",
-                url: "/auth/getnodes",
+                type: "GET",
+                url: "{{.uri}}/auth/getnodes",
                 data: {time:time},
                 dataType: 'json',
                 success: function(data) {

@@ -63,7 +63,7 @@
         //方法级渲染
         table.render({
             elem: '#table_list'
-            ,url: '/server/table'
+            ,url: '{{.uri}}/server/table'
             ,size: 'sm' //小尺寸的表格
             ,cols: [[
                 // {checkbox: true, fixed: true},
@@ -93,7 +93,7 @@
         };
 
         $("#add").on("click",function() {
-            window.parent.openTab("/server/add",'新增资源',"admin_server_add-0",'fa-plus');
+            window.parent.openTab("{{.uri}}/server/add",'新增资源',"admin_server_add-0",'fa-plus');
         })
 
         //监听工具条
@@ -101,12 +101,12 @@
             var data = obj.data;
             var server_name = data.server_name
             if(obj.event === 'edit'){
-                window.parent.openTab("/server/edit?id="+data.id,server_name+'编辑',"admin_server_edit-"+data.id,'fa-edit');
+                window.parent.openTab("{{.uri}}/server/edit?id="+data.id,server_name+'编辑',"admin_server_edit-"+data.id,'fa-edit');
             } else if(obj.event === 'del'){
                 layer.confirm('真的删除【'+data.server_name+'】服务器资源么', function(index){
                     var jsData = {'id':data.id}
                     // $.post('urlfor "ServerController.AjaxDel"', jsData, function (out) {
-                    $.post('del', jsData, function (out) {
+                    $.post('{{.uri}}/server/del', jsData, function (out) {
                         if (out.status == 0) {
                             layer.alert(out.msg, {icon: 1},function(index){
                                 layer.close(index);
@@ -121,7 +121,7 @@
                 })
                 
             } else if(obj.event === 'copy'){
-                window.parent.openTab("/server/copy?id="+data.id,server_name+'复制',"admin_server_copy-"+data.id,'fa-copy');
+                window.parent.openTab("{{.uri}}/server/copy?id="+data.id,server_name+'复制',"admin_server_copy-"+data.id,'fa-copy');
                 // window.location.href="/server/copy?id="+data.id
             }else{
                 layer.msg('操作不存在');

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
 )
 
 type UserController struct {

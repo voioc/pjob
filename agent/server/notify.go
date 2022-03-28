@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/voioc/pjob/libs"
+	"github.com/voioc/cjob/libs"
 )
 
 //启动时注册

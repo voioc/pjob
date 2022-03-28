@@ -13,8 +13,8 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
 )
 
 const (

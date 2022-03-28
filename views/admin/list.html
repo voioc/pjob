@@ -57,7 +57,7 @@
         //方法级渲染
         table.render({
             elem: '#table_list'
-            ,url: '/admin/table'
+            ,url: '{{.uri}}/admin/table'
             ,size: 'sm' //小尺寸的表格
             ,cols: [[
                 // {checkbox: true, fixed: true},
@@ -88,7 +88,7 @@
         };
 
         $("#add").on("click",function() {
-            window.parent.openTab("/admin/add",'新增用户',"admin_user_add-0",'fa-plus');
+            window.parent.openTab("{{.uri}}/admin/add",'新增用户',"admin_user_add-0",'fa-plus');
         })
 
         //监听工具条
@@ -97,7 +97,7 @@
             var real_name = data.real_name;
             if(obj.event === 'edit'){
                 // window.location.href="/admin/edit?id="+data.id
-                window.parent.openTab("/admin/edit?id="+data.id,real_name+' 用户编辑',"admin_user_edit-"+data.id,'fa-edit');
+                window.parent.openTab("{{.uri}}/admin/edit?id="+data.id,real_name+' 用户编辑',"admin_user_edit-"+data.id,'fa-edit');
             } else if(obj.event === 'status'){
 
                 acts = "禁用";
@@ -113,7 +113,7 @@
 
                 layer.confirm('真的'+acts+'【'+data.login_name+'】账号么', function(index){
                     var jsData = {'id':data.id,'status':status}
-                    $.post('del', jsData, function (out) {
+                    $.post('{{.uri}}/admin/del', jsData, function (out) {
                     // $.post('urlfor "AdminController.AjaxDel"', jsData, function (out) {
                         if (out.status == 0) {
                             layer.alert(out.msg, {icon: 1},function(index){

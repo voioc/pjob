@@ -5,7 +5,7 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/voioc/pjob/agent/server"
+	"github.com/voioc/cjob/agent/server"
 )
 
 //文件配置路径

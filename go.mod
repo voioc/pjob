@@ -1,4 +1,4 @@
-module github.com/voioc/pjob
+module github.com/voioc/cjob
 
 go 1.17
 

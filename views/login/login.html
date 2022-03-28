@@ -1,3 +1,4 @@
+{{ define "login/login.html" }}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
@@ -45,11 +46,12 @@
             })
             return;
         }
+        
         form.on('submit(login)', function(data){
             var form_data = $("form").serialize();
             $.post('{{.url}}', form_data, function (out) {
                 if (out.code == 0) {
-                    layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
+                    layer.msg("操作成功",{icon: 1, shade:0.3, time:1000},function () {
                         window.location.href="/home"
                     })
                 } else {
@@ -63,6 +65,7 @@
 </script>
 </body>
 </html>
+{{ end }}
 
 
 

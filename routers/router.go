@@ -2,8 +2,8 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/controllers"
-	"github.com/voioc/pjob/middleware"
+	"github.com/voioc/cjob/controllers"
+	"github.com/voioc/cjob/middleware"
 )
 
 func InitRouter(engine *gin.Engine) {
@@ -43,6 +43,35 @@ func InitRouter(engine *gin.Engine) {
 		"views/task/copy.html",
 		"views/tasklog/list.html",
 		"views/tasklog/detail.html",
+		"views/group/list.html",
+		"views/group/add.html",
+		"views/group/edit.html",
+		"views/server/add.html",
+		"views/server/copy.html",
+		"views/server/edit.html",
+		"views/server/list.html",
+
+		"views/servergroup/add.html",
+		"views/servergroup/edit.html",
+		"views/servergroup/list.html",
+
+		"views/ban/add.html",
+		"views/ban/edit.html",
+		"views/ban/list.html",
+
+		"views/notify/add.html",
+		"views/notify/edit.html",
+		"views/notify/list.html",
+
+		"views/admin/add.html",
+		"views/admin/edit.html",
+		"views/admin/list.html",
+
+		"views/role/add.html",
+		"views/role/edit.html",
+		"views/role/list.html",
+
+		"views/auth/list.html",
 	)
 
 	loginC := controllers.LoginController{}
@@ -101,6 +130,70 @@ func InitRouter(engine *gin.Engine) {
 		r.GET("/tasklog/detail", taskLogC.Detail)
 		r.GET("/tasklog/ajaxdel", taskLogC.AjaxDel)
 
+		groupC := controllers.GroupController{}
+		r.GET("/group/list", groupC.List)
+		r.GET("/group/table", groupC.Table)
+		r.GET("/group/add", groupC.Add)
+		r.GET("/group/edit", groupC.Edit)
+		r.POST("/group/save", groupC.AjaxSave)
+		r.POST("/group/del", groupC.AjaxDel)
+
+		serverC := controllers.ServerController{}
+		r.GET("/server/list", serverC.List)
+		r.GET("/server/table", serverC.Table)
+		r.GET("/server/add", serverC.Add)
+		r.GET("/server/edit", serverC.Edit)
+		r.POST("/server/save", serverC.AjaxSave)
+		r.POST("/server/del", serverC.AjaxDel)
+		r.POST("/server/test", serverC.AjaxTestServer)
+
+		serverGroupC := controllers.ServerGroupController{}
+		r.GET("/servergroup/list", serverGroupC.List)
+		r.GET("/server/group/table", serverGroupC.Table)
+		r.GET("/server/group/add", serverGroupC.Add)
+		r.GET("/server/group/edit", serverGroupC.Edit)
+		r.POST("/server/group/save", serverGroupC.AjaxSave)
+		r.POST("/server/group/del", serverGroupC.AjaxDel)
+
+		banC := controllers.BanController{}
+		r.GET("/ban/list", banC.List)
+		r.GET("/ban/table", banC.Table)
+		r.GET("/ban/add", banC.Add)
+		r.GET("/ban/edit", banC.Edit)
+		r.POST("/ban/save", banC.AjaxSave)
+		r.POST("/ban/del", banC.AjaxDel)
+
+		notifyC := controllers.NotifyController{}
+		r.GET("/notifytpl/list", notifyC.List)
+		r.GET("/notify/table", notifyC.Table)
+		r.GET("/notify/add", notifyC.Add)
+		r.GET("/notify/edit", notifyC.Edit)
+		r.POST("/notify/save", notifyC.AjaxSave)
+		r.POST("/notify/del", notifyC.AjaxDel)
+
+		adminC := controllers.AdminController{}
+		r.GET("/admin/list", adminC.List)
+		r.GET("/admin/table", adminC.Table)
+		r.GET("/admin/add", adminC.Add)
+		r.GET("/admin/edit", adminC.Edit)
+		r.POST("/admin/save", adminC.AjaxSave)
+		r.POST("/admin/del", adminC.AjaxDel)
+
+		roleC := controllers.RoleController{}
+		r.GET("/role/list", roleC.List)
+		r.GET("/role/table", roleC.Table)
+		r.GET("/role/add", roleC.Add)
+		r.GET("/role/edit", roleC.Edit)
+		r.POST("/role/save", roleC.AjaxSave)
+		r.POST("/role/del", roleC.AjaxDel)
+
+		authC := controllers.AuthController{}
+		// r.GET("/auth/index", authC.Index)
+		r.GET("/auth/list", authC.List)
+		r.GET("/auth/getnodes", authC.GetNodes)
+		r.GET("/auth/getnode", authC.GetNode)
+		r.POST("/auth/save", authC.AjaxSave)
+		r.POST("/auth/del", authC.AjaxDel)
 	}
 
 }

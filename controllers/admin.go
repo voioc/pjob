@@ -9,27 +9,37 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/utils"
 )
 
 type AdminController struct {
 	BaseController
 }
 
-func (self *AdminController) List() {
-	self.Data["pageTitle"] = "管理员管理"
-	self.display()
-	//self.TplName = "admin/list.html"
+func (self *AdminController) List(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
+	data["pageTitle"] = "管理员管理"
+
+	// self.display()
+	c.HTML(http.StatusOK, "admin/list.html", data)
 }
 
-func (self *AdminController) Add() {
-	self.Data["pageTitle"] = "新增管理员"
+func (self *AdminController) Add(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
+	data["pageTitle"] = "新增管理员"
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
@@ -42,15 +52,19 @@ func (self *AdminController) Add() {
 		list[k] = row
 	}
 
-	self.Data["role"] = list
+	data["role"] = list
 
-	self.display()
+	// self.display()
+	c.HTML(http.StatusOK, "admin/add.html", data)
 }
 
-func (self *AdminController) Edit() {
-	self.Data["pageTitle"] = "编辑管理员"
+func (self *AdminController) Edit(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 
-	id, _ := self.GetInt("id", 0)
+	data["pageTitle"] = "编辑管理员"
+
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	Admin, _ := models.AdminGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = Admin.Id
@@ -61,7 +75,7 @@ func (self *AdminController) Edit() {
 	row["dingtalk"] = Admin.Dingtalk
 	row["wechat"] = Admin.Wechat
 	row["role_ids"] = Admin.RoleIds
-	self.Data["admin"] = row
+	data["admin"] = row
 
 	role_ids := strings.Split(Admin.RoleIds, ",")
 
@@ -83,60 +97,69 @@ func (self *AdminController) Edit() {
 		row["role_name"] = v.RoleName
 		list[k] = row
 	}
-	self.Data["role"] = list
-	self.display()
+	data["role"] = list
+	// self.display()
+
+	c.HTML(http.StatusOK, "admin/edit.html", data)
 }
 
-func (self *AdminController) AjaxSave() {
-	Admin_id, _ := self.GetInt("id")
-	if Admin_id == 0 {
+func (self *AdminController) AjaxSave(c *gin.Context) {
+	uid := c.GetInt("uid")
+	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	if id == 0 {
 		Admin := new(models.Admin)
-		Admin.LoginName = strings.TrimSpace(self.GetString("login_name"))
-		Admin.RealName = strings.TrimSpace(self.GetString("real_name"))
-		Admin.Phone = strings.TrimSpace(self.GetString("phone"))
-		Admin.Email = strings.TrimSpace(self.GetString("email"))
-		Admin.Dingtalk = strings.TrimSpace(self.GetString("dingtalk"))
-		Admin.Wechat = strings.TrimSpace(self.GetString("wechat"))
-		Admin.RoleIds = strings.TrimSpace(self.GetString("roleids"))
+		Admin.LoginName = strings.TrimSpace(c.DefaultPostForm("login_name", ""))
+		Admin.RealName = strings.TrimSpace(c.DefaultPostForm("real_name", ""))
+		Admin.Phone = strings.TrimSpace(c.DefaultPostForm("phone", ""))
+		Admin.Email = strings.TrimSpace(c.DefaultPostForm("email", ""))
+		Admin.Dingtalk = strings.TrimSpace(c.DefaultPostForm("dingtalk", ""))
+		Admin.Wechat = strings.TrimSpace(c.DefaultPostForm("wechat", ""))
+		Admin.RoleIds = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
 		Admin.UpdateTime = time.Now().Unix()
-		Admin.UpdateId = self.userId
+		Admin.UpdateId = uid
 		Admin.Status = 1
 
 		// 检查登录名是否已经存在
 		_, err := models.AdminGetByName(Admin.LoginName)
 
 		if err == nil {
-			self.ajaxMsg("登录名已经存在", MSG_ERR)
+			// self.ajaxMsg("登录名已经存在", MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "登录名已经存在"))
+			return
 		}
 		//新增
 		pwd, salt := libs.Password(4, "")
 		Admin.Password = pwd
 		Admin.Salt = salt
 		Admin.CreateTime = time.Now().Unix()
-		Admin.CreateId = self.userId
+		Admin.CreateId = uid
 		if _, err := models.AdminAdd(Admin); err != nil {
-			self.ajaxMsg(err.Error(), MSG_ERR)
+			// self.ajaxMsg(err.Error(), MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+			return
 		}
-		self.ajaxMsg("", MSG_OK)
+
+		// self.ajaxMsg("", MSG_OK)
+		c.JSON(http.StatusOK, common.Success(c))
+		return
 	}
 
-	Admin, _ := models.AdminGetById(Admin_id)
+	Admin, _ := models.AdminGetById(id)
 	//修改
-	Admin.Id = Admin_id
+	// Admin.Id = id
 	Admin.UpdateTime = time.Now().Unix()
-	Admin.UpdateId = self.userId
-	Admin.LoginName = strings.TrimSpace(self.GetString("login_name"))
-	Admin.RealName = strings.TrimSpace(self.GetString("real_name"))
-	Admin.Phone = strings.TrimSpace(self.GetString("phone"))
-	Admin.Email = strings.TrimSpace(self.GetString("email"))
-	Admin.Dingtalk = strings.TrimSpace(self.GetString("dingtalk"))
-	Admin.Wechat = strings.TrimSpace(self.GetString("wechat"))
-	Admin.RoleIds = strings.TrimSpace(self.GetString("roleids"))
+	Admin.UpdateId = uid
+	Admin.LoginName = strings.TrimSpace(c.DefaultPostForm("login_name", ""))
+	Admin.RealName = strings.TrimSpace(c.DefaultPostForm("real_name", ""))
+	Admin.Phone = strings.TrimSpace(c.DefaultPostForm("phone", ""))
+	Admin.Email = strings.TrimSpace(c.DefaultPostForm("email", ""))
+	Admin.Dingtalk = strings.TrimSpace(c.DefaultPostForm("dingtalk", ""))
+	Admin.Wechat = strings.TrimSpace(c.DefaultPostForm("wechat", ""))
+	Admin.RoleIds = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
 	Admin.UpdateTime = time.Now().Unix()
-	Admin.UpdateId = self.userId
 	Admin.Status = 1
 
-	resetPwd, _ := self.GetInt("reset_pwd")
+	resetPwd, _ := strconv.Atoi(c.DefaultPostForm("reset_pwd", "0"))
 	if resetPwd == 1 {
 		pwd, salt := libs.Password(4, "")
 		Admin.Password = pwd
@@ -144,63 +167,69 @@ func (self *AdminController) AjaxSave() {
 	}
 
 	//普通管理员不可修改超级管理员资料
-	if self.userId != 1 && Admin.Id == 1 {
-		self.ajaxMsg("不可修改超级管理员资料", MSG_ERR)
+	if uid != 1 && Admin.Id == 1 {
+		// self.ajaxMsg("不可修改超级管理员资料", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "不可修改超级管理员资料"))
+		return
 	}
 	if err := Admin.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg(strconv.Itoa(resetPwd), MSG_OK)
+
+	// self.ajaxMsg(strconv.Itoa(resetPwd), MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *AdminController) AjaxDel() {
+func (self *AdminController) AjaxDel(c *gin.Context) {
 
-	Admin_id, _ := self.GetInt("id")
-	status := strings.TrimSpace(self.GetString("status"))
-	if Admin_id == 1 {
-		self.ajaxMsg("超级管理员不允许操作", MSG_ERR)
+	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	status := strings.TrimSpace(c.DefaultPostForm("status", "0"))
+	if id == 1 {
+		// self.ajaxMsg("超级管理员不允许操作", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "超级管理员不允许操作"))
+		return
 	}
 
 	Admin_status := 0
 	if status == "enable" {
 		Admin_status = 1
 	}
-	Admin, _ := models.AdminGetById(Admin_id)
+
+	Admin, _ := models.AdminGetById(id)
 	Admin.UpdateTime = time.Now().Unix()
 	Admin.Status = Admin_status
-	Admin.Id = Admin_id
+	Admin.Id = id
 
 	if err := Admin.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("操作成功", MSG_OK)
+
+	// self.ajaxMsg("操作成功", MSG_OK)
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *AdminController) Table() {
+func (self *AdminController) Table(c *gin.Context) {
 	//列表
-	page, err := self.GetInt("page")
-	if err != nil {
-		page = 1
-	}
-	limit, err := self.GetInt("limit")
-	if err != nil {
-		limit = 30
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pagesize", "20"))
 
-	realName := strings.TrimSpace(self.GetString("realName"))
+	realName := strings.TrimSpace(c.DefaultQuery("realName", ""))
 
 	StatusText := make(map[int]string)
 	StatusText[0] = "<font color='red'>禁用</font>"
 	StatusText[1] = "正常"
 
-	self.pageSize = limit
 	//查询条件
 	filters := make([]interface{}, 0)
-	//
 	if realName != "" {
 		filters = append(filters, "real_name__icontains", realName)
 	}
-	result, count := models.AdminGetList(page, self.pageSize, filters...)
+
+	result, count := models.AdminGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -212,11 +241,14 @@ func (self *AdminController) Table() {
 		row["dingtalk"] = v.Dingtalk
 		row["wechat"] = v.Wechat
 		row["role_ids"] = v.RoleIds
-		row["create_time"] = beego.Date(time.Unix(v.CreateTime, 0), "Y-m-d H:i:s")
-		row["update_time"] = beego.Date(time.Unix(v.UpdateTime, 0), "Y-m-d H:i:s")
+		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
 		row["status"] = v.Status
 		row["status_text"] = StatusText[v.Status]
 		list[k] = row
 	}
-	self.ajaxList("成功", MSG_OK, count, list)
+
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }

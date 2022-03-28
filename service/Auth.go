@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/models"
 )
 
 func Menu(uid int) (map[string][]map[string]interface{}, error) {

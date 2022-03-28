@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
 
 	"runtime"
 	"strconv"
@@ -32,7 +32,7 @@ import (
 
 	"github.com/astaxie/beego"
 	gote "github.com/linxiaozhi/go-telnet"
-	"github.com/voioc/pjob/notify"
+	"github.com/voioc/cjob/notify"
 	"golang.org/x/crypto/ssh"
 )
 

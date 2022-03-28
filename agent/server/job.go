@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	. "github.com/voioc/pjob/jobs"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/models"
+	. "github.com/voioc/cjob/jobs"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/models"
 )
 
 //执行句柄map

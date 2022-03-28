@@ -2,7 +2,7 @@ package service
 
 import (
 	"github.com/astaxie/beego/orm"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/models"
 )
 
 func AdminGetById(id int) (*models.Admin, error) {

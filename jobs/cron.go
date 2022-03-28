@@ -11,7 +11,7 @@ import (
 	"sync"
 
 	"github.com/astaxie/beego"
-	cron "github.com/voioc/pjob/crons"
+	cron "github.com/voioc/cjob/crons"
 )
 
 var (

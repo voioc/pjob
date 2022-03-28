@@ -7,7 +7,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/pkg/errors"
-	"github.com/voioc/pjob/libs"
+	"github.com/voioc/cjob/libs"
 )
 
 type WechatAjaxReturn struct {

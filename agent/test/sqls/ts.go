@@ -7,7 +7,7 @@
 *************************************************************/
 package main
 
-import "github.com/voioc/pjob/models"
+import "github.com/voioc/cjob/models"
 
 func main() {
 

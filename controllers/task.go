@@ -15,14 +15,14 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/common"
-	"github.com/voioc/pjob/libs"
-	"github.com/voioc/pjob/service"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/service"
 
 	"github.com/astaxie/beego"
-	cron "github.com/voioc/pjob/crons"
-	"github.com/voioc/pjob/jobs"
-	"github.com/voioc/pjob/models"
+	cron "github.com/voioc/cjob/crons"
+	"github.com/voioc/cjob/jobs"
+	"github.com/voioc/cjob/models"
 )
 
 type TaskController struct {

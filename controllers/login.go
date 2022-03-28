@@ -12,7 +12,9 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/common"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/utils"
+	"html/template"
 )
 
 type LoginController struct {
@@ -23,7 +25,13 @@ func (self *LoginController) Login(c *gin.Context) {
 	//if self.userId > 0 {
 	//	self.redirect(beego.URLFor("HomeController.Index"))
 	//}
-	// c.StaticFile("index", "login/login.html")
+	// c.HTML("index", "login.html")
+
+	// data := map[string]interface{}{"url"}
+	fm := template.FuncMap{
+		"url": utils.URI("login_in"),
+	}
+	c.HTML(http.StatusOK, "login/login.html", fm)
 }
 
 //登录 TODO:XSRF过滤
@@ -49,7 +57,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	// 			user.Update()
 	// 			authkey := libs.Md5([]byte(self.getClientIp() + "|" + user.Password + user.Salt))
 	// self.Ctx.SetCookie("auth", strconv.Itoa(user.Id)+"|"+authkey, 7*86400)
-	c.SetCookie("auth", "1|authkey", 7*86400, "/", "localhost", false, true)
+	c.SetCookie("auth", "1|authkey", 7*86400, "/", "127.0.0.1", false, true)
 
 	// 			self.ajaxMsg("登录成功", MSG_OK)
 	// 		}

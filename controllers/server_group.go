@@ -8,6 +8,7 @@
 package controllers
 
 import (
+	"net/http"
 	"strings"
 	"time"
 
@@ -16,70 +17,97 @@ import (
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/voioc/pjob/models"
+	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/service"
+	"github.com/voioc/cjob/utils"
 )
 
 type ServerGroupController struct {
 	BaseController
 }
 
-func (self *ServerGroupController) List() {
-	self.Data["pageTitle"] = "资源分组管理"
-	self.display()
+func (self *ServerGroupController) List(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
+	data["pageTitle"] = "资源分组管理"
+	// self.display()
+	c.HTML(http.StatusOK, "servergroup/list.html", data)
 }
 
-func (self *ServerGroupController) Add() {
-	self.Data["pageTitle"] = "新增分组"
-	self.Data["hideTop"] = true
-	self.display()
-}
-func (self *ServerGroupController) Edit() {
-	self.Data["pageTitle"] = "编辑分组"
-	self.Data["hideTop"] = true
+func (self *ServerGroupController) Add(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 
-	id, _ := self.GetInt("id", 0)
+	data["pageTitle"] = "新增分组"
+	data["hideTop"] = true
+
+	// self.display()
+	c.HTML(http.StatusOK, "servergroup/add.html", data)
+}
+func (self *ServerGroupController) Edit(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
+	data["pageTitle"] = "编辑分组"
+	data["hideTop"] = true
+
+	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	group, _ := models.TaskGroupGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = group.Id
 	row["group_name"] = group.GroupName
 	row["description"] = group.Description
-	self.Data["group"] = row
-	self.display()
+	data["group"] = row
+
+	// self.display()
+	c.HTML(http.StatusOK, "servergroup/edit.html", data)
 }
 
-func (self *ServerGroupController) AjaxSave() {
+func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 	servergroup := new(models.ServerGroup)
-	servergroup.GroupName = strings.TrimSpace(self.GetString("group_name"))
-	servergroup.Description = strings.TrimSpace(self.GetString("description"))
+	servergroup.GroupName = strings.TrimSpace(c.DefaultPostForm("group_name", ""))
+	servergroup.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	servergroup.Status = 1
 
-	servergroup_id, _ := self.GetInt("id")
+	servergroup_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 
 	fmt.Println(servergroup_id)
+	uid := c.GetInt("uid")
 	if servergroup_id == 0 {
 		//新增
 		servergroup.CreateTime = time.Now().Unix()
 		servergroup.UpdateTime = time.Now().Unix()
-		servergroup.CreateId = self.userId
-		servergroup.UpdateId = self.userId
+		servergroup.CreateId = uid
+		servergroup.UpdateId = uid
 		if _, err := models.ServerGroupAdd(servergroup); err != nil {
-			self.ajaxMsg(err.Error(), MSG_ERR)
+			// self.ajaxMsg(err.Error(), MSG_ERR)
+			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+			return
 		}
-		self.ajaxMsg("", MSG_OK)
+
+		c.JSON(http.StatusOK, common.Success(c))
+		return
 	}
+
 	//修改
 	servergroup.Id = servergroup_id
 	servergroup.UpdateTime = time.Now().Unix()
-	servergroup.UpdateId = self.userId
+	servergroup.UpdateId = uid
 	if err := servergroup.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *ServerGroupController) AjaxDel() {
+func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 
-	group_id, _ := self.GetInt("id")
+	group_id, _ := strconv.Atoi(c.PostForm("id"))
 	group, _ := models.TaskGroupGetById(group_id)
 	group.Status = 0
 	group.Id = group_id
@@ -90,33 +118,33 @@ func (self *ServerGroupController) AjaxDel() {
 	filters = append(filters, "status", 0)
 	_, n := models.TaskServerGetList(1, 1, filters...)
 	if n > 0 {
-		self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
+		// self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "分组下有服务器资源，请先处理"))
+		return
 	}
 	if err := group.Update(); err != nil {
-		self.ajaxMsg(err.Error(), MSG_ERR)
+		// self.ajaxMsg(err.Error(), MSG_ERR)
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
-	self.ajaxMsg("", MSG_OK)
+
+	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *ServerGroupController) Table() {
+func (self *ServerGroupController) Table(c *gin.Context) {
 	//列表
-	page, err := self.GetInt("page")
-	if err != nil {
-		page = 1
-	}
-	limit, err := self.GetInt("limit")
-	if err != nil {
-		limit = 30
-	}
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pagesize", "20"))
 
-	groupName := strings.TrimSpace(self.GetString("groupName"))
-	self.pageSize = limit
+	groupName := strings.TrimSpace(c.DefaultQuery("groupName", ""))
 	//查询条件
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
 
-	if self.userId != 1 {
-		groups := strings.Split(self.serverGroups, ",")
+	uid := c.GetInt("uid")
+	if uid != 1 {
+		_, sg := service.TaskGroups(uid, c.GetString("role_id"))
+		groups := strings.Split(sg, ",")
 
 		groupsIds := make([]int, 0)
 		for _, v := range groups {
@@ -128,7 +156,7 @@ func (self *ServerGroupController) Table() {
 	if groupName != "" {
 		filters = append(filters, "group_name__contains", groupName)
 	}
-	result, count := models.ServerGroupGetList(page, self.pageSize, filters...)
+	result, count := models.ServerGroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -139,5 +167,8 @@ func (self *ServerGroupController) Table() {
 		row["update_time"] = beego.Date(time.Unix(v.UpdateTime, 0), "Y-m-d H:i:s")
 		list[k] = row
 	}
-	self.ajaxList("成功", MSG_OK, count, list)
+
+	// self.ajaxList("成功", MSG_OK, count, list)
+	ext := map[string]int{"count": int(count)}
+	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }

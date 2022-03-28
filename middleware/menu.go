@@ -1,17 +1,19 @@
 package middleware
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/pjob/models"
-	"github.com/voioc/pjob/service"
+	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/service"
 )
 
 func Menu() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		cookie, _ := c.Cookie("auth")
+		fmt.Println("cookie: ", cookie)
 		arr := strings.Split(cookie, "|")
 
 		uid := 1

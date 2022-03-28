@@ -19,8 +19,8 @@ import (
 
 	gote "github.com/linxiaozhi/go-telnet"
 	"github.com/pkg/errors"
-	"github.com/voioc/pjob/common"
-	"github.com/voioc/pjob/models"
+	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/models"
 	"golang.org/x/crypto/ssh"
 )
 

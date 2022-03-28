@@ -48,7 +48,8 @@
             </tr>
             <tr>
                 <td>任务状态</td>
-                <td>{{.TextStatus|str2html}}</td>
+                <!-- <td>.TextStatus|str2html</td> -->
+                <td>{{.TextStatus}}</td>
                 <td></td>
             </tr>
 
@@ -65,7 +66,8 @@
             </tr>
             <tr>
                 <td>执行资源</td>
-                <td>  {{str2html .serverName}}</td>
+                <!-- <td>  str2html .serverName</td> -->
+                <td>  {{.serverName}}</td>
                 <td></td>
             </tr>
 

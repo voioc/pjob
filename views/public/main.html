@@ -259,6 +259,11 @@
             layer.tips($(this).attr('data-title'), $(this),{time:1000});
         });
 
+        element.on('tab(main_tab)', function(data){
+            var src=$(".layui-tab-item.layui-show").find("iframe").attr("src");
+            $(".layui-tab-item.layui-show").find("iframe").attr("src",src);
+        });
+
         // if (layui.admin.setter.pageTabs && layui.admin.setter.tabAutoRefresh == true) {
         //     $('.layui-layout-admin>.layui-body>.layui-tab').attr('lay-autoRefresh', 'true');
         // }

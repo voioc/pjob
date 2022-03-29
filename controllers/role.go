@@ -233,6 +233,6 @@ func (self *RoleController) Table(c *gin.Context) {
 		list[k] = row
 	}
 
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }

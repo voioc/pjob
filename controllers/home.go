@@ -12,7 +12,6 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
-	"text/template"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -21,6 +20,7 @@ import (
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/models"
 	"github.com/voioc/cjob/service"
+	"github.com/voioc/cjob/utils"
 )
 
 type HomeController struct {
@@ -29,23 +29,30 @@ type HomeController struct {
 
 // Index dk
 func (self *HomeController) Index(c *gin.Context) {
-	// self.Data["pageTitle"] = "系统首页"
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+	data["siteName"] = "系统首页"
+	data["loginUserName"] = "管理员"
+
 	//self.display()
 	// self.TplName = "public/main.html"
 
 	uid := c.GetInt("uid")
 	menu, _ := service.Menu(uid)
-	c.HTML(http.StatusOK, "main.html", template.FuncMap{
-		"siteName":  "系统首页",
-		"SideMenu1": menu["SideMenu1"],
-		"SideMenu2": menu["SideMenu2"],
-	})
+	data["SideMenu1"] = menu["SideMenu1"]
+	data["SideMenu2"] = menu["SideMenu2"]
+
+	c.HTML(http.StatusOK, "main.html", data)
 }
 
-func (self *HomeController) Help() {
-	self.Data["pageTitle"] = "Cron表达式说明"
+func (self *HomeController) Help(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+	data["pageTitle"] = "Cron表达式说明"
+
 	//self.display()
-	self.TplName = "public/help.html"
+	// self.TplName = "public/help.html"
+	c.HTML(http.StatusOK, "public/help.html", data)
 }
 
 func (self *HomeController) Start(c *gin.Context) {

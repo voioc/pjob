@@ -66,6 +66,14 @@
                 ,{field:'update_time', title: '更新时间'}
                 ,{fixed: 'right', width:160, align:'center', toolbar: '#bar'}
             ]]
+            ,parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": res.ext.total, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            }
             ,id: 'listReload'
             ,page: true
             ,height: "full-130"
@@ -106,7 +114,7 @@
                     var jsData = {'id':data.id}
                     // $.post('urlfor "ServerGroupController.AjaxDel"', jsData, function (out) {
                     $.post('{{.uri}}/server/group/del', jsData, function (out) {
-                        if (out.status == 0) {
+                        if (out.code == 0) {
                             layer.alert('删除成功了', {icon: 1,shade:0.3,time:1000},function(index){
                                 layer.close(index);
                                 window.location.reload();

@@ -101,7 +101,7 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 	}
 
 	// self.ajaxList("成功", MSG_OK, count, list)
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
@@ -400,7 +400,7 @@ func (self *ServerController) Table(c *gin.Context) {
 	}
 
 	// self.ajaxList("成功", MSG_OK, count, list)
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 

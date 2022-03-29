@@ -68,11 +68,16 @@ func main() {
 
 	//router.LoadHTMLFiles("templates/index.tmpl")
 	//router.LoadHTMLFiles("templates/index.tmpl", "templates/goods.hmpl"
-	r.LoadHTMLGlob("views/**/*")
+	// r.LoadHTMLGlob("views/**/*")
 	//多层目录，多文件重名，在html文件中声明即可 {{defind "goods/list.html"}} {{end}}
 
 	// r.SetFuncMap(template.FuncMap{
 	// 	"abc": abc,
+	// })
+
+	// r.LoadHTMLFiles("templates/index.html")
+	// r.GET("/detail", func(c *gin.Context) {
+	// 	c.HTML(200, "index.html", "<a href='lizhouwen.com'>1232</a>")
 	// })
 
 	// r.LoadHTMLGlob("views/login/login.html")

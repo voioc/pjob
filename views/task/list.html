@@ -17,7 +17,7 @@
             <div class="layui-btn-group">
                 <button class="layui-btn layui-btn-sm" data-type="tabAdd" id="add">新增</button>
                 <button class="layui-btn layui-btn-sm batch" data-type="batchstart" >启动</button>
-                <button class="layui-btn layui-btn-sm layui-btn-danger batch" data-type="batchpause" >暂停</button>cron
+                <button class="layui-btn layui-btn-sm layui-btn-danger batch" data-type="batchpause" >暂停</button>
             </div>
         </div>
         <div class="layui-col-xs6 search_text" style="text-align: right;">
@@ -81,6 +81,14 @@
                 ,{field:'execute_times', title: '次数',width:100}
                 ,{width:180, align:'center', title:'操作', toolbar: '#bar'}
             ]]
+            ,parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": res.ext.total, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            }
             ,id: 'listReload'
             ,page: true
             ,limit:20
@@ -124,7 +132,7 @@
                 layer.confirm("测试执行任务，注意不要超时，请确认执行", {icon: 3, title:'提示'}, function(index){
                     layer.load();
                     $.post('{{.uri}}/task/ajaxrun', {id:data.id}, function (out) {
-                        if (out.status == 0) {
+                        if (out.code == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                                 window.parent.openTab("{{.uri}}/tasklog/list?task_id="+data.id,task_name+'运行日志',"admin_task_log-"+data.id,'');
                             })
@@ -168,7 +176,7 @@
 
                 layer.load();
                 $.post('{{.uri}}/task/ajax'+action, {"ids":ids}, function (out) {
-                    if (out.status == 0) {
+                    if (out.code == 0) {
                         layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                             $('#search').click();
                         })
@@ -177,6 +185,7 @@
                         return
                     }
                 }, "json");
+
                 setTimeout(function(){
                     layer.closeAll('loading');
                 }, 2000);

@@ -15,9 +15,9 @@
     <div class="layui-row" style="margin-top: 20px;">
         <div class="layui-col-xs6">
             <div class="layui-btn-group">
-                <a class="layui-btn layui-btn-sm" data-type="tabAdd" href="/task/add">新增任务</a>
-                <button class="layui-btn layui-btn-sm batch" data-type="batchaudit" >审核通过</button>
-                <button class="layui-btn layui-btn-sm layui-btn-danger batch" data-type="batchnopass" >审核不通过</button>
+                <a class="layui-btn layui-btn-sm" data-type="tabAdd" href="{{.uri}}/task/add">新增任务</a>
+                <button class="layui-btn layui-btn-sm batch" data-type="audit" >审核通过</button>
+                <button class="layui-btn layui-btn-sm layui-btn-danger batch" data-type="reject" >审核不通过</button>
             </div>
         </div>
         <div class="layui-col-xs6 search_text">
@@ -106,7 +106,7 @@
                     layer.load();
                     $.post('{{.uri}}/task/ajaxdel', {id:data.id}, function (out) {
 
-                        if (out.status == 0) {
+                        if (out.code == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                                 $('#reload').click();
                             })
@@ -137,7 +137,7 @@
 
             var  msg = "确认审核通过这些任务吗";
             var  msgok = "审核通过的任务已经被转移到【任务列表】，请前去操作";
-            if (action=='batchnopass'){
+            if (action=='reject'){
                 msg = "确定审核不通过这些任务吗";
                 msgok = "操作成功";
             }
@@ -148,9 +148,9 @@
                 });
                 ids = ids.substr(0,ids.length-1);
                 layer.load();
-                $.post('{{.uri}}/task/ajax'+action, {"ids":ids}, function (out) {
-                    if (out.status == 0) {
-                        layer.msg(msgok,{icon: 1,shade:0.3,time:1000},function () {
+                $.post('{{.uri}}/task/'+action, {"ids":ids}, function (out) {
+                    if (out.code == 0) {
+                        layer.msg(msgok, {icon: 1, shade:0.3, time: 3000},function () {
                             $('#reload').click();
                         })
                     } else {
@@ -161,7 +161,7 @@
                 layer.closeAll('loading');
                 layer.close(index);
             });
-            return ;
+            return;
         })
 
         $('.demoTable .layui-btn').on('click', function(){

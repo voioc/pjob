@@ -86,7 +86,7 @@ func TaskGetList(page, pageSize int, filters ...interface{}) ([]*Task, int64) {
 		}
 	}
 	total, _ := query.Count()
-	query.OrderBy("-status", "task_name", "-id").Limit(pageSize, offset).All(&tasks)
+	query.OrderBy("-id", "-status", "task_name").Limit(pageSize, offset).All(&tasks)
 
 	return tasks, total
 }

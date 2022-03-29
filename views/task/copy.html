@@ -265,7 +265,7 @@
                 }
 
                 $.post('{{.uri}}/task/save', form_data, function (out) {
-                    if (out.status == 0) {
+                    if (out.code == 0) {
                         layer.msg(okmsg,{icon: 1,shade:0.3,time:1000},function () {
                             // self.location=document.referrer;
                             window.parent.deleteCurrentTab();

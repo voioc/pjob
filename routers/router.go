@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"html/template"
+
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/controllers"
 	"github.com/voioc/cjob/middleware"
@@ -31,70 +33,71 @@ func InitRouter(engine *gin.Engine) {
 
 	// beego.AutoRouter(&controllers.NotifyTplController{})
 
-	engine.LoadHTMLFiles(
-		"views/login/login.html",
-		"views/public/main.html",
-		"views/home/start.html",
-		"views/task/list.html",
-		"views/task/detail.html",
-		"views/task/add.html",
-		"views/task/auditlist.html",
-		"views/task/edit.html",
-		"views/task/copy.html",
-		"views/tasklog/list.html",
-		"views/tasklog/detail.html",
-		"views/group/list.html",
-		"views/group/add.html",
-		"views/group/edit.html",
-		"views/server/add.html",
-		"views/server/copy.html",
-		"views/server/edit.html",
-		"views/server/list.html",
+	engine.SetFuncMap(template.FuncMap{
+		"str2html": func(str string) template.HTML {
+			return template.HTML(str)
+		},
+	})
 
-		"views/servergroup/add.html",
-		"views/servergroup/edit.html",
-		"views/servergroup/list.html",
+	engine.LoadHTMLGlob("views/**/*")
 
-		"views/ban/add.html",
-		"views/ban/edit.html",
-		"views/ban/list.html",
+	// engine.LoadHTMLFiles(
+	// 	"views/public/help.html",
 
-		"views/notify/add.html",
-		"views/notify/edit.html",
-		"views/notify/list.html",
+	// 	"views/login/login.html",
+	// 	"views/public/main.html",
+	// 	"views/home/start.html",
+	// 	"views/task/list.html",
+	// 	"views/task/detail.html",
+	// 	"views/task/add.html",
+	// 	"views/task/auditlist.html",
+	// 	"views/task/edit.html",
+	// 	"views/task/copy.html",
+	// 	"views/tasklog/list.html",
+	// 	"views/tasklog/detail.html",
+	// 	"views/group/list.html",
+	// 	"views/group/add.html",
+	// 	"views/group/edit.html",
+	// 	"views/server/add.html",
+	// 	"views/server/copy.html",
+	// 	"views/server/edit.html",
+	// 	"views/server/list.html",
 
-		"views/admin/add.html",
-		"views/admin/edit.html",
-		"views/admin/list.html",
+	// 	"views/servergroup/add.html",
+	// 	"views/servergroup/edit.html",
+	// 	"views/servergroup/list.html",
 
-		"views/role/add.html",
-		"views/role/edit.html",
-		"views/role/list.html",
+	// 	"views/ban/add.html",
+	// 	"views/ban/edit.html",
+	// 	"views/ban/list.html",
 
-		"views/auth/list.html",
-		"views/user/edit.html",
-	)
+	// 	"views/notify/add.html",
+	// 	"views/notify/edit.html",
+	// 	"views/notify/list.html",
+
+	// 	"views/admin/add.html",
+	// 	"views/admin/edit.html",
+	// 	"views/admin/list.html",
+
+	// 	"views/role/add.html",
+	// 	"views/role/edit.html",
+	// 	"views/role/list.html",
+
+	// 	"views/auth/list.html",
+	// 	"views/user/edit.html",
+	// )
 
 	loginC := controllers.LoginController{}
 	engine.GET("/", loginC.Login)
+	engine.GET("/login", loginC.Login)
 	engine.POST("/login_in", loginC.LoginIn)
 
 	r := engine.Group("").Use(middleware.Menu())
 	{
-		// self.Data["pageTitle"] = "系统首页"
-		// r.GET("/home", func(c *gin.Context) {
-		// 	fmt.Println(c.Get("menu"))
-		// 	menu, _ := service.Menu(1)
-		// 	c.HTML(http.StatusOK, "main.html", template.FuncMap{
-		// 		"siteName":  "系统首页",
-		// 		"SideMenu1": menu["SideMenu1"],
-		// 		"SideMenu2": menu["SideMenu2"],
-		// 	})
-		// })
-
 		homeC := controllers.HomeController{}
 		r.GET("/home", homeC.Index)
 		r.GET("/home/start", homeC.Start)
+		r.GET("/help", homeC.Help)
 
 		taskC := controllers.TaskController{}
 		r.GET("/task/list", taskC.List)
@@ -107,19 +110,19 @@ func InitRouter(engine *gin.Engine) {
 
 		r.GET("/task/table", taskC.Table)
 
-		r.GET("/task/ajaxaudit", taskC.AjaxAudit)
-		r.GET("/task/ajaxnopass", taskC.AjaxBatchNoPass)
+		r.POST("/task/ajaxaudit", taskC.Audit)
+		// r.POST("/task/ajaxnopass", taskC.AjaxBatchNoPass)
 		r.POST("/task/ajaxstart", taskC.AjaxStart)
 		r.POST("/task/ajaxpause", taskC.AjaxPause)
 		r.POST("/task/ajaxrun", taskC.AjaxRun)
 		r.POST("/task/ajaxdel", taskC.AjaxDel)
 		r.POST("/task/notify/type", taskC.AjaxNotifyType)
 
-		r.GET("/task/ajaxbatchstart", taskC.AjaxBatchStart)
-		r.GET("/task/ajaxbatchpause", taskC.AjaxBatchPause)
-		r.GET("/task/ajaxbatchdel", taskC.AjaxBatchDel)
-		r.GET("/task/ajaxbatchaudit", taskC.AjaxAudit)
-		r.GET("/task/ajaxbatchnopass", taskC.AjaxBatchNoPass)
+		r.POST("/task/ajaxbatchstart", taskC.AjaxBatchStart)
+		r.POST("/task/ajaxbatchpause", taskC.AjaxBatchPause)
+		r.POST("/task/ajaxbatchdel", taskC.AjaxBatchDel)
+		r.POST("/task/audit", taskC.AjaxBatchAudit)
+		r.POST("/task/reject", taskC.Reject)
 
 		r.POST("/task/apitask", taskC.ApiTask)
 		r.GET("/task/apistart", taskC.ApiStart)

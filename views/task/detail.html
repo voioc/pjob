@@ -61,8 +61,7 @@
             </tr>
             <tr>
                 <td>任务状态</td>
-                <!-- <td>.TextStatus|str2html</td> -->
-                <td>{{.TextStatus}}</td>
+                <td>{{.TextStatus | str2html}}</td>
                 <td></td>
             </tr>
 
@@ -79,8 +78,7 @@
             </tr>
             <tr>
                 <td>执行资源</td>
-                <!-- <td>  str2html .serverName</td> -->
-                <td>  {{.serverName}}</td>
+                <td>{{ .serverName | str2html }}</td>
                 <td></td>
             </tr>
 
@@ -212,7 +210,7 @@
                     layer.load();
                     $.post('{{.uri}}/task/ajaxdel', {id:id}, function (out) {
 
-                        if (out.status == 0) {
+                        if (out.code == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                                 window.parent.deleteCurrentTab();
                             })
@@ -233,7 +231,7 @@
                 layer.confirm("测试执行任务，注意不要超时，请确认执行", {icon: 3, title:'提示'}, function(index){
                     layer.load();
                     $.post('{{.uri}}/task/ajaxrun', {id:id}, function (out) {
-                        if (out.status == 0) {
+                        if (out.code == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                                 window.parent.openTab("{{.uri}}/tasklog/list?task_id="+id,task_name+' 日志',"admin_task_log-"+id,'');
 
@@ -250,7 +248,7 @@
                 });
             }else if (event==='audit' || event==='start' || event==='pause' || event==="nopass"){
                 $.post('{{.uri}}/task/ajax'+event, {id:id}, function (out) {
-                    if (out.status == 0) {
+                    if (out.code == 0) {
                         layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                             window.location.reload()
                         })

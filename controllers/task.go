@@ -446,7 +446,7 @@ func checkCommand(command string) (string, bool) {
 	return "", true
 }
 
-func (self *TaskController) AjaxAudit(c *gin.Context) {
+func (self *TaskController) Audit(c *gin.Context) {
 	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
 
 	// taskId, _ := self.GetInt("id")
@@ -502,8 +502,12 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 	}
 
 	if task.Status != 0 {
+		msg := "任务状态有误"
+		if task.Status == 2 {
+			msg = "任务正在审核中,不能启动"
+		}
 		// self.ajaxMsg("任务状态有误", MSG_ERR)
-		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务状态有误"))
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, msg))
 		return
 	}
 
@@ -581,7 +585,7 @@ func (self *TaskController) AjaxRun(c *gin.Context) {
 
 // AjaxBatchStart sdf
 func (self *TaskController) AjaxBatchStart(c *gin.Context) {
-	ids := strings.Split(c.Query("ids"), ",")
+	ids := strings.Split(c.PostForm("ids"), ",")
 	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
 		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
@@ -614,9 +618,9 @@ func (self *TaskController) AjaxBatchStart(c *gin.Context) {
 
 // AjaxBatchPause kkk
 func (self *TaskController) AjaxBatchPause(c *gin.Context) {
-	ids := strings.Split(c.Query("ids"), ",")
+	ids := strings.Split(c.PostForm("ids"), ",")
 	// ids := strings.Split(idStr, ",")
-	if len(ids) < 1 {
+	if len(ids) < 2 && ids[0] == "" {
 		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择要暂停的任务"))
 		return
@@ -629,14 +633,16 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 		}
 
 		task, err := models.TaskGetById(id)
-		//移出任务
-		TaskServerIdsArr := strings.Split(task.ServerIds, ",")
+		fmt.Println(task)
 
+		// 移出任务
+		TaskServerIdsArr := strings.Split(task.ServerIds, ",")
 		for _, server_id := range TaskServerIdsArr {
 			server_id_int, _ := strconv.Atoi(server_id)
 			jobKey := libs.JobKey(task.Id, server_id_int)
 			jobs.RemoveJob(jobKey)
 		}
+
 		if err == nil {
 			task.Status = 0
 			task.Update()
@@ -649,7 +655,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 
 // AjaxBatchDel kddd
 func (self *TaskController) AjaxBatchDel(c *gin.Context) {
-	ids := strings.Split(c.Query("ids"), ",")
+	ids := strings.Split(c.PostForm("ids"), ",")
 	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
 		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
@@ -682,7 +688,7 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 }
 
 func (self *TaskController) AjaxBatchAudit(c *gin.Context) {
-	ids := strings.Split(c.Query("ids"), ",")
+	ids := strings.Split(c.PostForm("ids"), ",")
 	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
 		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
@@ -702,8 +708,8 @@ func (self *TaskController) AjaxBatchAudit(c *gin.Context) {
 	c.JSON(http.StatusOK, common.Success(c))
 }
 
-func (self *TaskController) AjaxBatchNoPass(c *gin.Context) {
-	ids := strings.Split(c.Query("ids"), ",")
+func (self *TaskController) Reject(c *gin.Context) {
+	ids := strings.Split(c.PostForm("ids"), ",")
 	// ids := strings.Split(idStr, ",")
 	if len(ids) < 1 {
 		// self.ajaxMsg("请选择要操作的任务", MSG_ERR)
@@ -742,7 +748,7 @@ func changeStatus(taskId, status, userId int) bool {
 
 // AjaxDel ddd
 func (self *TaskController) AjaxDel(c *gin.Context) {
-	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
+	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	task, _ := models.TaskGetById(id)
 
 	uid := c.GetInt("uid")
@@ -763,7 +769,7 @@ func (self *TaskController) AjaxDel(c *gin.Context) {
 }
 
 func (self *TaskController) AjaxNotifyType(c *gin.Context) {
-	notifyType, _ := strconv.Atoi(c.DefaultQuery("notify_type", "0"))
+	notifyType, _ := strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
 	result, count, _ := models.NotifyTplGetByTplTypeList(notifyType)
 
 	list := make([]map[string]interface{}, len(result))
@@ -777,7 +783,7 @@ func (self *TaskController) AjaxNotifyType(c *gin.Context) {
 	}
 
 	// self.ajaxList("成功", MSG_OK, count, list)
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
@@ -814,9 +820,8 @@ func (self *TaskController) Table(c *gin.Context) {
 	//	self.Ctx.SetCookie("groupid", strconv.Itoa(groupId)+"|job")
 	//}
 
-	// status, _ := self.GetInt("status")
-	status := 0
-	taskName := "" //strings.TrimSpace(self.GetString("task_name"))
+	status, _ := strconv.Atoi(c.DefaultQuery("status", "0"))
+	taskName := strings.TrimSpace(c.DefaultQuery("task_name", ""))
 
 	StatusText := []string{
 		"<font color='red'><i class='fa fa-minus-square'></i></font>",
@@ -915,7 +920,7 @@ func (self *TaskController) Table(c *gin.Context) {
 	}
 
 	// self.ajaxList("成功", MSG_OK, count, list)
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 

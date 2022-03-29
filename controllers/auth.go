@@ -62,7 +62,7 @@ func (self *AuthController) GetNodes(c *gin.Context) {
 	}
 
 	// self.ajaxList("成功", MSG_OK, count, list)
-	ext := map[string]int{"count": int(count)}
+	ext := map[string]int{"total": int(count)}
 	c.JSON(http.StatusOK, common.Success(c, list, ext))
 }
 
@@ -85,7 +85,7 @@ func (self *AuthController) GetNode(c *gin.Context) {
 	fmt.Println(row)
 
 	// self.ajaxList("成功", MSG_OK, 0, row)
-	ext := map[string]int{"count": 0}
+	ext := map[string]int{"total": 0}
 	c.JSON(http.StatusOK, common.Success(c, row, ext))
 }
 

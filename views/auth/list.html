@@ -36,7 +36,7 @@
                 <div class="layui-form-item">
                     <label class="layui-form-label">权限名称</label>
                     <div class="layui-input-inline">
-                        <input type="text" name="auth_name" lay-verify="required" autocomplete="off" placeholder="请输入权限名称" class="layui-input">
+                        <input type="text" name="auth_name" lay-verify="required" id="auth_name" autocomplete="off" placeholder="请输入权限名称" class="layui-input">
                     </div>
                     <div class="layui-form-mid layui-word-aux"></div>
                 </div>
@@ -96,7 +96,7 @@
                     <div class="layui-input-block">
                         <button class="layui-btn" lay-submit="" lay-filter="add">新增</button>
                         <button class="layui-btn layui-btn-normal" lay-submit="" lay-filter="edit">修改</button>
-                        <a class="layui-btn layui-btn-danger" href="javascript:;" id="del" lay-submit="">删除</a>
+                        <a class="layui-btn layui-btn-danger layui-btn-disabled" disabled="true" href="javascript:;" id="del" lay-submit="">删除</a>
                         <button type="reset" class="layui-btn layui-btn-primary">重置</button>
                     </div>
                 </div>
@@ -124,6 +124,7 @@
             })
             return;
         }
+
         form.on("submit",function(data) {
             var sub_type = data.elem.getAttribute("lay-filter")
             console.log(sub_type)
@@ -199,7 +200,7 @@
             $("form[name=form]").find("input[name=auth_name]").val(nodes[0].name);
 
             $.ajax({
-                type: "POST",
+                type: "GET",
                 url: "{{.uri}}/auth/getnode",
                 data: {id:id},
                 dataType: 'json',
@@ -212,7 +213,11 @@
                         var is_show = data.data.is_show
                         $("form[name=form]").find("input[type=radio][value="+is_show+"]").attr("checked", true);
                         $("form[name=form]").find("input[type=radio][value="+is_show+"]").click();
+
+                        $("#del").removeClass("layui-btn-disabled").attr("disabled", false);
+
                         form.render();
+
                     }
                 }
             });

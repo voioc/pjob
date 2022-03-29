@@ -18,6 +18,7 @@ import (
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/service"
+	"github.com/voioc/cjob/utils"
 
 	"github.com/astaxie/beego"
 	cron "github.com/voioc/cjob/crons"
@@ -31,6 +32,7 @@ type TaskController struct {
 
 func (self *TaskController) List(c *gin.Context) {
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	data["pageTitle"] = "任务管理"
 	data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
 	data["groupId"] = 0
@@ -45,6 +47,7 @@ func (self *TaskController) List(c *gin.Context) {
 
 func (self *TaskController) AuditList(c *gin.Context) {
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	data["pageTitle"] = "任务审核"
 	// self.display()
 	c.HTML(http.StatusOK, "task/auditlist.html", data)
@@ -52,6 +55,7 @@ func (self *TaskController) AuditList(c *gin.Context) {
 
 func (self *TaskController) Add(c *gin.Context) {
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 
 	uid := c.GetInt("uid")
 	tg, _ := service.TaskGroups(uid, c.GetString("role_id"))
@@ -67,6 +71,7 @@ func (self *TaskController) Add(c *gin.Context) {
 
 func (self *TaskController) Edit(c *gin.Context) {
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	data["pageTitle"] = "编辑任务"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
@@ -134,6 +139,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 
 func (self *TaskController) Copy(c *gin.Context) {
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 
 	data["pageTitle"] = "复制任务"
 	data["adminInfo"] = AllAdminInfo("")
@@ -204,6 +210,7 @@ func (self *TaskController) Copy(c *gin.Context) {
 func (self *TaskController) Detail(c *gin.Context) {
 	uid := c.GetInt("uid")
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	data["pageTitle"] = "任务详细"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
@@ -307,7 +314,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 		}
 	}
 
-	c.HTML(http.StatusOK, "detail.html", data)
+	c.HTML(http.StatusOK, "task/detail.html", data)
 }
 
 func (self *TaskController) Save(c *gin.Context) {
@@ -352,8 +359,8 @@ func (self *TaskController) Save(c *gin.Context) {
 		}
 		if task.TaskName == "" || task.CronSpec == "" || task.Command == "" {
 			// self.ajaxMsg("", MSG_ERR)
-			fmt.Println("11111")
-			fmt.Println(task.TaskName, task.CronSpec, task.Command)
+			// fmt.Println("11111")
+			// fmt.Println(task.TaskName, task.CronSpec, task.Command)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请填写完整信息!"))
 			return
 		}

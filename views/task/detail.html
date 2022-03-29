@@ -1,3 +1,16 @@
+{{ define "task/detail.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{.siteName}}</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/admin/css/app.css?t=2">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" media="all">
+    <script src="/static/layui/layui.js"></script>
+</head>
+<body>
 <style>
     .layui-form-item{
         margin-bottom: 0px;
@@ -183,11 +196,11 @@
                     layer.msg("运行状态无法编辑任务，请先暂停任务");
                     return;
                 }
-                window.parent.openTab("/task/edit?id="+id,task_name+' 编辑',"admin_task_edit-"+id,'fa-edit');
+                window.parent.openTab("{{.uri}}/task/edit?id="+id,task_name+' 编辑',"admin_task_edit-"+id,'fa-edit');
             }else if(event==='log'){
-                window.parent.openTab("/tasklog/list?task_id="+id,task_name+'日志',"admin_log-"+id,'');
+                window.parent.openTab("{{.uri}}/tasklog/list?task_id="+id,task_name+'日志',"admin_log-"+id,'');
             }else if(event==='copy'){
-                window.parent.openTab("/task/copy?id="+id,task_name+' 复制',"admin_task_copy-"+id,'fa-copy');
+                window.parent.openTab("{{.uri}}/task/copy?id="+id,task_name+' 复制',"admin_task_copy-"+id,'fa-copy');
             }else if(event==="del"){
                 var status =" {{.task.Status}}";
                 if(status==1){
@@ -197,7 +210,7 @@
 
                 layer.confirm("确认要删除这条任务吗？", {icon: 3, title:'提示'}, function(index){
                     layer.load();
-                    $.post('/task/ajaxdel', {id:id}, function (out) {
+                    $.post('{{.uri}}/task/ajaxdel', {id:id}, function (out) {
 
                         if (out.status == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
@@ -219,10 +232,10 @@
             }else if (event==='run'){
                 layer.confirm("测试执行任务，注意不要超时，请确认执行", {icon: 3, title:'提示'}, function(index){
                     layer.load();
-                    $.post('/task/ajaxrun', {id:id}, function (out) {
+                    $.post('{{.uri}}/task/ajaxrun', {id:id}, function (out) {
                         if (out.status == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
-                                window.parent.openTab("/tasklog/list?task_id="+id,task_name+' 日志',"admin_task_log-"+id,'');
+                                window.parent.openTab("{{.uri}}/tasklog/list?task_id="+id,task_name+' 日志',"admin_task_log-"+id,'');
 
                             })
                         } else {
@@ -236,7 +249,7 @@
                     layer.close(index);
                 });
             }else if (event==='audit' || event==='start' || event==='pause' || event==="nopass"){
-                $.post('/task/ajax'+event, {id:id}, function (out) {
+                $.post('{{.uri}}/task/ajax'+event, {id:id}, function (out) {
                     if (out.status == 0) {
                         layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                             window.location.reload()
@@ -258,3 +271,6 @@
         form.render();
     });
 </script>
+</body>
+</html>
+{{ end }}

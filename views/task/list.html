@@ -69,7 +69,7 @@
         //方法级渲染
         table.render({
             elem: '#table_list'
-            ,url: '/task/table'
+            ,url: '{{.uri}}/task/table'
             ,size: 'sm' //小尺寸的表格
             ,cols: [[
                 {checkbox: true, fixed: true},
@@ -101,7 +101,7 @@
         };
 
         $("#add").on("click",function() {
-            window.parent.openTab("/task/add",'新增任务',"admin_task_add-0",'fa-plus');
+            window.parent.openTab("{{.uri}}/task/add",'新增任务',"admin_task_add-0",'fa-plus');
         })
 
         // form.on('select(select_group)', function(data){
@@ -115,18 +115,18 @@
             var task_name = window.parent.delHtmlTag(data.task_name)
             task_name = window.parent.getDelimiterLastString(task_name,"-")
             if(obj.event === 'edit'){
-                window.parent.openTab("/task/edit?id="+data.id,task_name+' 编辑',"admin_task_edit-"+data.id,'fa-edit');
+                window.parent.openTab("{{.uri}}/task/edit?id="+data.id,task_name+' 编辑',"admin_task_edit-"+data.id,'fa-edit');
             } else if(obj.event === 'log'){
-                window.parent.openTab("/tasklog/list?task_id="+data.id,task_name+'日志',"admin_log-"+data.id,'');
+                window.parent.openTab("{{.uri}}/tasklog/list?task_id="+data.id,task_name+'日志',"admin_log-"+data.id,'');
             }else if (obj.event==='detail'){
-                window.parent.openTab('/task/detail?id='+data.id,task_name+'详情',"admin_task_detail-"+data.id,'fa-folder-open-o');
+                window.parent.openTab('{{.uri}}/task/detail?id='+data.id,task_name+'详情',"admin_task_detail-"+data.id,'fa-folder-open-o');
             }else if (obj.event==='run'){
                 layer.confirm("测试执行任务，注意不要超时，请确认执行", {icon: 3, title:'提示'}, function(index){
                     layer.load();
-                    $.post('/task/ajaxrun', {id:data.id}, function (out) {
+                    $.post('{{.uri}}/task/ajaxrun', {id:data.id}, function (out) {
                         if (out.status == 0) {
                             layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
-                                window.parent.openTab("/tasklog/list?task_id="+data.id,task_name+'运行日志',"admin_task_log-"+data.id,'');
+                                window.parent.openTab("{{.uri}}/tasklog/list?task_id="+data.id,task_name+'运行日志',"admin_task_log-"+data.id,'');
                             })
                         } else {
                             layer.msg(out.msg)
@@ -167,7 +167,7 @@
                 ids = ids.substr(0,ids.length-1);
 
                 layer.load();
-                $.post('/task/ajax'+action, {"ids":ids}, function (out) {
+                $.post('{{.uri}}/task/ajax'+action, {"ids":ids}, function (out) {
                     if (out.status == 0) {
                         layer.msg("操作成功",{icon: 1,shade:0.3,time:1000},function () {
                             $('#search').click();

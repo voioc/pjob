@@ -72,6 +72,7 @@ func InitRouter(engine *gin.Engine) {
 		"views/role/list.html",
 
 		"views/auth/list.html",
+		"views/user/edit.html",
 	)
 
 	loginC := controllers.LoginController{}
@@ -108,10 +109,10 @@ func InitRouter(engine *gin.Engine) {
 
 		r.GET("/task/ajaxaudit", taskC.AjaxAudit)
 		r.GET("/task/ajaxnopass", taskC.AjaxBatchNoPass)
-		r.GET("/task/ajaxstart", taskC.AjaxStart)
-		r.GET("/task/ajaxpause", taskC.AjaxPause)
-		r.GET("/task/ajaxrun", taskC.AjaxRun)
-		r.GET("/task/ajaxdel", taskC.AjaxDel)
+		r.POST("/task/ajaxstart", taskC.AjaxStart)
+		r.POST("/task/ajaxpause", taskC.AjaxPause)
+		r.POST("/task/ajaxrun", taskC.AjaxRun)
+		r.POST("/task/ajaxdel", taskC.AjaxDel)
 		r.POST("/task/notify/type", taskC.AjaxNotifyType)
 
 		r.GET("/task/ajaxbatchstart", taskC.AjaxBatchStart)
@@ -194,6 +195,11 @@ func InitRouter(engine *gin.Engine) {
 		r.GET("/auth/getnode", authC.GetNode)
 		r.POST("/auth/save", authC.AjaxSave)
 		r.POST("/auth/del", authC.AjaxDel)
+
+		userC := controllers.UserController{}
+		// r.GET("/auth/index", authC.Index)
+		r.GET("/user/edit", userC.Edit)
+		r.POST("/user/save", userC.AjaxSave)
 	}
 
 }

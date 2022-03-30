@@ -1,16 +1,17 @@
 /************************************************************
-** @Description: models
+** @Description: model
 ** @Author: Bee
 ** @Date:   2019-02-15 20:21
 ** @Last Modified by:   Bee
 ** @Last Modified time: 2019-02-15 20:21
 *************************************************************/
-package models
+package model
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/orm"
 	"time"
+
+	"github.com/astaxie/beego/orm"
 )
 
 const (

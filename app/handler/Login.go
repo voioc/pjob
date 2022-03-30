@@ -5,16 +5,17 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:55:21
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
+
+	"html/template"
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
-	"html/template"
 )
 
 type LoginController struct {
@@ -46,7 +47,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	// 	username := strings.TrimSpace(self.GetString("username"))
 	// 	password := strings.TrimSpace(self.GetString("password"))
 	// 	if username != "" && password != "" {
-	// 		user, err := models.AdminGetByName(username)
+	// 		user, err := model.AdminGetByName(username)
 	// 		if err != nil || user.Password != libs.Md5([]byte(password+user.Salt)) {
 	// 			self.ajaxMsg("帐号或密码错误", MSG_ERR)
 	// 		} else if user.Status == -1 {
@@ -57,7 +58,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	// 			user.Update()
 	// 			authkey := libs.Md5([]byte(self.getClientIp() + "|" + user.Password + user.Salt))
 	// self.Ctx.SetCookie("auth", strconv.Itoa(user.Id)+"|"+authkey, 7*86400)
-	c.SetCookie("auth", "1|authkey", 7*86400, "/", "127.0.0.1", false, true)
+	c.SetCookie("auth", "1|authkey", 7*86400, "/", "10.74.6.23", false, true)
 
 	// 			self.ajaxMsg("登录成功", MSG_OK)
 	// 		}

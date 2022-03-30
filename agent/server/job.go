@@ -17,9 +17,9 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/voioc/cjob/app/model"
 	. "github.com/voioc/cjob/jobs"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
 )
 
 //执行句柄map
@@ -39,7 +39,7 @@ func GetCmdMap(key string) *exec.Cmd {
 	return nil
 }
 
-func RestJobFromTask(task *models.Task, serverId int) (*Job, error) {
+func RestJobFromTask(task *model.Task, serverId int) (*Job, error) {
 
 	if task.Id < 1 {
 		return nil, fmt.Errorf("ToJob: 缺少id")

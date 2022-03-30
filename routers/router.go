@@ -4,7 +4,7 @@ import (
 	"html/template"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/controllers"
+	"github.com/voioc/cjob/app/handler"
 	"github.com/voioc/cjob/middleware"
 )
 
@@ -87,19 +87,19 @@ func InitRouter(engine *gin.Engine) {
 	// 	"views/user/edit.html",
 	// )
 
-	loginC := controllers.LoginController{}
+	loginC := handler.LoginController{}
 	engine.GET("/", loginC.Login)
 	engine.GET("/login", loginC.Login)
 	engine.POST("/login_in", loginC.LoginIn)
 
 	r := engine.Group("").Use(middleware.Menu())
 	{
-		homeC := controllers.HomeController{}
+		homeC := handler.HomeController{}
 		r.GET("/home", homeC.Index)
 		r.GET("/home/start", homeC.Start)
 		r.GET("/help", homeC.Help)
 
-		taskC := controllers.TaskController{}
+		taskC := handler.TaskController{}
 		r.GET("/task/list", taskC.List)
 		r.GET("/task/auditlist", taskC.AuditList)
 		r.GET("/task/add", taskC.Add)
@@ -128,13 +128,13 @@ func InitRouter(engine *gin.Engine) {
 		r.GET("/task/apistart", taskC.ApiStart)
 		r.GET("/task/apipause", taskC.ApiPause)
 
-		taskLogC := controllers.TaskLogController{}
+		taskLogC := handler.TaskLogController{}
 		r.GET("/tasklog/list", taskLogC.List)
 		r.GET("/tasklog/table", taskLogC.Table)
 		r.GET("/tasklog/detail", taskLogC.Detail)
 		r.GET("/tasklog/ajaxdel", taskLogC.AjaxDel)
 
-		groupC := controllers.GroupController{}
+		groupC := handler.GroupController{}
 		r.GET("/group/list", groupC.List)
 		r.GET("/group/table", groupC.Table)
 		r.GET("/group/add", groupC.Add)
@@ -142,7 +142,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/group/save", groupC.AjaxSave)
 		r.POST("/group/del", groupC.AjaxDel)
 
-		serverC := controllers.ServerController{}
+		serverC := handler.ServerController{}
 		r.GET("/server/list", serverC.List)
 		r.GET("/server/table", serverC.Table)
 		r.GET("/server/add", serverC.Add)
@@ -151,7 +151,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/server/del", serverC.AjaxDel)
 		r.POST("/server/test", serverC.AjaxTestServer)
 
-		serverGroupC := controllers.ServerGroupController{}
+		serverGroupC := handler.ServerGroupController{}
 		r.GET("/servergroup/list", serverGroupC.List)
 		r.GET("/server/group/table", serverGroupC.Table)
 		r.GET("/server/group/add", serverGroupC.Add)
@@ -159,7 +159,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/server/group/save", serverGroupC.AjaxSave)
 		r.POST("/server/group/del", serverGroupC.AjaxDel)
 
-		banC := controllers.BanController{}
+		banC := handler.BanController{}
 		r.GET("/ban/list", banC.List)
 		r.GET("/ban/table", banC.Table)
 		r.GET("/ban/add", banC.Add)
@@ -167,7 +167,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/ban/save", banC.AjaxSave)
 		r.POST("/ban/del", banC.AjaxDel)
 
-		notifyC := controllers.NotifyController{}
+		notifyC := handler.NotifyController{}
 		r.GET("/notifytpl/list", notifyC.List)
 		r.GET("/notify/table", notifyC.Table)
 		r.GET("/notify/add", notifyC.Add)
@@ -175,7 +175,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/notify/save", notifyC.AjaxSave)
 		r.POST("/notify/del", notifyC.AjaxDel)
 
-		adminC := controllers.AdminController{}
+		adminC := handler.AdminController{}
 		r.GET("/admin/list", adminC.List)
 		r.GET("/admin/table", adminC.Table)
 		r.GET("/admin/add", adminC.Add)
@@ -183,7 +183,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/admin/save", adminC.AjaxSave)
 		r.POST("/admin/del", adminC.AjaxDel)
 
-		roleC := controllers.RoleController{}
+		roleC := handler.RoleController{}
 		r.GET("/role/list", roleC.List)
 		r.GET("/role/table", roleC.Table)
 		r.GET("/role/add", roleC.Add)
@@ -191,7 +191,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/role/save", roleC.AjaxSave)
 		r.POST("/role/del", roleC.AjaxDel)
 
-		authC := controllers.AuthController{}
+		authC := handler.AuthController{}
 		// r.GET("/auth/index", authC.Index)
 		r.GET("/auth/list", authC.List)
 		r.GET("/auth/getnodes", authC.GetNodes)
@@ -199,7 +199,7 @@ func InitRouter(engine *gin.Engine) {
 		r.POST("/auth/save", authC.AjaxSave)
 		r.POST("/auth/del", authC.AjaxDel)
 
-		userC := controllers.UserController{}
+		userC := handler.UserController{}
 		// r.GET("/auth/index", authC.Index)
 		r.GET("/user/edit", userC.Edit)
 		r.POST("/user/save", userC.AjaxSave)

@@ -5,7 +5,7 @@
 ** @Last Modified by:  george hao
 ** @Last Modified time: 2018-07-05 16:43
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"fmt"
@@ -14,10 +14,10 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 
 	"strings"
 	"time"
@@ -33,7 +33,7 @@ func (self *TaskLogController) List(c *gin.Context) {
 	// 	taskId = 1
 	// }
 
-	task, err := models.TaskGetById(taskId)
+	task, err := model.TaskGetById(taskId)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -81,7 +81,7 @@ func (self *TaskLogController) Table(c *gin.Context) {
 
 	filters = append(filters, "task_id", taskId)
 
-	result, count := models.TaskLogGetList(page, pageSize, filters...)
+	result, count := model.TaskLogGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
@@ -116,7 +116,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	//日志内容
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	tasklog, err := models.TaskLogGetById(id)
+	tasklog, err := model.TaskLogGetById(id)
 
 	fmt.Println(tasklog)
 	if err != nil {
@@ -156,7 +156,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	data["taskLog"] = row
 
 	//任务详情
-	task, err := models.TaskGetById(tasklog.TaskId)
+	task, err := model.TaskGetById(tasklog.TaskId)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -188,7 +188,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 				serverName = "本地服务器  "
 			}
 		}
-		servers, n := models.TaskServerGetByIds(task.ServerIds)
+		servers, n := model.TaskServerGetByIds(task.ServerIds)
 		if n > 0 {
 			for _, server := range servers {
 				if server.Status != 0 {
@@ -207,7 +207,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	//任务分组
 	groupName := "默认分组"
 	if task.GroupId > 0 {
-		group, err := models.GroupGetById(task.GroupId)
+		group, err := model.GroupGetById(task.GroupId)
 		if err == nil {
 			groupName = group.GroupName
 		}
@@ -218,14 +218,14 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	createName := "未知"
 	updateName := "未知"
 	if task.CreateId > 0 {
-		admin, err := models.AdminGetById(task.CreateId)
+		admin, err := model.AdminGetById(task.CreateId)
 		if err == nil {
 			createName = admin.RealName
 		}
 	}
 
 	if task.UpdateId > 0 {
-		admin, err := models.AdminGetById(task.UpdateId)
+		admin, err := model.AdminGetById(task.UpdateId)
 		if err == nil {
 			updateName = admin.RealName
 		}
@@ -243,7 +243,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
-		notifyTpl, err := models.NotifyTplGetById(task.NotifyTplId)
+		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplId)
 		if err == nil {
 			data["NotifyTplName"] = notifyTpl.TplName
 		}
@@ -269,7 +269,7 @@ func (self *TaskLogController) AjaxDel(c *gin.Context) {
 		if id < 1 {
 			continue
 		}
-		models.TaskLogDelById(id)
+		model.TaskLogDelById(id)
 	}
 
 	// self.ajaxMsg("", MSG_OK)

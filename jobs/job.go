@@ -21,8 +21,8 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
 
 	"runtime"
 	"strconv"
@@ -44,7 +44,7 @@ type Job struct {
 	ServerName string                         // 执行器名称
 	ServerType int                            // 执行器类型，2-agent 1-telnet 0-ssh
 	Name       string                         // 任务名称
-	Task       *models.Task                   // 任务对象
+	Task       *model.Task                    // 任务对象
 	RunFunc    func(time.Duration) *JobResult // 执行函数
 	Status     int                            // 任务状态，大于0表示正在执行中
 	Concurrent bool                           // 同一个任务是否允许并行执行
@@ -79,7 +79,7 @@ func SetCounter(key string) {
 	}
 }
 
-func NewJobFromTask(task *models.Task) ([]*Job, error) {
+func NewJobFromTask(task *model.Task) ([]*Job, error) {
 	if task.Id < 1 {
 		return nil, fmt.Errorf("ToJob: 缺少id")
 	}
@@ -99,14 +99,14 @@ func NewJobFromTask(task *models.Task) ([]*Job, error) {
 			if task.Concurrent == 1 {
 				job.Concurrent = true
 			}
-			//job.Concurrent = task.Concurrent == 1
+			// job.Concurrent = task.Concurrent == 1
 			job.ServerId = 0
 			job.ServerName = "本地服务器"
 			jobArr = append(jobArr, job)
 		} else {
 			server_id_int, _ := strconv.Atoi(server_id)
-			//远程执行
-			server, _ := models.TaskServerGetById(server_id_int)
+			// 远程执行
+			server, _ := model.TaskServerGetById(server_id_int)
 
 			if server.Status == 2 {
 				fmt.Println("服务器已禁用")
@@ -115,7 +115,7 @@ func NewJobFromTask(task *models.Task) ([]*Job, error) {
 
 			if server.ConnectionType == 0 {
 				if server.Type == 0 {
-					//密码验证登录服务器
+					// 密码验证登录服务器
 					job := RemoteCommandJobByPassword(task.Id, server_id_int, task.TaskName, task.Command, server)
 					job.Task = task
 					job.Concurrent = false
@@ -210,7 +210,7 @@ func NewCommandJob(id int, serverId int, name string, command string) *Job {
 }
 
 //远程执行任务 密钥验证
-func RemoteCommandJob(id int, serverId int, name string, command string, servers *models.TaskServer) *Job {
+func RemoteCommandJob(id int, serverId int, name string, command string, servers *model.TaskServer) *Job {
 	job := &Job{
 		Id:       id,
 		Name:     name,
@@ -293,7 +293,7 @@ func RemoteCommandJob(id int, serverId int, name string, command string, servers
 	return job
 }
 
-func RemoteCommandJobByPassword(id int, serverId int, name string, command string, servers *models.TaskServer) *Job {
+func RemoteCommandJobByPassword(id int, serverId int, name string, command string, servers *model.TaskServer) *Job {
 	var (
 		auth         []ssh.AuthMethod
 		addr         string
@@ -364,7 +364,7 @@ func RemoteCommandJobByPassword(id int, serverId int, name string, command strin
 	return job
 }
 
-func RemoteCommandJobByTelnetPassword(id int, serverId int, name string, command string, servers *models.TaskServer) *Job {
+func RemoteCommandJobByTelnetPassword(id int, serverId int, name string, command string, servers *model.TaskServer) *Job {
 
 	job := &Job{
 		Id:       id,
@@ -460,7 +460,7 @@ func RemoteCommandJobByTelnetPassword(id int, serverId int, name string, command
 	return job
 }
 
-func RemoteCommandJobByAgentPassword(id int, serverId int, name string, command string, servers *models.TaskServer) *Job {
+func RemoteCommandJobByAgentPassword(id int, serverId int, name string, command string, servers *model.TaskServer) *Job {
 
 	job := &Job{
 		Id:         id,
@@ -499,7 +499,7 @@ type RpcResult struct {
 
 func (j *Job) agentRun() (reply *JobResult) {
 
-	server, _ := models.TaskServerGetById(j.ServerId)
+	server, _ := model.TaskServerGetById(j.ServerId)
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", server.ServerIp, server.Port))
 	reply = new(JobResult)
 	if err != nil {
@@ -529,7 +529,7 @@ func (j *Job) agentRun() (reply *JobResult) {
 	return
 }
 
-func TestServer(server *models.TaskServer) error {
+func TestServer(server *model.TaskServer) error {
 	if server.ConnectionType == 0 {
 		switch server.Type {
 		case 0:
@@ -580,7 +580,7 @@ func PollServer(j *Job) bool {
 	}
 
 	//判断执行器或者服务器是否存活
-	server, _ := models.TaskServerGetById(pollServerId)
+	server, _ := model.TaskServerGetById(pollServerId)
 
 	if server.Status != 0 {
 		return false
@@ -600,7 +600,7 @@ func PollServer(j *Job) bool {
 }
 
 func (j *Job) Run() {
-	//执行策略 轮询
+	// 执行策略 轮询
 	if j.Task.ServerType == 1 {
 		if !PollServer(j) {
 			return
@@ -651,7 +651,7 @@ func (j *Job) Run() {
 	ut := time.Now().Sub(t) / time.Millisecond
 
 	// 插入日志
-	log := new(models.TaskLog)
+	log := new(model.TaskLog)
 	log.TaskId = j.Id
 	log.ServerId = j.ServerId
 	log.ServerName = j.ServerName
@@ -661,10 +661,10 @@ func (j *Job) Run() {
 	log.CreateTime = t.Unix()
 
 	if jobResult.IsTimeout {
-		log.Status = models.TASK_TIMEOUT
+		log.Status = model.TASK_TIMEOUT
 		log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), jobResult.ErrMsg)
 	} else if !jobResult.IsOk {
-		log.Status = models.TASK_ERROR
+		log.Status = model.TASK_ERROR
 		log.Error = "ERROR:" + jobResult.ErrMsg
 	}
 
@@ -701,9 +701,9 @@ func (j *Job) Run() {
 
 			title, content, taskOutput, errOutput := "", "", "", ""
 
-			notifyTpl, err := models.NotifyTplGetById(j.Task.NotifyTplId)
+			notifyTpl, err := model.NotifyTplGetById(j.Task.NotifyTplId)
 			if err != nil {
-				notifyTpl, err := models.NotifyTplGetByTplType(j.Task.NotifyType, models.NotifyTplTypeSystem)
+				notifyTpl, err := model.NotifyTplGetByTplType(j.Task.NotifyType, model.NotifyTplTypeSystem)
 				if err == nil {
 					title = notifyTpl.Title
 					content = notifyTpl.Content
@@ -793,7 +793,7 @@ func (j *Job) Run() {
 		}
 	}
 
-	j.LogId, _ = models.TaskLogAdd(log)
+	j.LogId, _ = model.TaskLogAdd(log)
 
 	// 更新上次执行时间
 	j.Task.PrevTime = t.Unix()
@@ -824,7 +824,7 @@ func AllAdminInfo(adminIds string) []*adminInfo {
 		}
 		Filters = append(Filters, "id__in", notifyUserIds)
 	}
-	Result, _ := models.AdminGetList(1, 1000, Filters...)
+	Result, _ := model.AdminGetList(1, 1000, Filters...)
 
 	adminInfos := make([]*adminInfo, 0)
 	for _, v := range Result {

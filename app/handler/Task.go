@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2018-06-11 21:11
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"fmt"
@@ -15,15 +15,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 
 	"github.com/astaxie/beego"
 	cron "github.com/voioc/cjob/crons"
 	"github.com/voioc/cjob/jobs"
-	"github.com/voioc/cjob/models"
 )
 
 type TaskController struct {
@@ -75,7 +75,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑任务"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	task, err := models.TaskGetById(id)
+	task, err := model.TaskGetById(id)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -118,7 +118,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 
 	data["service_ids"] = server_ids_arr
 
-	notifyTplList, _, err := models.NotifyTplGetByTplTypeList(task.NotifyType)
+	notifyTplList, _, err := model.NotifyTplGetByTplTypeList(task.NotifyType)
 	tplList := make([]map[string]interface{}, len(notifyTplList))
 
 	if err == nil {
@@ -145,7 +145,7 @@ func (self *TaskController) Copy(c *gin.Context) {
 	data["adminInfo"] = AllAdminInfo("")
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	task, err := models.TaskGetById(id)
+	task, err := model.TaskGetById(id)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -187,7 +187,7 @@ func (self *TaskController) Copy(c *gin.Context) {
 
 	data["service_ids"] = server_ids_arr
 
-	notifyTplList, _, err := models.NotifyTplGetByTplTypeList(task.NotifyType)
+	notifyTplList, _, err := model.NotifyTplGetByTplTypeList(task.NotifyType)
 	tplList := make([]map[string]interface{}, len(notifyTplList))
 
 	if err == nil {
@@ -214,7 +214,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	data["pageTitle"] = "任务详细"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	task, err := models.TaskGetById(id)
+	task, err := model.TaskGetById(id)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		// self.ajaxMsg(err.Error(), MSG_ERR)
@@ -248,7 +248,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 				serverName = "本地服务器 <br>"
 			}
 		}
-		servers, n := models.TaskServerGetByIds(task.ServerIds)
+		servers, n := model.TaskServerGetByIds(task.ServerIds)
 		if n > 0 {
 			for _, server := range servers {
 				fmt.Println(server.Status)
@@ -272,7 +272,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	//任务分组
 	groupName := "默认分组"
 	if task.GroupId > 0 {
-		group, err := models.GroupGetById(task.GroupId)
+		group, err := model.GroupGetById(task.GroupId)
 		if err == nil {
 			groupName = group.GroupName
 		}
@@ -284,14 +284,14 @@ func (self *TaskController) Detail(c *gin.Context) {
 	createName := "未知"
 	updateName := "未知"
 	if task.CreateId > 0 {
-		admin, err := models.AdminGetById(task.CreateId)
+		admin, err := model.AdminGetById(task.CreateId)
 		if err == nil {
 			createName = admin.RealName
 		}
 	}
 
 	if task.UpdateId > 0 {
-		admin, err := models.AdminGetById(task.UpdateId)
+		admin, err := model.AdminGetById(task.UpdateId)
 		if err == nil {
 			updateName = admin.RealName
 		}
@@ -308,7 +308,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 
 	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
-		notifyTpl, err := models.NotifyTplGetById(task.NotifyTplId)
+		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplId)
 		if err == nil {
 			self.Data["NotifyTplName"] = notifyTpl.TplName
 		}
@@ -321,7 +321,7 @@ func (self *TaskController) Save(c *gin.Context) {
 	uid := c.GetInt("uid")
 	task_id, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
 	if task_id == 0 {
-		task := new(models.Task)
+		task := new(model.Task)
 		task.CreateId = c.GetInt("uid")
 		task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 		task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
@@ -371,7 +371,7 @@ func (self *TaskController) Save(c *gin.Context) {
 			return
 		}
 
-		if _, err := models.TaskAdd(task); err != nil {
+		if _, err := model.TaskAdd(task); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -382,7 +382,7 @@ func (self *TaskController) Save(c *gin.Context) {
 		return
 	}
 
-	task, _ := models.TaskGetById(task_id)
+	task, _ := model.TaskGetById(task_id)
 	//修改
 	task.Id = task_id
 	task.UpdateTime = time.Now().Unix()
@@ -437,7 +437,7 @@ func checkCommand(command string) (string, bool) {
 
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 0)
-	ban, _ := models.BanGetList(1, 1000, filters...)
+	ban, _ := model.BanGetList(1, 1000, filters...)
 	for _, v := range ban {
 		if strings.Contains(command, v.Code) {
 			return v.Code, false
@@ -494,7 +494,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 		return
 	}
 
-	task, err := models.TaskGetById(taskID)
+	task, err := model.TaskGetById(taskID)
 	if err != nil {
 		// self.ajaxMsg("查不到该任务", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
@@ -538,7 +538,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 		return
 	}
 
-	task, err := models.TaskGetById(taskID)
+	task, err := model.TaskGetById(taskID)
 	if err != nil {
 		// self.ajaxMsg("查不到该任务", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
@@ -563,7 +563,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 // AjaxRun ss
 func (self *TaskController) AjaxRun(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	task, err := models.TaskGetById(id)
+	task, err := model.TaskGetById(id)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -599,7 +599,7 @@ func (self *TaskController) AjaxBatchStart(c *gin.Context) {
 			continue
 		}
 
-		if task, err := models.TaskGetById(id); err == nil {
+		if task, err := model.TaskGetById(id); err == nil {
 			jobArr, err := jobs.NewJobFromTask(task)
 			if err == nil {
 				for _, job := range jobArr {
@@ -632,7 +632,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 			continue
 		}
 
-		task, err := models.TaskGetById(id)
+		task, err := model.TaskGetById(id)
 		fmt.Println(task)
 
 		// 移出任务
@@ -669,7 +669,7 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 			continue
 		}
 
-		task, _ := models.TaskGetById(id)
+		task, _ := model.TaskGetById(id)
 
 		//移出任务
 		TaskServerIdsArr := strings.Split(task.ServerIds, ",")
@@ -679,8 +679,8 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 			jobKey := libs.JobKey(task.Id, server_id_int)
 			jobs.RemoveJob(jobKey)
 		}
-		models.TaskDel(id)
-		models.TaskLogDelByTaskId(id)
+		model.TaskDel(id)
+		model.TaskLogDelByTaskId(id)
 	}
 
 	// self.ajaxMsg("", MSG_OK)
@@ -733,7 +733,7 @@ func changeStatus(taskId, status, userId int) bool {
 		return false
 	}
 
-	task, _ := models.TaskGetById(taskId)
+	task, _ := model.TaskGetById(taskId)
 	//修改
 	task.Id = taskId
 	task.UpdateTime = time.Now().Unix()
@@ -749,7 +749,7 @@ func changeStatus(taskId, status, userId int) bool {
 // AjaxDel ddd
 func (self *TaskController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	task, _ := models.TaskGetById(id)
+	task, _ := model.TaskGetById(id)
 
 	uid := c.GetInt("uid")
 	task.UpdateTime = time.Now().Unix()
@@ -770,7 +770,7 @@ func (self *TaskController) AjaxDel(c *gin.Context) {
 
 func (self *TaskController) AjaxNotifyType(c *gin.Context) {
 	notifyType, _ := strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
-	result, count, _ := models.NotifyTplGetByTplTypeList(notifyType)
+	result, count, _ := model.NotifyTplGetByTplTypeList(notifyType)
 
 	list := make([]map[string]interface{}, len(result))
 
@@ -866,7 +866,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		filters = append(filters, "task_name__icontains", taskName)
 	}
 
-	result, count := models.TaskGetList(page, pagesize, filters...)
+	result, count := model.TaskGetList(page, pagesize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
@@ -928,7 +928,7 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 	// uid := c.GetInt("uid")
 	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	if taskID == 0 {
-		task := new(models.Task)
+		task := new(model.Task)
 		task.CreateId, _ = strconv.Atoi(c.DefaultPostForm("create_id", "0"))
 		task.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 		task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
@@ -973,7 +973,7 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 			return
 		}
 
-		if id, err = models.TaskAdd(task); err != nil {
+		if id, err = model.TaskAdd(task); err != nil {
 			self.ajaxMsg(err.Error(), MSG_ERR)
 		}
 
@@ -983,7 +983,7 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 		return
 	}
 
-	task, _ := models.TaskGetById(taskID)
+	task, _ := model.TaskGetById(taskID)
 
 	if task.Status == 1 {
 		// self.ajaxMsg("运行状态无法编辑任务，请先暂停任务", MSG_ERR)
@@ -1048,7 +1048,7 @@ func (self *TaskController) ApiStart(c *gin.Context) {
 		return
 	}
 
-	task, err := models.TaskGetById(taskID)
+	task, err := model.TaskGetById(taskID)
 	if err != nil {
 		// self.ajaxMsg("查不到该任务", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))
@@ -1088,7 +1088,7 @@ func (self *TaskController) ApiPause(c *gin.Context) {
 		return
 	}
 
-	task, err := models.TaskGetById(taskID)
+	task, err := model.TaskGetById(taskID)
 	if err != nil {
 		// self.ajaxMsg("查不到该任务", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "查不到该任务"))

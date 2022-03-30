@@ -5,7 +5,7 @@
 ** @Last Modified by:   Bee
 ** @Last Modified time: 2019-02-15 20:21
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"encoding/json"
@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -53,7 +53,7 @@ func (self *NotifyController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑通知模板"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	notifyTpl, _ := models.NotifyTplGetById(id)
+	notifyTpl, _ := model.NotifyTplGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = notifyTpl.Id
 	row["tpl_name"] = notifyTpl.TplName
@@ -74,14 +74,14 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 	uid := c.GetInt("uid")
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	if id == 0 {
-		notifyTpl := new(models.NotifyTpl)
+		notifyTpl := new(model.NotifyTpl)
 		notifyTpl.TplName = strings.TrimSpace(c.DefaultPostForm("tpl_name", ""))
 		notifyTpl.TplType, _ = strconv.Atoi(c.DefaultPostForm("tpl_type", "0"))
 		notifyTpl.Title = strings.TrimSpace(c.DefaultPostForm("title", ""))
 		notifyTpl.Content = strings.TrimSpace(c.DefaultPostForm("content", ""))
 		notifyTpl.CreateId = uid
 		notifyTpl.CreateTime = time.Now().Unix()
-		notifyTpl.Type = models.NotifyTplTypeDefault
+		notifyTpl.Type = model.NotifyTplTypeDefault
 		notifyTpl.Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
 
 		if notifyTpl.TplType == 1 || notifyTpl.TplType == 2 || notifyTpl.TplType == 3 {
@@ -94,7 +94,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 			}
 		}
 
-		if _, err := models.NotifyTplAdd(notifyTpl); err != nil {
+		if _, err := model.NotifyTplAdd(notifyTpl); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -104,7 +104,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	notifyTpl, _ := models.NotifyTplGetById(id)
+	notifyTpl, _ := model.NotifyTplGetById(id)
 	//修改
 	// notifyTpl.Id = id
 	notifyTpl.UpdateId = uid
@@ -126,7 +126,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		}
 	}
 
-	if notifyTpl.Type == models.NotifyTplTypeSystem {
+	if notifyTpl.Type == model.NotifyTplTypeSystem {
 		// self.ajaxMsg("系统模板禁止更新", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "系统模板禁止更新"))
 		return
@@ -147,15 +147,15 @@ func (self *NotifyController) AjaxDel(c *gin.Context) {
 	data["uri"] = utils.URI("")
 
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	notifyTpl, _ := models.NotifyTplGetById(id)
+	notifyTpl, _ := model.NotifyTplGetById(id)
 
-	if notifyTpl.Type == models.NotifyTplTypeSystem {
+	if notifyTpl.Type == model.NotifyTplTypeSystem {
 		// self.ajaxMsg("系统模板禁止删除", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "系统模板禁止删除"))
 		return
 	}
 
-	if err := models.NotifyTplDelById(id); err != nil {
+	if err := model.NotifyTplDelById(id); err != nil {
 		// self.ajaxMsg("删除失败,"+err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "删除失败: "+err.Error()))
 		return
@@ -190,7 +190,7 @@ func (self *NotifyController) Table(c *gin.Context) {
 	if tplName != "" {
 		filters = append(filters, "tpl_name__icontains", tplName)
 	}
-	result, count := models.NotifyTplGetList(page, pageSize, filters...)
+	result, count := model.NotifyTplGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 21:42:08
 ***********************************************/
-package models
+package model
 
 import (
 	"fmt"

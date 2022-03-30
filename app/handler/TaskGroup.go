@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2018-06-10 22:24
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -17,9 +17,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -54,7 +54,7 @@ func (self *GroupController) Edit(c *gin.Context) {
 	data["hideTop"] = true
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ := models.GroupGetById(id)
+	group, _ := model.GroupGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = group.Id
 	row["group_name"] = group.GroupName
@@ -67,7 +67,7 @@ func (self *GroupController) Edit(c *gin.Context) {
 
 func (self *GroupController) AjaxSave(c *gin.Context) {
 
-	group := new(models.Group)
+	group := new(model.Group)
 	group.GroupName = strings.TrimSpace(c.DefaultPostForm("group_name", ""))
 	group.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	group.Status = 1
@@ -82,7 +82,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 		group.UpdateTime = time.Now().Unix()
 		group.CreateId = uid
 		group.UpdateId = uid
-		if _, err := models.GroupAdd(group); err != nil {
+		if _, err := model.GroupAdd(group); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -108,7 +108,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 func (self *GroupController) AjaxDel(c *gin.Context) {
 
 	group_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	group, err := models.GroupGetById(group_id)
+	group, err := model.GroupGetById(group_id)
 	if err != nil || group.Id == 0 {
 		msg := "内部错误"
 		if err != nil {
@@ -126,7 +126,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	//filters := make([]interface{}, 0)
 	//filters = append(filters, "group_id", group_id)
 	//filters = append(filters, "status", 0)
-	//_, n := models.TaskServerGetList(1, 1, filters...)
+	//_, n := model.TaskServerGetList(1, 1, filters...)
 	//if n > 0 {
 	//	self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 	//}
@@ -168,7 +168,7 @@ func (self *GroupController) Table(c *gin.Context) {
 	if groupName != "" {
 		filters = append(filters, "group_name__contains", groupName)
 	}
-	result, count := models.GroupGetList(page, pageSize, filters...)
+	result, count := model.GroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

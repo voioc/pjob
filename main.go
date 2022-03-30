@@ -13,16 +13,16 @@ import (
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/routers"
-	_ "github.com/voioc/cjob/routers"
+	// _ "github.com/voioc/cjob/routers"
 )
 
 func init() {
 
 	//初始化数据模型
 	var StartTime = time.Now().Unix()
-	models.Init(StartTime)
+	model.Init(StartTime)
 	// jobs.InitJobs()
 }
 

@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:14:07
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"fmt"
@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -43,7 +43,7 @@ func (self *AdminController) Add(c *gin.Context) {
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
-	result, _ := models.RoleGetList(1, 1000, filters...)
+	result, _ := model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -65,7 +65,7 @@ func (self *AdminController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑管理员"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	Admin, _ := models.AdminGetById(id)
+	Admin, _ := model.AdminGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = Admin.Id
 	row["login_name"] = Admin.LoginName
@@ -81,7 +81,7 @@ func (self *AdminController) Edit(c *gin.Context) {
 
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
-	result, _ := models.RoleGetList(1, 1000, filters...)
+	result, _ := model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -107,7 +107,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 	uid := c.GetInt("uid")
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	if id == 0 {
-		Admin := new(models.Admin)
+		Admin := new(model.Admin)
 		Admin.LoginName = strings.TrimSpace(c.DefaultPostForm("login_name", ""))
 		Admin.RealName = strings.TrimSpace(c.DefaultPostForm("real_name", ""))
 		Admin.Phone = strings.TrimSpace(c.DefaultPostForm("phone", ""))
@@ -120,7 +120,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Status = 1
 
 		// 检查登录名是否已经存在
-		_, err := models.AdminGetByName(Admin.LoginName)
+		_, err := model.AdminGetByName(Admin.LoginName)
 
 		if err == nil {
 			// self.ajaxMsg("登录名已经存在", MSG_ERR)
@@ -133,7 +133,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Salt = salt
 		Admin.CreateTime = time.Now().Unix()
 		Admin.CreateId = uid
-		if _, err := models.AdminAdd(Admin); err != nil {
+		if _, err := model.AdminAdd(Admin); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -144,7 +144,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	Admin, _ := models.AdminGetById(id)
+	Admin, _ := model.AdminGetById(id)
 	//修改
 	// Admin.Id = id
 	Admin.UpdateTime = time.Now().Unix()
@@ -197,7 +197,7 @@ func (self *AdminController) AjaxDel(c *gin.Context) {
 		Admin_status = 1
 	}
 
-	Admin, _ := models.AdminGetById(id)
+	Admin, _ := model.AdminGetById(id)
 	Admin.UpdateTime = time.Now().Unix()
 	Admin.Status = Admin_status
 	Admin.Id = id
@@ -229,7 +229,7 @@ func (self *AdminController) Table(c *gin.Context) {
 		filters = append(filters, "real_name__icontains", realName)
 	}
 
-	result, count := models.AdminGetList(page, pageSize, filters...)
+	result, count := model.AdminGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

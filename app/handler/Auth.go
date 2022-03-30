@@ -6,7 +6,7 @@
 ** @Last Modified time: 2017-09-17 11:23:40
 ***********************************************/
 
-package controllers
+package handler
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -50,7 +50,7 @@ func (self *AuthController) List(c *gin.Context) {
 func (self *AuthController) GetNodes(c *gin.Context) {
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
-	result, count := models.AuthGetList(1, 1000, filters...)
+	result, count := model.AuthGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -69,7 +69,7 @@ func (self *AuthController) GetNodes(c *gin.Context) {
 //获取一个节点
 func (self *AuthController) GetNode(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	result, _ := models.AuthGetById(id)
+	result, _ := model.AuthGetById(id)
 	// if err == nil {
 	// 	self.ajaxMsg(err.Error(), MSG_ERR)
 	// }
@@ -93,7 +93,7 @@ func (self *AuthController) GetNode(c *gin.Context) {
 func (self *AuthController) AjaxSave(c *gin.Context) {
 
 	uid := c.GetInt("uid")
-	auth := new(models.Auth)
+	auth := new(model.Auth)
 	auth.UserId = uid
 	auth.Pid, _ = strconv.Atoi(c.DefaultPostForm("pid", "0"))
 	auth.AuthName = strings.TrimSpace(c.DefaultPostForm("auth_name", ""))
@@ -111,7 +111,7 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 		auth.CreateTime = time.Now().Unix()
 		auth.CreateId = uid
 		auth.UpdateId = uid
-		if _, err := models.AuthAdd(auth); err != nil {
+		if _, err := model.AuthAdd(auth); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -133,7 +133,7 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 //删除
 func (self *AuthController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	auth, err := models.AuthGetById(id)
+	auth, err := model.AuthGetById(id)
 	if err != nil || auth == nil {
 		msg := "角色ID错误"
 		if err != nil {

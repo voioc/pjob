@@ -5,14 +5,15 @@
 * @Last Modified time: 2017-06-22 14:57:13
  */
 
-package models
+package model
 
 import (
 	"encoding/json"
+	"time"
+
 	"github.com/astaxie/beego/cache"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
-	"time"
 )
 
 type TaskLog struct {

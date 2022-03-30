@@ -19,12 +19,12 @@ import (
 
 	gote "github.com/linxiaozhi/go-telnet"
 	"github.com/pkg/errors"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
 	"golang.org/x/crypto/ssh"
 )
 
-func RemoteCommandByTelnetPassword(servers *models.TaskServer) error {
+func RemoteCommandByTelnetPassword(servers *model.TaskServer) error {
 
 	addr := fmt.Sprintf("%s:%d", servers.ServerIp, servers.Port)
 	conn, err := gote.DialTimeout("tcp", addr, time.Second*10)
@@ -69,7 +69,7 @@ func RemoteCommandByTelnetPassword(servers *models.TaskServer) error {
 	return errors.Errorf("连接失败!")
 }
 
-func RemoteCommandByPassword(servers *models.TaskServer) error {
+func RemoteCommandByPassword(servers *model.TaskServer) error {
 	var (
 		auth         []ssh.AuthMethod
 		addr         string
@@ -96,7 +96,7 @@ func RemoteCommandByPassword(servers *models.TaskServer) error {
 	return err
 }
 
-func RemoteCommandByKey(servers *models.TaskServer) error {
+func RemoteCommandByKey(servers *model.TaskServer) error {
 	key, err := ioutil.ReadFile(servers.PrivateKeySrc)
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func RemoteCommandByKey(servers *models.TaskServer) error {
 	return err
 }
 
-func RemoteAgent(servers *models.TaskServer) error {
+func RemoteAgent(servers *model.TaskServer) error {
 
 	conn, err := net.Dial("tcp", servers.ServerIp+":"+strconv.Itoa(servers.Port))
 	if err != nil {

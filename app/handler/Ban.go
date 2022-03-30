@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2018-06-10 19:50
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -40,7 +40,7 @@ func (self *BanController) Add(c *gin.Context) {
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
-	result, _ := models.RoleGetList(1, 1000, filters...)
+	result, _ := model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -61,7 +61,7 @@ func (self *BanController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑禁用命令"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	ban, _ := models.BanGetById(id)
+	ban, _ := model.BanGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = ban.Id
 	row["code"] = ban.Code
@@ -73,11 +73,11 @@ func (self *BanController) Edit(c *gin.Context) {
 func (self *BanController) AjaxSave(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	if id == 0 {
-		ban := new(models.Ban)
+		ban := new(model.Ban)
 		ban.Code = strings.TrimSpace(c.DefaultPostForm("code", ""))
 		ban.CreateTime = time.Now().Unix()
 
-		if _, err := models.BanAdd(ban); err != nil {
+		if _, err := model.BanAdd(ban); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -87,7 +87,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	ban, _ := models.BanGetById(id)
+	ban, _ := model.BanGetById(id)
 	//修改
 	// ban.Id = id
 	ban.UpdateTime = time.Now().Unix()
@@ -104,7 +104,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 
 func (self *BanController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	ban, _ := models.BanGetById(id)
+	ban, _ := model.BanGetById(id)
 	ban.UpdateTime = time.Now().Unix()
 	ban.Status = 1
 
@@ -131,7 +131,7 @@ func (self *BanController) Table(c *gin.Context) {
 	if code != "" {
 		filters = append(filters, "code__icontains", code)
 	}
-	result, count := models.BanGetList(page, pageSize, filters...)
+	result, count := model.BanGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

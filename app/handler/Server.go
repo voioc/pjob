@@ -5,7 +5,7 @@
 ** @Last Modified by:   Bee
 ** @Last Modified time: 2019-02-17 22:15:15
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -15,10 +15,10 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -82,7 +82,7 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 	filters = append(filters, "status", 0)
 	filters = append(filters, "group_id", gid)
 
-	result, count := models.TaskServerGetList(page, pageSize, filters...)
+	result, count := model.TaskServerGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -110,7 +110,7 @@ func (self *ServerController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑执行资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := models.TaskServerGetById(id)
+	server, _ := model.TaskServerGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = server.Id
 	row["connection_type"] = server.ConnectionType
@@ -136,7 +136,7 @@ func (self *ServerController) Edit(c *gin.Context) {
 
 func (self *ServerController) AjaxTestServer(c *gin.Context) {
 
-	server := new(models.TaskServer)
+	server := new(model.TaskServer)
 	server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "0"))
 	server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", ""))
 	server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", ""))
@@ -207,7 +207,7 @@ func (self *ServerController) Copy(c *gin.Context) {
 	data["pageTitle"] = "复制服务器资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := models.TaskServerGetById(id)
+	server, _ := model.TaskServerGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = server.Id
 	row["connection_type"] = server.ConnectionType
@@ -235,7 +235,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 	server_id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 
 	if server_id == 0 {
-		server := new(models.TaskServer)
+		server := new(model.TaskServer)
 		server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "0"))
 		server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", ""))
 		server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", ""))
@@ -254,7 +254,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		server.UpdateTime = time.Now().Unix()
 		server.Status = 0
 
-		if _, err := models.TaskServerAdd(server); err != nil {
+		if _, err := model.TaskServerAdd(server); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -264,7 +264,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	server, _ := models.TaskServerGetById(server_id)
+	server, _ := model.TaskServerGetById(server_id)
 
 	//修改
 	// server.Id = server_id
@@ -302,7 +302,7 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	server, _ := models.TaskServerGetById(id)
+	server, _ := model.TaskServerGetById(id)
 	if server == nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "资源不存在"))
 		return
@@ -381,7 +381,7 @@ func (self *ServerController) Table(c *gin.Context) {
 		filters = append(filters, "server_name__icontains", serverName)
 	}
 
-	result, count := models.TaskServerGetList(page, pageSize, filters...)
+	result, count := model.TaskServerGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -419,10 +419,10 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 
 	defaultActName := "agent-" + serverIp + "-" + strconv.Itoa(port)
 
-	id := models.TaskServerForActuator(serverIp, port)
+	id := model.TaskServerForActuator(serverIp, port)
 	if id == 0 {
 		//新增
-		server := new(models.TaskServer)
+		server := new(model.TaskServer)
 		server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "3"))
 		server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", defaultActName))
 		server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", "agent"))
@@ -441,7 +441,7 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		server.CreateTime = time.Now().Unix()
 		server.UpdateTime = time.Now().Unix()
 		server.Status = 0
-		serverId, err := models.TaskServerAdd(server)
+		serverId, err := model.TaskServerAdd(server)
 		if err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -453,7 +453,7 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		return
 	} else {
 		//修改状态
-		server, _ := models.TaskServerGetById(id)
+		server, _ := model.TaskServerGetById(id)
 		server.UpdateTime = time.Now().Unix()
 		server.Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
 		if err := server.Update(); err != nil {
@@ -482,7 +482,7 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 		return
 	}
 
-	id := models.TaskServerForActuator(serverId, port)
+	id := model.TaskServerForActuator(serverId, port)
 	if id == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))
@@ -493,7 +493,7 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 		status = 0
 	}
 
-	server, _ := models.TaskServerGetById(id)
+	server, _ := model.TaskServerGetById(id)
 	server.UpdateTime = time.Now().Unix()
 	server.Status = status
 	server.Id = id
@@ -525,14 +525,14 @@ func (self *ServerController) ApiGet(c *gin.Context) {
 		return
 	}
 
-	id := models.TaskServerForActuator(serverId, port)
+	id := model.TaskServerForActuator(serverId, port)
 	if id == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))
 		return
 	}
 
-	server, err := models.TaskServerGetById(id)
+	server, err := model.TaskServerGetById(id)
 
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)

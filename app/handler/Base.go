@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-18 10:28:01
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"strconv"
@@ -13,8 +13,8 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
 )
 
 const (
@@ -26,7 +26,7 @@ type BaseController struct {
 	beego.Controller
 	controllerName string
 	actionName     string
-	user           *models.Admin
+	user           *model.Admin
 	userId         int
 	userName       string
 	loginName      string
@@ -70,7 +70,7 @@ func (self *BaseController) Auth(c *gin.Context) {
 		idstr, password := arr[0], arr[1]
 		userId, _ := strconv.Atoi(idstr)
 		if userId > 0 {
-			user, err := models.AdminGetById(userId)
+			user, err := model.AdminGetById(userId)
 
 			if err == nil && password == libs.Md5([]byte(self.getClientIp()+"|"+user.Password+user.Salt)) {
 				self.userId = user.Id
@@ -112,7 +112,7 @@ func (self *BaseController) Auth(c *gin.Context) {
 	}
 }
 
-func (self *BaseController) dataAuth(user *models.Admin) {
+func (self *BaseController) dataAuth(user *model.Admin) {
 	if user.RoleIds == "0" || user.Id == 1 {
 		return
 	}
@@ -130,7 +130,7 @@ func (self *BaseController) dataAuth(user *models.Admin) {
 
 	Filters = append(Filters, "id__in", RoleIds)
 
-	Result, _ := models.RoleGetList(1, 1000, Filters...)
+	Result, _ := model.RoleGetList(1, 1000, Filters...)
 	serverGroups := ""
 	taskGroups := ""
 	for _, v := range Result {
@@ -148,11 +148,11 @@ func (self *BaseController) AdminAuth() {
 	filters = append(filters, "status", 1)
 	if self.userId != 1 {
 		//普通管理员
-		adminAuthIds, _ := models.RoleAuthGetByIds(self.user.RoleIds)
+		adminAuthIds, _ := model.RoleAuthGetByIds(self.user.RoleIds)
 		adminAuthIdArr := strings.Split(adminAuthIds, ",")
 		filters = append(filters, "id__in", adminAuthIdArr)
 	}
-	result, _ := models.AuthGetList(1, 1000, filters...)
+	result, _ := model.AuthGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	list2 := make([]map[string]interface{}, len(result))
 	allow_url := ""
@@ -255,7 +255,7 @@ func serverGroupLists(authStr string, adminId int) (sgl map[int]string) {
 		Filters = append(Filters, "id__in", serverGroupIds)
 	}
 
-	groupResult, n := models.ServerGroupGetList(1, 1000, Filters...)
+	groupResult, n := model.ServerGroupGetList(1, 1000, Filters...)
 	sgl = make(map[int]string, n)
 	for _, gv := range groupResult {
 		sgl[gv.Id] = gv.GroupName
@@ -276,7 +276,7 @@ func taskGroupLists(authStr string, adminId int) (gl map[int]string) {
 		}
 		groupFilters = append(groupFilters, "id__in", taskGroupIds)
 	}
-	groupResult, n := models.GroupGetList(1, 1000, groupFilters...)
+	groupResult, n := model.GroupGetList(1, 1000, groupFilters...)
 	gl = make(map[int]string, n)
 	for _, gv := range groupResult {
 		gl[gv.Id] = gv.GroupName
@@ -288,7 +288,7 @@ func serverListByGroupId(groupId int) []string {
 	Filters := make([]interface{}, 0)
 	Filters = append(Filters, "status", 1)
 	Filters = append(Filters, "group_id", groupId)
-	Result, _ := models.TaskServerGetList(1, 1000, Filters...)
+	Result, _ := model.TaskServerGetList(1, 1000, Filters...)
 
 	servers := make([]string, 0)
 	for _, v := range Result {
@@ -318,7 +318,7 @@ func AllAdminInfo(adminIds string) []*AdminInfo {
 		}
 		Filters = append(Filters, "id__in", notifyUserIds)
 	}
-	Result, _ := models.AdminGetList(1, 1000, Filters...)
+	Result, _ := model.AdminGetList(1, 1000, Filters...)
 
 	adminInfos := make([]*AdminInfo, 0)
 	for _, v := range Result {
@@ -345,7 +345,7 @@ func serverLists(authStr string, adminId int) (sls []serverList) {
 	Filters := make([]interface{}, 0)
 	Filters = append(Filters, "status__in", []int{0, 1})
 
-	Result, _ := models.TaskServerGetList(1, 1000, Filters...)
+	Result, _ := model.TaskServerGetList(1, 1000, Filters...)
 	for k, v := range serverGroup {
 		sl := serverList{}
 		sl.GroupId = k

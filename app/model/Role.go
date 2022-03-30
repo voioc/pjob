@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:48:52
 ***********************************************/
-package models
+package model
 
 import (
 	"github.com/astaxie/beego/orm"

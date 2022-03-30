@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2018-06-08 21:57
 *************************************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -18,9 +18,9 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -55,7 +55,7 @@ func (self *ServerGroupController) Edit(c *gin.Context) {
 	data["hideTop"] = true
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ := models.TaskGroupGetById(id)
+	group, _ := model.TaskGroupGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = group.Id
 	row["group_name"] = group.GroupName
@@ -67,7 +67,7 @@ func (self *ServerGroupController) Edit(c *gin.Context) {
 }
 
 func (self *ServerGroupController) AjaxSave(c *gin.Context) {
-	servergroup := new(models.ServerGroup)
+	servergroup := new(model.ServerGroup)
 	servergroup.GroupName = strings.TrimSpace(c.DefaultPostForm("group_name", ""))
 	servergroup.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	servergroup.Status = 1
@@ -82,7 +82,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 		servergroup.UpdateTime = time.Now().Unix()
 		servergroup.CreateId = uid
 		servergroup.UpdateId = uid
-		if _, err := models.ServerGroupAdd(servergroup); err != nil {
+		if _, err := model.ServerGroupAdd(servergroup); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -108,7 +108,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 
 	group_id, _ := strconv.Atoi(c.PostForm("id"))
-	group, _ := models.TaskGroupGetById(group_id)
+	group, _ := model.TaskGroupGetById(group_id)
 	group.Status = 0
 	group.Id = group_id
 	group.UpdateTime = time.Now().Unix()
@@ -116,7 +116,7 @@ func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 	filters := make([]interface{}, 0)
 	filters = append(filters, "group_id", group_id)
 	filters = append(filters, "status", 0)
-	_, n := models.TaskServerGetList(1, 1, filters...)
+	_, n := model.TaskServerGetList(1, 1, filters...)
 	if n > 0 {
 		// self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "分组下有服务器资源，请先处理"))
@@ -156,7 +156,7 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 	if groupName != "" {
 		filters = append(filters, "group_name__contains", groupName)
 	}
-	result, count := models.ServerGroupGetList(page, pageSize, filters...)
+	result, count := model.ServerGroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

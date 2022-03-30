@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:31:13
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -62,7 +62,7 @@ func (self *RoleController) Edit(c *gin.Context) {
 	data["serverGroup"] = serverLists(sg, uid)
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	role, _ := models.RoleGetById(id)
+	role, _ := model.RoleGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = role.Id
 	row["role_name"] = role.RoleName
@@ -72,7 +72,7 @@ func (self *RoleController) Edit(c *gin.Context) {
 	data["role"] = row
 
 	//获取选择的树节点
-	roleAuth, _ := models.RoleAuthGetById(id)
+	roleAuth, _ := model.RoleAuthGetById(id)
 	authId := make([]int, 0)
 	for _, v := range roleAuth {
 		authId = append(authId, v.AuthId)
@@ -104,7 +104,7 @@ func (self *RoleController) Edit(c *gin.Context) {
 func (self *RoleController) AjaxSave(c *gin.Context) {
 
 	uid := c.GetInt("uid")
-	role := new(models.Role)
+	role := new(model.Role)
 	role.RoleName = strings.TrimSpace(c.DefaultPostForm("role_name", ""))
 	role.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
 	role.ServerGroupIds = strings.TrimSpace(c.DefaultPostForm("server_group_ids", ""))
@@ -122,18 +122,18 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 		role.CreateId = uid
 		role.UpdateId = uid
 
-		id, err := models.RoleAdd(role)
+		id, err := model.RoleAdd(role)
 		if err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
 
-		ras := make([]models.RoleAuth, 0)
+		ras := make([]model.RoleAuth, 0)
 		authsSlice := strings.Split(auths, ",")
 		for _, v := range authsSlice {
-			//ra := new(models.RoleAuth)
-			ra := models.RoleAuth{}
+			//ra := new(model.RoleAuth)
+			ra := model.RoleAuth{}
 			aid, _ := strconv.Atoi(v)
 			ra.AuthId = aid
 			ra.RoleId = id
@@ -141,7 +141,7 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 		}
 
 		if len(ras) > 0 {
-			models.RoleAuthBatchAdd(&ras)
+			model.RoleAuthBatchAdd(&ras)
 		}
 
 		// self.ajaxMsg("", MSG_OK)
@@ -159,20 +159,20 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 		return
 	}
 	// 删除该角色权限
-	models.RoleAuthDelete(id)
+	model.RoleAuthDelete(id)
 
-	ras := make([]models.RoleAuth, 0)
+	ras := make([]model.RoleAuth, 0)
 	authsSlice := strings.Split(auths, ",")
 	for _, v := range authsSlice {
-		//ra := new(models.RoleAuth)
-		ra := models.RoleAuth{}
+		//ra := new(model.RoleAuth)
+		ra := model.RoleAuth{}
 		aid, _ := strconv.Atoi(v)
 		ra.AuthId = aid
 		ra.RoleId = int64(id)
 		ras = append(ras, ra)
 	}
 	if len(ras) > 0 {
-		models.RoleAuthBatchAdd(&ras)
+		model.RoleAuthBatchAdd(&ras)
 	}
 
 	// self.ajaxMsg("", MSG_OK)
@@ -182,7 +182,7 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 func (self *RoleController) AjaxDel(c *gin.Context) {
 
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	role, err := models.RoleGetById(id)
+	role, err := model.RoleGetById(id)
 	if err != nil || role == nil {
 		msg := "角色ID错误"
 		if err != nil {
@@ -203,7 +203,7 @@ func (self *RoleController) AjaxDel(c *gin.Context) {
 	}
 
 	// 删除该角色权限
-	//models.RoleAuthDelete(role_id)
+	//model.RoleAuthDelete(role_id)
 	// self.ajaxMsg("", MSG_OK)
 	c.JSON(http.StatusOK, common.Success(c))
 }
@@ -221,7 +221,7 @@ func (self *RoleController) Table(c *gin.Context) {
 	if roleName != "" {
 		filters = append(filters, "role_name__icontains", roleName)
 	}
-	result, count := models.RoleGetList(page, pageSize, filters...)
+	result, count := model.RoleGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:14:07
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -30,7 +30,7 @@ func (self *UserController) Edit(c *gin.Context) {
 	data["pageTitle"] = "资料修改"
 
 	uid := c.GetInt("uid")
-	Admin, _ := models.AdminGetById(uid)
+	Admin, _ := model.AdminGetById(uid)
 	row := make(map[string]interface{})
 	row["id"] = Admin.Id
 	row["login_name"] = Admin.LoginName
@@ -47,7 +47,7 @@ func (self *UserController) Edit(c *gin.Context) {
 
 func (self *UserController) AjaxSave(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	admin, err := models.AdminGetById(id)
+	admin, err := model.AdminGetById(id)
 	if err != nil || admin == nil {
 		msg := "用户ID错误"
 		if err != nil {

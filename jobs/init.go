@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/app/model"
 )
 
 func InitJobs() {
-	list, _ := models.TaskGetList(1, 1000000, "status", 1)
+	list, _ := model.TaskGetList(1, 1000000, "status", 1)
 	for _, task := range list {
 		jobs, err := NewJobFromTask(task)
 		if err != nil {

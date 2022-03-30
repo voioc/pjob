@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-09 18:04:41
 ***********************************************/
-package controllers
+package handler
 
 import (
 	"net/http"
@@ -16,10 +16,10 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/jobs"
 	"github.com/voioc/cjob/libs"
-	"github.com/voioc/cjob/models"
-	"github.com/voioc/cjob/service"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -59,27 +59,27 @@ func (self *HomeController) Start(c *gin.Context) {
 
 	data := map[string]interface{}{}
 	//总任务数量
-	_, count := models.TaskGetList(1, 10)
+	_, count := model.TaskGetList(1, 10)
 	// self.Data["totalJob"] = count
 	data["totalJob"] = count
 
 	//日志总量
-	_, totalLog := models.TaskLogGetList(1, 10)
+	_, totalLog := model.TaskLogGetList(1, 10)
 	data["totalLog"] = totalLog
 
 	//待审核任务数量
-	_, totalAuditTask := models.TaskGetList(1, 10, "status", 2)
+	_, totalAuditTask := model.TaskGetList(1, 10, "status", 2)
 	data["totalAuditTask"] = totalAuditTask
 
 	//失败
-	errorNum, err := models.GetLogNum(-1)
+	errorNum, err := model.GetLogNum(-1)
 	if err != nil {
 		errorNum = 0
 	}
 	data["errorNum"] = errorNum
 
 	//成功
-	successNum, err := models.GetLogNum(0)
+	successNum, err := model.GetLogNum(0)
 	if err != nil {
 		successNum = 0
 	}
@@ -87,12 +87,12 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["successNum"] = successNum
 
 	//用户数
-	_, userNum := models.AdminGetList(1, 10, "status", 1)
+	_, userNum := model.AdminGetList(1, 10, "status", 1)
 	// self.Data["userNum"] = userNum
 	data["userNum"] = userNum
 
 	//累计运行总次数
-	n, err := models.TaskTotalRunNum()
+	n, err := model.TaskTotalRunNum()
 	if err != nil {
 		n = 0
 	}
@@ -108,7 +108,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	for k, v := range entries {
 		row := make(map[string]interface{})
 		job := v.Job.(*jobs.Job)
-		task, _ := models.TaskGetById(job.GetId())
+		task, _ := model.TaskGetById(job.GetId())
 		row["task_id"] = job.GetId()
 		row["task_name"] = job.GetName()
 		row["task_group"] = groups_map[task.GroupId]
@@ -120,11 +120,11 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["recentLogs"] = jobList
 
 	// 最近执行失败的日志
-	logs, _ := models.TaskLogGetList(1, 30, "status__lt", 0)
+	logs, _ := model.TaskLogGetList(1, 30, "status__lt", 0)
 	errLogs := make([]map[string]interface{}, len(logs))
 
 	for k, v := range logs {
-		task, err := models.TaskGetById(v.TaskId)
+		task, err := model.TaskGetById(v.TaskId)
 		taskName := ""
 		if err == nil {
 			taskName = task.TaskName
@@ -146,9 +146,9 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["jobs"] = jobList
 
 	//折线图
-	okRun := models.SumByDays(30, "0")
-	errRun := models.SumByDays(30, "-1")
-	expiredRun := models.SumByDays(30, "-2")
+	okRun := model.SumByDays(30, "0")
+	errRun := model.SumByDays(30, "-1")
+	expiredRun := model.SumByDays(30, "-2")
 
 	days := []string{}
 	okNum := []int64{}
@@ -200,7 +200,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["cpuNum"] = runtime.NumCPU()
 
 	//系统运行信息
-	info := libs.SystemInfo(models.StartTime)
+	info := libs.SystemInfo(model.StartTime)
 	data["sysInfo"] = info
 
 	data["pageTitle"] = "系统概况"

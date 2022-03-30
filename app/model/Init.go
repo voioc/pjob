@@ -5,7 +5,7 @@
 * @Last Modified time: 2019-02-15 22:12
  */
 
-package models
+package model
 
 import (
 	"net/url"

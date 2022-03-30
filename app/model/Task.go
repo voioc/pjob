@@ -1,11 +1,11 @@
 /************************************************************
-** @Description: models
+** @Description: model
 ** @Author: haodaquan
 ** @Date:   2018-06-11 21:26
 ** @Last Modified by:   Bee
 ** @Last Modified time: 2019-02-15 21:32
 *************************************************************/
-package models
+package model
 
 import (
 	"fmt"

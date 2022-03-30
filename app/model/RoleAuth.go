@@ -5,7 +5,7 @@
 ** @Last Modified by:   haodaquan
 ** @Last Modified time: 2017-09-17 11:49:13
 ***********************************************/
-package models
+package model
 
 import (
 	"bytes"

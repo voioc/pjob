@@ -4,7 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/voioc/cjob/models"
+	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/utils"
 )
 
 func Menu(uid int) (map[string][]map[string]interface{}, error) {
@@ -16,13 +17,13 @@ func Menu(uid int) (map[string][]map[string]interface{}, error) {
 
 	if uid != 1 {
 		//普通管理员
-		adminAuthIds, _ := models.RoleAuthGetByIds("0")
-		// adminAuthIds, _ := models.RoleAuthGetByIds(self.user.RoleIds)
+		adminAuthIds, _ := model.RoleAuthGetByIds("0")
+		// adminAuthIds, _ := model.RoleAuthGetByIds(self.user.RoleIds)
 		adminAuthIdArr := strings.Split(adminAuthIds, ",")
 		filters = append(filters, "id__in", adminAuthIdArr)
 	}
 
-	result, _ := models.AuthGetList(1, 1000, filters...)
+	result, _ := model.AuthGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	list2 := make([]map[string]interface{}, len(result))
 	allow_url := ""
@@ -36,7 +37,7 @@ func Menu(uid int) (map[string][]map[string]interface{}, error) {
 			row["Id"] = int(v.Id)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
-			row["AuthUrl"] = v.AuthUrl
+			row["AuthUrl"] = utils.URI("") + v.AuthUrl
 			row["Icon"] = v.Icon
 			row["Pid"] = int(v.Pid)
 			list[i] = row
@@ -47,7 +48,7 @@ func Menu(uid int) (map[string][]map[string]interface{}, error) {
 			row["Id"] = int(v.Id)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
-			row["AuthUrl"] = v.AuthUrl
+			row["AuthUrl"] = utils.URI("") + v.AuthUrl
 			row["Icon"] = v.Icon
 			row["Pid"] = int(v.Pid)
 			list2[j] = row
@@ -79,7 +80,7 @@ func TaskGroups(uid int, roleIDs string) (string, string) {
 
 	Filters = append(Filters, "id__in", RoleIds)
 
-	Result, _ := models.RoleGetList(1, 1000, Filters...)
+	Result, _ := model.RoleGetList(1, 1000, Filters...)
 	serverGroups := ""
 	taskGroups := ""
 	for _, v := range Result {

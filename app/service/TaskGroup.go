@@ -26,7 +26,7 @@ func (s *TaskGroupService) GroupList(page, pageSize int, filters ...interface{})
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %s", condition, filters[k].(string), filters[k+1])
+			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 

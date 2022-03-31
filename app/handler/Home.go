@@ -8,9 +8,9 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"runtime"
+	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -59,7 +59,6 @@ func (self *HomeController) Start(c *gin.Context) {
 	// 总任务数量
 	// _, count := model.TaskGetList(1, 10)
 	_, count, err := service.TaskS(c).TaskGetList(1, 10)
-
 	// self.Data["totalJob"] = count
 	data["totalJob"] = count
 
@@ -68,7 +67,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["totalLog"] = totalLog
 
 	// 待审核任务数量
-	_, totalAuditTask, err := service.TaskS(c).TaskGetList(1, 10, "status", 2)
+	_, totalAuditTask, err := service.TaskS(c).TaskGetList(1, 10, "status = ", 2)
 	data["totalAuditTask"] = totalAuditTask
 
 	//失败
@@ -87,7 +86,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["successNum"] = successNum
 
 	// 用户数
-	_, userNum, err := service.AdminS(c).AdminList(1, 10, "status", 1)
+	_, userNum, err := service.AdminS(c).AdminList(1, 10, "status = ", 1)
 	data["userNum"] = userNum
 
 	// 累计运行总次数
@@ -134,7 +133,7 @@ func (self *HomeController) Start(c *gin.Context) {
 		row["start_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
 		row["process_time"] = float64(v.ProcessTime) / 1000
 		row["output_size"] = libs.SizeFormat(float64(len(v.Output)))
-		row["error"] = v.Error[0:100]
+		row["error"] = v.Error // v.Error[0:100]
 		row["status"] = v.Status
 		errLogs[k] = row
 
@@ -145,9 +144,9 @@ func (self *HomeController) Start(c *gin.Context) {
 
 	// 折线图
 	okRun, _ := service.TaskLogS(c).SumByDays(30, "0")
-	// errRun, _ := service.TaskLogS(c).SumByDays(30, "-1")
-	// expiredRun, _ := service.TaskLogS(c).SumByDays(30, "-2")
-	fmt.Println(okRun)
+	errRun, _ := service.TaskLogS(c).SumByDays(30, "-1")
+	expiredRun, _ := service.TaskLogS(c).SumByDays(30, "-2")
+	// fmt.Println(okRun)
 
 	days := []string{}
 	okNum := []int64{}
@@ -159,35 +158,35 @@ func (self *HomeController) Start(c *gin.Context) {
 		Value int64
 	}
 
-	// //排序
-	// var ss []kv
-	// for k, v := range okRun {
-	// 	i, _ := strconv.ParseInt(v, 10, 64)
-	// 	ss = append(ss, kv{k, i})
-	// }
+	//排序
+	var ss []kv
+	for k, v := range okRun {
+		// i, _ := strconv.ParseInt(v, 10, 64)
+		ss = append(ss, kv{k, int64(v)})
+	}
 
-	// sort.Slice(ss, func(i, j int) bool {
-	// 	return ss[i].Key < ss[j].Key
-	// })
+	sort.Slice(ss, func(i, j int) bool {
+		return ss[i].Key < ss[j].Key
+	})
 
-	// for _, v := range ss {
-	// 	days = append(days, v.Key)
-	// 	okNum = append(okNum, v.Value)
+	for _, v := range ss {
+		days = append(days, v.Key)
+		okNum = append(okNum, v.Value)
 
-	// 	if _, ok := errRun[v.Key]; ok {
-	// 		i, _ := strconv.ParseInt(v.Key, 10, 64)
-	// 		errNum = append(errNum, i)
-	// 	} else {
-	// 		errNum = append(errNum, 0)
-	// 	}
+		value := 0
+		if _, ok := errRun[v.Key]; ok {
+			// i, _ := strconv.ParseInt(v.Key, 10, 64)
+			value = errRun[v.Key]
+		}
+		errNum = append(errNum, int64(value))
 
-	// 	if _, ok := expiredRun[v.Key]; ok {
-	// 		i, _ := strconv.ParseInt(expiredRun[v.Key].(string), 10, 64)
-	// 		expiredNum = append(expiredNum, i)
-	// 	} else {
-	// 		expiredNum = append(expiredNum, 0)
-	// 	}
-	// }
+		value = 0
+		if _, ok := expiredRun[v.Key]; ok {
+			// i, _ := strconv.ParseInt(expiredRun[v.Key], 10, 64)
+			value = expiredRun[v.Key]
+		}
+		expiredNum = append(expiredNum, int64(value))
+	}
 
 	data["days"] = days
 	data["okNum"] = okNum

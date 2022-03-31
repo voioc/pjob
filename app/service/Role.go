@@ -34,7 +34,7 @@ func (s *RoleService) RoleList(page, pageSize int, filters ...interface{}) ([]*m
 				in[filters[k].(string)] = filters[k+1]
 			}
 
-			condition = fmt.Sprintf("%s and %s %s", condition, filters[k].(string), filters[k+1])
+			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 
@@ -77,7 +77,7 @@ func (s *RoleService) TaskGroups(uid int, roleIDs string) (string, string) {
 	}
 
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
+	filters = append(filters, "status = ", 1)
 
 	RoleIdsArr := strings.Split(roleIDs, ",")
 
@@ -87,7 +87,7 @@ func (s *RoleService) TaskGroups(uid int, roleIDs string) (string, string) {
 		RoleIds = append(RoleIds, id)
 	}
 
-	filters = append(filters, "id__in", RoleIds)
+	filters = append(filters, "id", RoleIds)
 
 	result, _, _ := s.RoleList(1, 1000, filters...)
 	serverGroups := ""

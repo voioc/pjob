@@ -28,7 +28,7 @@ func (s *ServerGroupService) List(page, pageSize int, filters ...interface{}) ([
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %s", condition, filters[k].(string), filters[k+1])
+			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 
@@ -54,7 +54,7 @@ func (s *ServerGroupService) List(page, pageSize int, filters ...interface{}) ([
 
 func (s *ServerGroupService) ServerGroupLists(authStr string, adminId int) (sgl map[int]string) {
 	Filters := make([]interface{}, 0)
-	Filters = append(Filters, "status", 1)
+	Filters = append(Filters, "status = ", 1)
 	if authStr != "0" && adminId != 1 {
 		serverGroupIdsArr := strings.Split(authStr, ",")
 		serverGroupIds := make([]int, 0)
@@ -62,7 +62,7 @@ func (s *ServerGroupService) ServerGroupLists(authStr string, adminId int) (sgl 
 			id, _ := strconv.Atoi(v)
 			serverGroupIds = append(serverGroupIds, id)
 		}
-		Filters = append(Filters, "id__in", serverGroupIds)
+		Filters = append(Filters, "id", serverGroupIds)
 	}
 
 	groupResult, n, _ := s.List(1, 1000, Filters...)

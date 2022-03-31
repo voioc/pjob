@@ -26,9 +26,10 @@ func (s *TaskService) TaskGetList(page, pageSize int, filters ...interface{}) ([
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %s", condition, filters[k].(string), filters[k+1])
+			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
+	fmt.Println(condition)
 
 	total, err := model.GetDB().Where(condition).Count(&model.Task{})
 	if err != nil {
@@ -67,7 +68,7 @@ func (s *TaskService) TaskByID(id int) (*model.Task, error) {
 	}
 
 	if task.ID == 0 {
-		return nil, fmt.Errorf("")
+		return nil, fmt.Errorf("task not found")
 	}
 
 	return task, nil

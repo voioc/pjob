@@ -26,7 +26,7 @@ func (s *TaskLogService) LogList(page, pageSize int, filters ...interface{}) ([]
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %s", condition, filters[k].(string), filters[k+1])
+			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 
@@ -64,7 +64,12 @@ func (s *TaskLogService) SumByDays(limit int, status string) (map[string]int, er
 	// 	"-2": "expiredRun",
 	// }
 
-	res := make([]map[string]int, 0)
+	type dc struct {
+		Days  string
+		Count int
+	}
+
+	tmp := make([]dc, 0)
 	// key := m[status]
 
 	// if RunNumCache.IsExist(key) {
@@ -73,8 +78,13 @@ func (s *TaskLogService) SumByDays(limit int, status string) (map[string]int, er
 	// 	return res
 	// }
 	if err := model.GetDB().SQL("SELECT FROM_UNIXTIME(create_time,'%Y-%m-%d') days,COUNT(id) count FROM pp_task_log WHERE status in(?) GROUP BY days ORDER BY days DESC limit ?;",
-		status, limit).Find(&res); err != nil {
+		status, limit).Find(&tmp); err != nil {
 		return nil, err
+	}
+
+	data := map[string]int{}
+	for _, row := range tmp {
+		data[row.Days] = row.Count
 	}
 
 	// data, err := json.Marshal(res)
@@ -82,6 +92,7 @@ func (s *TaskLogService) SumByDays(limit int, status string) (map[string]int, er
 	// 	return nil
 	// }
 	// RunNumCache.Put(key, data, 2*time.Hour)
-	return res[0], nil
+
+	return data, nil
 
 }

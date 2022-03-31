@@ -9,24 +9,22 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/model"
+	_ "github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/routers"
+	"github.com/voioc/coco/cache"
+	"github.com/voioc/coco/logzap"
 	// _ "github.com/voioc/cjob/routers"
 )
 
-func init() {
-
-	//初始化数据模型
-	var StartTime = time.Now().Unix()
-	model.Init(StartTime)
-	// jobs.InitJobs()
-}
-
 func main() {
+
+	// db.Init()        // 初始化数据库连接
+	cache.Init()     // 初始化缓存连接
+	logzap.InitZap() // 初始化日志组件
+
 	r := gin.New()
 	// pprof.Register(r)
 	// r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {

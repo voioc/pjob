@@ -41,8 +41,8 @@ func (self *TaskLogController) List(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{}
-	data["pageTitle"] = "日志管理 - " + task.TaskName + "(#" + strconv.Itoa(task.Id) + ")"
-	data["task_id"] = task.Id
+	data["pageTitle"] = "日志管理 - " + task.TaskName + "(#" + strconv.Itoa(task.ID) + ")"
+	data["task_id"] = task.ID
 
 	c.HTML(http.StatusOK, "tasklog/list.html", data)
 }
@@ -86,13 +86,13 @@ func (self *TaskLogController) Table(c *gin.Context) {
 
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
-		row["task_id"] = libs.JobKey(v.TaskId, v.ServerId)
-		row["start_time"] = beego.Date(time.Unix(v.CreateTime, 0), "Y-m-d H:i:s")
+		row["id"] = v.ID
+		row["task_id"] = libs.JobKey(v.TaskID, v.ServerID)
+		row["start_time"] = beego.Date(time.Unix(v.CreatedAt, 0), "Y-m-d H:i:s")
 		row["process_time"] = float64(v.ProcessTime) / 1000
 
-		row["server_id"] = v.ServerId
-		row["server_name"] = v.ServerName + "#" + strconv.Itoa(v.ServerId)
+		row["server_id"] = v.ServerID
+		row["server_name"] = v.ServerName + "#" + strconv.Itoa(v.ServerID)
 		if v.Status == 0 {
 			row["output_size"] = libs.SizeFormat(float64(len(v.Output)))
 		} else {
@@ -132,9 +132,9 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	data := map[string]interface{}{}
 	row := make(map[string]interface{})
-	row["id"] = tasklog.Id
-	row["task_id"] = tasklog.TaskId
-	row["start_time"] = beego.Date(time.Unix(tasklog.CreateTime, 0), "Y-m-d H:i:s")
+	row["id"] = tasklog.ID
+	row["task_id"] = tasklog.TaskID
+	row["start_time"] = beego.Date(time.Unix(tasklog.CreatedAt, 0), "Y-m-d H:i:s")
 	row["process_time"] = float64(tasklog.ProcessTime) / 1000
 	if tasklog.Status == 0 {
 		row["output_size"] = libs.SizeFormat(float64(len(tasklog.Output)))
@@ -156,7 +156,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	data["taskLog"] = row
 
 	//任务详情
-	task, err := model.TaskGetById(tasklog.TaskId)
+	task, err := model.TaskGetById(tasklog.TaskID)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -171,24 +171,24 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	}
 
 	data["TextStatus"] = TextStatus[task.Status]
-	data["CreateTime"] = beego.Date(time.Unix(task.CreateTime, 0), "Y-m-d H:i:s")
-	data["UpdateTime"] = beego.Date(time.Unix(task.UpdateTime, 0), "Y-m-d H:i:s")
+	data["CreateTime"] = beego.Date(time.Unix(task.CreatedAt, 0), "Y-m-d H:i:s")
+	data["UpdateTime"] = beego.Date(time.Unix(task.UpdatedAt, 0), "Y-m-d H:i:s")
 	data["task"] = task
 	// 分组列表
-	tg, _ := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	tg, _ := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	data["taskGroup"] = taskGroupLists(tg, c.GetInt("uid"))
 
 	serverName := ""
-	if task.ServerIds == "0" {
+	if task.ServerIDs == "0" {
 		serverName = "本地服务器"
 	} else {
-		serverIdSli := strings.Split(task.ServerIds, ",")
+		serverIdSli := strings.Split(task.ServerIDs, ",")
 		for _, v := range serverIdSli {
 			if v == "0" {
-				serverName = "本地服务器  "
+				serverName = "本地服务器"
 			}
 		}
-		servers, n := model.TaskServerGetByIds(task.ServerIds)
+		servers, n := model.TaskServerGetByIds(task.ServerIDs)
 		if n > 0 {
 			for _, server := range servers {
 				if server.Status != 0 {
@@ -206,8 +206,8 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	//任务分组
 	groupName := "默认分组"
-	if task.GroupId > 0 {
-		group, err := model.GroupGetById(task.GroupId)
+	if task.GroupID > 0 {
+		group, err := model.GroupGetById(task.GroupID)
 		if err == nil {
 			groupName = group.GroupName
 		}
@@ -217,15 +217,15 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	//创建人和修改人
 	createName := "未知"
 	updateName := "未知"
-	if task.CreateId > 0 {
-		admin, err := model.AdminGetById(task.CreateId)
+	if task.CreatedID > 0 {
+		admin, err := model.AdminGetById(task.CreatedID)
 		if err == nil {
 			createName = admin.RealName
 		}
 	}
 
-	if task.UpdateId > 0 {
-		admin, err := model.AdminGetById(task.UpdateId)
+	if task.UpdatedID > 0 {
+		admin, err := model.AdminGetById(task.UpdatedID)
 		if err == nil {
 			updateName = admin.RealName
 		}
@@ -243,7 +243,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
-		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplId)
+		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplID)
 		if err == nil {
 			data["NotifyTplName"] = notifyTpl.TplName
 		}

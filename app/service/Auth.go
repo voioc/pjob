@@ -4,11 +4,22 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
 )
 
-func Menu(uid int) (map[string][]map[string]interface{}, error) {
+type AuthService struct {
+	common.Base
+}
+
+// AuthS instance
+func AuthS(c *gin.Context) *AuthService {
+	return &AuthService{Base: common.Base{C: c}}
+}
+
+func (s *AuthService) Menu(uid int) (map[string][]map[string]interface{}, error) {
 	data := map[string][]map[string]interface{}{}
 
 	// 左侧导航栏
@@ -33,24 +44,24 @@ func Menu(uid int) (map[string][]map[string]interface{}, error) {
 			allow_url += v.AuthUrl
 		}
 		row := make(map[string]interface{})
-		if v.Pid == 1 && v.IsShow == 1 {
-			row["Id"] = int(v.Id)
+		if v.PID == 1 && v.IsShow == 1 {
+			row["Id"] = int(v.ID)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
 			row["AuthUrl"] = utils.URI("") + v.AuthUrl
 			row["Icon"] = v.Icon
-			row["Pid"] = int(v.Pid)
+			row["Pid"] = int(v.PID)
 			list[i] = row
 			i++
 		}
 
-		if v.Pid != 1 && v.IsShow == 1 {
-			row["Id"] = int(v.Id)
+		if v.PID != 1 && v.IsShow == 1 {
+			row["Id"] = int(v.ID)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
 			row["AuthUrl"] = utils.URI("") + v.AuthUrl
 			row["Icon"] = v.Icon
-			row["Pid"] = int(v.Pid)
+			row["Pid"] = int(v.PID)
 			list2[j] = row
 			j++
 		}
@@ -62,13 +73,13 @@ func Menu(uid int) (map[string][]map[string]interface{}, error) {
 	return data, nil
 }
 
-func TaskGroups(uid int, roleIDs string) (string, string) {
-	// if user.RoleIds == "0" || user.Id == 1 {
-	// 	return
-	// }
+func (s *AuthService) TaskGroups(uid int, roleIDs string) (string, string) {
+	if uid == 1 || roleIDs == "0" {
+		return "", ""
+	}
 
-	Filters := make([]interface{}, 0)
-	Filters = append(Filters, "status", 1)
+	filters := make([]interface{}, 0)
+	filters = append(filters, "status", 1)
 
 	RoleIdsArr := strings.Split(roleIDs, ",")
 
@@ -78,14 +89,14 @@ func TaskGroups(uid int, roleIDs string) (string, string) {
 		RoleIds = append(RoleIds, id)
 	}
 
-	Filters = append(Filters, "id__in", RoleIds)
+	filters = append(filters, "id__in", RoleIds)
 
-	Result, _ := model.RoleGetList(1, 1000, Filters...)
+	result, _, _ := RoleS(s.C).RoleList(1, 1000, filters...)
 	serverGroups := ""
 	taskGroups := ""
-	for _, v := range Result {
-		serverGroups += v.ServerGroupIds + ","
-		taskGroups += v.TaskGroupIds + ","
+	for _, v := range result {
+		serverGroups += v.ServerGroupIDs + ","
+		taskGroups += v.TaskGroupIDs + ","
 	}
 
 	return strings.Trim(serverGroups, ","), strings.Trim(taskGroups, ",")

@@ -1,16 +1,13 @@
-/*
-* @Author: haodaquan
-* @Date:   2017-06-21 12:54:47
-* @Last Modified by:   haodaquan
-* @Last Modified time: 2017-06-23 11:04:25
- */
-
-package jobs
+package service
 
 import (
 	"sync"
 
 	"github.com/astaxie/beego"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	"github.com/voioc/cjob/app/job"
+	"github.com/voioc/cjob/common"
 	cron "github.com/voioc/cjob/crons"
 )
 
@@ -21,18 +18,28 @@ var (
 )
 
 func init() {
-	if size, _ := beego.AppConfig.Int("jobs.pool"); size > 0 {
+	if size := viper.GetInt("job.size"); size > 0 {
 		workPool = make(chan bool, size)
 	}
+
 	mainCron = cron.New()
 	mainCron.Start()
 }
 
-func AddJob(spec string, job *Job) bool {
+type CronService struct {
+	common.Base
+}
+
+// RoleS instance
+func CronS(c *gin.Context) *CronService {
+	return &CronService{Base: common.Base{C: c}}
+}
+
+func (s *CronService) AddJob(spec string, job *job.Job) bool {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if GetEntryById(job.JobKey) != nil {
+	if s.GetEntryById(job.JobKey) != nil {
 		return false
 	}
 	err := mainCron.AddJob(spec, job)
@@ -44,9 +51,9 @@ func AddJob(spec string, job *Job) bool {
 	return true
 }
 
-func RemoveJob(jobKey int) {
+func (s *CronService) RemoveJob(jobKey int) {
 	mainCron.RemoveJob(func(e *cron.Entry) bool {
-		if v, ok := e.Job.(*Job); ok {
+		if v, ok := e.Job.(*job.Job); ok {
 			if v.JobKey == jobKey {
 				return true
 			}
@@ -55,10 +62,10 @@ func RemoveJob(jobKey int) {
 	})
 }
 
-func GetEntryById(jobKey int) *cron.Entry {
+func (s *CronService) GetEntryById(jobKey int) *cron.Entry {
 	entries := mainCron.Entries()
 	for _, e := range entries {
-		if v, ok := e.Job.(*Job); ok {
+		if v, ok := e.Job.(*job.Job); ok {
 			if v.JobKey == jobKey {
 				return e
 			}
@@ -67,11 +74,10 @@ func GetEntryById(jobKey int) *cron.Entry {
 	return nil
 }
 
-func GetEntries(size int) []*cron.Entry {
+func (s *CronService) GetEntries(size int) []*cron.Entry {
 	ret := mainCron.Entries()
 	if len(ret) > size {
 		return ret[:size]
 	}
-
 	return ret
 }

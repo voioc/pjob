@@ -41,7 +41,7 @@ func Init(startTime int64) {
 		new(ServerGroup),
 		new(TaskServer),
 		new(Ban),
-		new(Group),
+		new(TaskGroup),
 		new(Task),
 		new(TaskLog),
 		new(NotifyTpl),

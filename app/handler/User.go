@@ -32,7 +32,7 @@ func (self *UserController) Edit(c *gin.Context) {
 	uid := c.GetInt("uid")
 	Admin, _ := model.AdminGetById(uid)
 	row := make(map[string]interface{})
-	row["id"] = Admin.Id
+	row["id"] = Admin.ID
 	row["login_name"] = Admin.LoginName
 	row["real_name"] = Admin.RealName
 	row["phone"] = Admin.Phone
@@ -59,9 +59,9 @@ func (self *UserController) AjaxSave(c *gin.Context) {
 	}
 
 	//修改
-	admin.Id = id
-	admin.UpdateTime = time.Now().Unix()
-	admin.UpdateId = c.GetInt("uid")
+	admin.ID = id
+	admin.UpdatedAt = time.Now().Unix()
+	admin.UpdatedID = c.GetInt("uid")
 	admin.LoginName = strings.TrimSpace(c.PostForm("login_name"))
 	admin.RealName = strings.TrimSpace(c.PostForm("real_name"))
 	admin.Phone = strings.TrimSpace(c.PostForm("phone"))
@@ -97,8 +97,8 @@ func (self *UserController) AjaxSave(c *gin.Context) {
 		admin.Password = pwd
 		admin.Salt = salt
 	}
-	admin.UpdateTime = time.Now().Unix()
-	admin.UpdateId = c.GetInt("uid")
+	admin.UpdatedAt = time.Now().Unix()
+	admin.UpdatedID = c.GetInt("uid")
 	admin.Status = 1
 
 	if err := admin.Update(); err != nil {

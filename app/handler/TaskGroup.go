@@ -56,7 +56,7 @@ func (self *GroupController) Edit(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	group, _ := model.GroupGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = group.Id
+	row["id"] = group.ID
 	row["group_name"] = group.GroupName
 	row["description"] = group.Description
 	data["group"] = row
@@ -67,7 +67,7 @@ func (self *GroupController) Edit(c *gin.Context) {
 
 func (self *GroupController) AjaxSave(c *gin.Context) {
 
-	group := new(model.Group)
+	group := new(model.TaskGroup)
 	group.GroupName = strings.TrimSpace(c.DefaultPostForm("group_name", ""))
 	group.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	group.Status = 1
@@ -78,10 +78,10 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 	uid := c.GetInt("uid")
 	if group_id == 0 {
 		//新增
-		group.CreateTime = time.Now().Unix()
-		group.UpdateTime = time.Now().Unix()
-		group.CreateId = uid
-		group.UpdateId = uid
+		group.CreatedAt = time.Now().Unix()
+		group.UpdatedAt = time.Now().Unix()
+		group.CreatedID = uid
+		group.UpdatedID = uid
 		if _, err := model.GroupAdd(group); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -92,9 +92,9 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 		return
 	}
 	//修改
-	group.Id = group_id
-	group.UpdateTime = time.Now().Unix()
-	group.UpdateId = self.userId
+	group.ID = group_id
+	group.UpdatedAt = time.Now().Unix()
+	group.UpdatedID = self.userId
 	if err := group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -109,7 +109,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 
 	group_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	group, err := model.GroupGetById(group_id)
-	if err != nil || group.Id == 0 {
+	if err != nil || group.ID == 0 {
 		msg := "内部错误"
 		if err != nil {
 			msg = err.Error()
@@ -120,8 +120,8 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	}
 
 	group.Status = 0
-	group.Id = group_id
-	group.UpdateTime = time.Now().Unix()
+	group.ID = group_id
+	group.UpdatedAt = time.Now().Unix()
 	//TODO 如果分组下有任务 不处理
 	//filters := make([]interface{}, 0)
 	//filters = append(filters, "group_id", group_id)
@@ -155,7 +155,7 @@ func (self *GroupController) Table(c *gin.Context) {
 	filters = append(filters, "status", 1)
 
 	if uid != 1 {
-		tg, _ := service.TaskGroups(uid, c.GetString("role_id"))
+		tg, _ := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 		groups := strings.Split(tg, ",")
 
 		groupsIds := make([]int, 0)
@@ -172,11 +172,11 @@ func (self *GroupController) Table(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["group_name"] = v.GroupName
 		row["description"] = v.Description
-		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
-		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
 

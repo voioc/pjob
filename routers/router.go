@@ -2,13 +2,17 @@ package routers
 
 import (
 	"html/template"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/handler"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/middleware"
 )
 
 func InitRouter(engine *gin.Engine) {
+	model.Init(time.Now().Unix())
+
 	// 默认登录
 	// beego.Router("/", &controllers.LoginController{}, "*:Login")
 	// beego.Router("/login_in", &controllers.LoginController{}, "*:LoginIn")

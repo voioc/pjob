@@ -14,14 +14,14 @@ import (
 )
 
 type ServerGroup struct {
-	Id          int
-	CreateId    int
-	UpdateId    int
-	GroupName   string
-	Description string
-	CreateTime  int64
-	UpdateTime  int64
-	Status      int
+	ID          int    `xorm:"id pk" json:"id"`
+	CreatedID   int    `xorm:"create_id" json:"create_id"`
+	UpdatedID   int    `xorm:"update_id" json:"update_id"`
+	GroupName   string `xorm:"group_name" json:"group_name"`
+	Description string `xorm:"description" json:"description"`
+	CreatedAt   int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt   int64  `xorm:"update_time" json:"created_at"`
+	Status      int    `xorm:"status" json:"status"`
 }
 
 func (t *ServerGroup) TableName() string {
@@ -47,7 +47,7 @@ func ServerGroupAdd(obj *ServerGroup) (int64, error) {
 
 func TaskGroupGetById(id int) (*ServerGroup, error) {
 	obj := &ServerGroup{
-		Id: id,
+		ID: id,
 	}
 	err := orm.NewOrm().Read(obj)
 	if err != nil {

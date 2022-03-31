@@ -12,27 +12,27 @@ import (
 )
 
 type Admin struct {
-	Id         int
-	LoginName  string
-	RealName   string
-	Password   string
-	RoleIds    string
-	Phone      string
-	Email      string
-	Dingtalk   string
-	Wechat     string
-	Salt       string
-	LastLogin  int64
-	LastIp     string
-	Status     int
-	CreateId   int
-	UpdateId   int
-	CreateTime int64
-	UpdateTime int64
+	ID        int    `xorm:"id pk" json:"id"`
+	LoginName string `xorm:"login_name" json:"login_name"`
+	RealName  string `xorm:"real_name" json:"real_name"`
+	Password  string `xorm:"password" json:"-"`
+	RoleIDs   string `xorm:"role_ids" json:"role_ids"`
+	Phone     string `xorm:"phone" json:"phone"`
+	Email     string `xorm:"email" json:"email"`
+	Dingtalk  string `xorm:"dingtalk" json:"dingtalk"`
+	Wechat    string `xorm:"wechat" json:"wechat"`
+	Salt      string `xorm:"salt" json:"salt"`
+	LastLogin int64  `xorm:"last_login" json:"last_login"`
+	LastIp    string `xorm:"last_ip" json:"last_ip"`
+	Status    int    `xorm:"status" json:"status"`
+	CreatedID int    `xorm:"create_id" json:"created_id"`
+	UpdatedID int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt int64  `xorm:"update_time" json:"created_at"`
 }
 
 func (a *Admin) TableName() string {
-	return TableName("uc_admin")
+	return "pp_uc_admin"
 }
 
 func AdminAdd(a *Admin) (int64, error) {

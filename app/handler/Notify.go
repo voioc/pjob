@@ -40,7 +40,7 @@ func (self *NotifyController) Add(c *gin.Context) {
 	data["pageTitle"] = "新增通知模板"
 
 	uid := c.GetInt("uid")
-	_, sg := service.TaskGroups(uid, c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 	data["serverGroup"] = serverGroupLists(sg, uid)
 	// self.display()
 
@@ -79,8 +79,8 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		notifyTpl.TplType, _ = strconv.Atoi(c.DefaultPostForm("tpl_type", "0"))
 		notifyTpl.Title = strings.TrimSpace(c.DefaultPostForm("title", ""))
 		notifyTpl.Content = strings.TrimSpace(c.DefaultPostForm("content", ""))
-		notifyTpl.CreateId = uid
-		notifyTpl.CreateTime = time.Now().Unix()
+		notifyTpl.CreatedID = uid
+		notifyTpl.CreatedAt = time.Now().Unix()
 		notifyTpl.Type = model.NotifyTplTypeDefault
 		notifyTpl.Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
 
@@ -107,8 +107,8 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 	notifyTpl, _ := model.NotifyTplGetById(id)
 	//修改
 	// notifyTpl.Id = id
-	notifyTpl.UpdateId = uid
-	notifyTpl.UpdateTime = time.Now().Unix()
+	notifyTpl.UpdatedID = uid
+	notifyTpl.UpdatedAt = time.Now().Unix()
 
 	notifyTpl.TplName = strings.TrimSpace(c.DefaultPostForm("tpl_name", ""))
 	notifyTpl.TplType, _ = strconv.Atoi(c.DefaultPostForm("tpl_type", "0"))
@@ -201,8 +201,8 @@ func (self *NotifyController) Table(c *gin.Context) {
 		row["tpl_type_text"] = TplTypeText[v.TplType]
 		row["status"] = v.Status
 		row["status_text"] = StatusText[v.Status]
-		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
-		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
 

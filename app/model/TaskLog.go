@@ -17,15 +17,15 @@ import (
 )
 
 type TaskLog struct {
-	Id          int
-	TaskId      int
-	ServerId    int
-	ServerName  string
-	Output      string
-	Error       string
-	Status      int
-	ProcessTime int
-	CreateTime  int64
+	ID          int    `xorm:"id pk" json:"id"`
+	TaskID      int    `xorm:"task_id" json:"task_id"`
+	ServerID    int    `xorm:"server_id" json:"server_id"`
+	ServerName  string `xorm:"server_name" json:"server_name"`
+	Output      string `xorm:"output" json:"output"`
+	Error       string `xorm:"error" json:"error"`
+	Status      int    `xorm:"status" json:"status"`
+	ProcessTime int    `xorm:"process_time" json:"process_time"`
+	CreatedAt   int64  `xorm:"create_time" json:"created_at"`
 }
 
 var RunNumCache, _ = cache.NewCache("memory", `{"interval":60}`)
@@ -59,7 +59,7 @@ func TaskLogGetList(page, pageSize int, filters ...interface{}) ([]*TaskLog, int
 
 func TaskLogGetById(id int) (*TaskLog, error) {
 	obj := &TaskLog{
-		Id: id,
+		ID: id,
 	}
 
 	err := orm.NewOrm().Read(obj)
@@ -70,7 +70,7 @@ func TaskLogGetById(id int) (*TaskLog, error) {
 }
 
 func TaskLogDelById(id int) error {
-	_, err := orm.NewOrm().Delete(&TaskLog{Id: id})
+	_, err := orm.NewOrm().Delete(&TaskLog{ID: id})
 	return err
 }
 

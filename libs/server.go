@@ -26,7 +26,7 @@ import (
 
 func RemoteCommandByTelnetPassword(servers *model.TaskServer) error {
 
-	addr := fmt.Sprintf("%s:%d", servers.ServerIp, servers.Port)
+	addr := fmt.Sprintf("%s:%d", servers.ServerIP, servers.Port)
 	conn, err := gote.DialTimeout("tcp", addr, time.Second*10)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func RemoteCommandByPassword(servers *model.TaskServer) error {
 		Timeout: 5 * time.Second,
 	}
 
-	addr = fmt.Sprintf("%s:%d", servers.ServerIp, servers.Port)
+	addr = fmt.Sprintf("%s:%d", servers.ServerIP, servers.Port)
 	client, err := ssh.Dial("tcp", addr, clientConfig)
 	if err == nil {
 		defer client.Close()
@@ -106,7 +106,7 @@ func RemoteCommandByKey(servers *model.TaskServer) error {
 	if err != nil {
 		return err
 	}
-	addr := fmt.Sprintf("%s:%d", servers.ServerIp, servers.Port)
+	addr := fmt.Sprintf("%s:%d", servers.ServerIP, servers.Port)
 	config := &ssh.ClientConfig{
 		User: servers.ServerAccount,
 		Auth: []ssh.AuthMethod{
@@ -129,7 +129,7 @@ func RemoteCommandByKey(servers *model.TaskServer) error {
 
 func RemoteAgent(servers *model.TaskServer) error {
 
-	conn, err := net.Dial("tcp", servers.ServerIp+":"+strconv.Itoa(servers.Port))
+	conn, err := net.Dial("tcp", servers.ServerIP+":"+strconv.Itoa(servers.Port))
 	if err != nil {
 		return err
 	}

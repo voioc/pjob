@@ -14,11 +14,11 @@ import (
 )
 
 type Ban struct {
-	Id         int
-	Code       string
-	CreateTime int64
-	UpdateTime int64
-	Status     int
+	ID        int    `xorm:"id pk" json:"id"`
+	Code      string `xorm:"code" json:"code"`
+	CreatedAt int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt int64  `xorm:"update_time" json:"updated_at"`
+	Status    int    `xorm:"status" json:"status"`
 }
 
 func (t *Ban) TableName() string {
@@ -44,7 +44,7 @@ func BanAdd(obj *Ban) (int64, error) {
 
 func BanGetById(id int) (*Ban, error) {
 	obj := &Ban{
-		Id: id,
+		ID: id,
 	}
 	err := orm.NewOrm().Read(obj)
 	if err != nil {

@@ -1,0 +1,30 @@
+[app]
+    env = "release"
+
+[log]
+    access = "/log/lemon.log"
+    error  = "/log/lemon_error.log"
+    closed = false
+
+[db.main]
+    driver = "mysql"
+    dsn = [
+        "root:Aa_123456@tcp(192.168.0.144:3306)/applecms?charset=utf8mb4",
+    ]
+    log = "/log/lemon_sql.log"
+
+[[cache]]
+    driver =  "redis"
+    nodes = ["172.16.0.17:6379"]
+    password = "Aa_123456"
+    expire = 300
+    flush = 300
+
+[geo]
+    amap_key = "04db6228b23ff2417957ae6055a5381a"
+    ip138_token = "c5c250dbc1fb1bd08b1d1a8a3c0074e2"
+    
+[riot]
+    amount = 2
+    gse ="data/riot/dict"
+    

@@ -12,16 +12,16 @@ import (
 )
 
 type Role struct {
-	Id             int
-	RoleName       string
-	Detail         string
-	ServerGroupIds string
-	TaskGroupIds   string
-	Status         int
-	CreateId       int
-	UpdateId       int
-	CreateTime     int64
-	UpdateTime     int64
+	Id             int    `xorm:"id pk" json:"id"`
+	RoleName       string `xorm:"role_name" json:"role_name"`
+	Detail         string `xorm:"detail" json:"detail"`
+	ServerGroupIDs string `xorm:"server_group_ids" json:"server_group_ids"`
+	TaskGroupIDs   string `xorm:"task_group_ids" json:"task_group_ids"`
+	Status         int    `xorm:"status" json:"status"`
+	CreatedID      int    `xorm:"create_id" json:"created_id"`
+	UpdatedID      int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt      int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt      int64  `xorm:"update_time" json:"created_at"`
 }
 
 func (a *Role) TableName() string {

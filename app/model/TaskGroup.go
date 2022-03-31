@@ -14,22 +14,22 @@ import (
 	"github.com/astaxie/beego/orm"
 )
 
-type Group struct {
-	Id          int
-	CreateId    int
-	UpdateId    int
-	GroupName   string
-	Description string
-	CreateTime  int64
-	UpdateTime  int64
-	Status      int
+type TaskGroup struct {
+	ID          int    `xorm:"id pk" json:"id"`
+	GroupName   string `xorm:"group_name" json:"group_name"`
+	Description string `xorm:"description" json:"description"`
+	CreatedID   int    `xorm:"create_id" json:"created_id"`
+	UpdatedID   int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt   int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt   int64  `xorm:"update_time" json:"updated_at"`
+	Status      int    `xorm:"status" json:"status"`
 }
 
-func (t *Group) TableName() string {
-	return TableName("task_group")
+func (t *TaskGroup) TableName() string {
+	return "pp_task_group"
 }
 
-func (t *Group) Update(fields ...string) error {
+func (t *TaskGroup) Update(fields ...string) error {
 	if t.GroupName == "" {
 		return fmt.Errorf("组名不能为空")
 	}
@@ -39,16 +39,16 @@ func (t *Group) Update(fields ...string) error {
 	return nil
 }
 
-func GroupAdd(obj *Group) (int64, error) {
+func GroupAdd(obj *TaskGroup) (int64, error) {
 	if obj.GroupName == "" {
 		return 0, fmt.Errorf("组名不能为空")
 	}
 	return orm.NewOrm().Insert(obj)
 }
 
-func GroupGetById(id int) (*Group, error) {
-	obj := &Group{
-		Id: id,
+func GroupGetById(id int) (*TaskGroup, error) {
+	obj := &TaskGroup{
+		ID: id,
 	}
 	err := orm.NewOrm().Read(obj)
 	if err != nil {
@@ -62,9 +62,9 @@ func GroupDelById(id int) error {
 	return err
 }
 
-func GroupGetList(page, pageSize int, filters ...interface{}) ([]*Group, int64) {
+func GroupGetList(page, pageSize int, filters ...interface{}) ([]*TaskGroup, int64) {
 	offset := (page - 1) * pageSize
-	list := make([]*Group, 0)
+	list := make([]*TaskGroup, 0)
 	query := orm.NewOrm().QueryTable(TableName("task_group"))
 	if len(filters) > 0 {
 		l := len(filters)

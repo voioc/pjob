@@ -54,8 +54,8 @@ func (self *AuthController) GetNodes(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
-		row["pId"] = v.Pid
+		row["id"] = v.ID
+		row["pId"] = v.PID
 		row["name"] = v.AuthName
 		row["open"] = true
 		list[k] = row
@@ -74,8 +74,8 @@ func (self *AuthController) GetNode(c *gin.Context) {
 	// 	self.ajaxMsg(err.Error(), MSG_ERR)
 	// }
 	row := make(map[string]interface{})
-	row["id"] = result.Id
-	row["pid"] = result.Pid
+	row["id"] = result.ID
+	row["pid"] = result.PID
 	row["auth_name"] = result.AuthName
 	row["auth_url"] = result.AuthUrl
 	row["sort"] = result.Sort
@@ -94,31 +94,31 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 
 	uid := c.GetInt("uid")
 	auth := new(model.Auth)
-	auth.UserId = uid
-	auth.Pid, _ = strconv.Atoi(c.DefaultPostForm("pid", "0"))
+	auth.UserID = uid
+	auth.PID, _ = strconv.Atoi(c.DefaultPostForm("pid", "0"))
 	auth.AuthName = strings.TrimSpace(c.DefaultPostForm("auth_name", ""))
 	auth.AuthUrl = strings.TrimSpace(c.DefaultPostForm("auth_url", ""))
 	auth.Sort, _ = strconv.Atoi(c.DefaultPostForm("sort", "0"))
 	auth.IsShow, _ = strconv.Atoi(c.DefaultPostForm("is_show", "0"))
 	auth.Icon = strings.TrimSpace(c.DefaultPostForm("icon", ""))
-	auth.UpdateTime = time.Now().Unix()
+	auth.UpdatedAt = time.Now().Unix()
 
 	auth.Status = 1
 
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	if id == 0 {
 		//新增
-		auth.CreateTime = time.Now().Unix()
-		auth.CreateId = uid
-		auth.UpdateId = uid
+		auth.CreatedAt = time.Now().Unix()
+		auth.CreatedID = uid
+		auth.UpdatedID = uid
 		if _, err := model.AuthAdd(auth); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
 	} else {
-		auth.Id = id
-		auth.UpdateId = self.userId
+		auth.ID = id
+		auth.UpdatedID = self.userId
 		if err := auth.Update(); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -144,7 +144,7 @@ func (self *AuthController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	auth.Id = id
+	auth.ID = id
 	auth.Status = 0
 	if err := auth.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)

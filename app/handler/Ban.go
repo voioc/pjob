@@ -63,7 +63,7 @@ func (self *BanController) Edit(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	ban, _ := model.BanGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = ban.Id
+	row["id"] = ban.ID
 	row["code"] = ban.Code
 	data["ban"] = row
 	// self.display()
@@ -75,7 +75,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 	if id == 0 {
 		ban := new(model.Ban)
 		ban.Code = strings.TrimSpace(c.DefaultPostForm("code", ""))
-		ban.CreateTime = time.Now().Unix()
+		ban.CreatedAt = time.Now().Unix()
 
 		if _, err := model.BanAdd(ban); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
@@ -90,7 +90,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 	ban, _ := model.BanGetById(id)
 	//修改
 	// ban.Id = id
-	ban.UpdateTime = time.Now().Unix()
+	ban.UpdatedAt = time.Now().Unix()
 	ban.Code = strings.TrimSpace(c.DefaultPostForm("code", ""))
 
 	if err := ban.Update(); err != nil {
@@ -105,7 +105,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 func (self *BanController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 	ban, _ := model.BanGetById(id)
-	ban.UpdateTime = time.Now().Unix()
+	ban.UpdatedAt = time.Now().Unix()
 	ban.Status = 1
 
 	if err := ban.Update(); err != nil {
@@ -135,9 +135,9 @@ func (self *BanController) Table(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["code"] = v.Code
-		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
 

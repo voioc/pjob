@@ -8,28 +8,18 @@ import (
 	"github.com/voioc/cjob/common"
 )
 
-type AdminService struct {
+type TaskGroupService struct {
 	common.Base
 }
 
-// AdminS instance
-func AdminS(c *gin.Context) *AdminService {
-	return &AdminService{Base: common.Base{C: c}}
+// TaskS instance
+func TaskGroupS(c *gin.Context) *TaskGroupService {
+	return &TaskGroupService{Base: common.Base{C: c}}
 }
 
-func (s *AdminService) AdminGetByID(id int) (*model.Admin, error) {
-	user := new(model.Admin)
-	if _, err := model.GetDB().Where("id = ?", id).Get(user); err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (s *AdminService) AdminList(page, pageSize int, filters ...interface{}) ([]*model.Admin, int64, error) {
+func (s *TaskGroupService) GroupList(page, pageSize int, filters ...interface{}) ([]*model.TaskGroup, int64, error) {
 	offset := (page - 1) * pageSize
-	data := make([]*model.Admin, 0)
+	data := make([]*model.TaskGroup, 0)
 
 	// query := model.GetDB()
 	// var count int
@@ -40,12 +30,12 @@ func (s *AdminService) AdminList(page, pageSize int, filters ...interface{}) ([]
 		}
 	}
 
-	total, err := model.GetDB().Where(condition).Count(&model.Admin{})
+	total, err := model.GetDB().Where(condition).Count(&model.TaskGroup{})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if err := model.GetDB().Where(condition).Limit(pageSize, offset).OrderBy("id desc").Find(&data); err != nil {
+	if err := model.GetDB().Where(condition).Limit(pageSize, offset).Find(&data); err != nil {
 		return nil, 0, err
 	}
 

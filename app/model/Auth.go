@@ -14,19 +14,19 @@ import (
 )
 
 type Auth struct {
-	Id         int
-	AuthName   string
-	AuthUrl    string
-	UserId     int
-	Pid        int
-	Sort       int
-	Icon       string
-	IsShow     int
-	Status     int
-	CreateId   int
-	UpdateId   int
-	CreateTime int64
-	UpdateTime int64
+	ID        int    `xorm:"id pk" json:"id"`
+	AuthName  string `xorm:"auth_name" json:"role_ids"`
+	AuthUrl   string `xorm:"auth_url" json:"role_ids"`
+	UserID    int    `xorm:"user_id" json:"role_ids"`
+	PID       int    `xorm:"pid" json:"role_ids"`
+	Sort      int    `xorm:"sort" json:"sort"`
+	Icon      string `xorm:"icon" json:"role_ids"`
+	IsShow    int    `xorm:"is_show" json:"role_ids"`
+	Status    int    `xorm:"status" json:"role_ids"`
+	CreatedID int    `xorm:"create_id" json:"created_id"`
+	UpdatedID int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt int64  `xorm:"update_time" json:"created_at"`
 }
 
 func (a *Auth) TableName() string {

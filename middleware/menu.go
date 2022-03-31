@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"fmt"
-	"strconv"
+	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
+	"github.com/voioc/cjob/common"
 )
 
 func Menu() gin.HandlerFunc {
@@ -16,20 +16,29 @@ func Menu() gin.HandlerFunc {
 		fmt.Println("cookie: ", cookie)
 		arr := strings.Split(cookie, "|")
 		fmt.Println("arr:", arr)
+		// uid, _ := strconv.Atoi(arr[0])
 		uid := 1
-		var user *model.Admin
-		if len(arr) == 2 {
-			// idstr, password := arr[0], arr[1]
-			uid, _ := strconv.Atoi(arr[0])
-			if uid > 0 {
-				user, _ = service.AdminGetById(uid)
-			}
+		user, err := service.AdminS(c).AdminGetByID(uid)
+		if err != nil {
+			c.JSON(http.StatusOK, common.Error(c, common.ERROR_AUTH))
+			c.Abort()
+			return
 		}
+
+		if user.ID == 0 {
+			c.JSON(http.StatusOK, common.Error(c, common.ERROR_AUTH))
+			c.Abort()
+			return
+		}
+
+		tg, sg := service.RoleS(c).TaskGroups(uid, user.RoleIDs)
 
 		// c.Set("menu", data)
 		c.Set("uid", uid)
-		c.Set("role_ids", user.RoleIds)
+		c.Set("role_ids", user.RoleIDs)
+		c.Set("tg", tg) // taskgroups
+		c.Set("sg", sg) // taskgroups
+
 		c.Next()
 	}
-
 }

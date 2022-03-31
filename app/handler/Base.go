@@ -73,7 +73,7 @@ func (self *BaseController) Auth(c *gin.Context) {
 			user, err := model.AdminGetById(userId)
 
 			if err == nil && password == libs.Md5([]byte(self.getClientIp()+"|"+user.Password+user.Salt)) {
-				self.userId = user.Id
+				self.userId = user.ID
 				self.loginName = user.LoginName
 				self.userName = user.RealName
 				self.user = user
@@ -113,14 +113,14 @@ func (self *BaseController) Auth(c *gin.Context) {
 }
 
 func (self *BaseController) dataAuth(user *model.Admin) {
-	if user.RoleIds == "0" || user.Id == 1 {
+	if user.RoleIDs == "0" || user.ID == 1 {
 		return
 	}
 
 	Filters := make([]interface{}, 0)
 	Filters = append(Filters, "status", 1)
 
-	RoleIdsArr := strings.Split(user.RoleIds, ",")
+	RoleIdsArr := strings.Split(user.RoleIDs, ",")
 
 	RoleIds := make([]int, 0)
 	for _, v := range RoleIdsArr {
@@ -134,8 +134,8 @@ func (self *BaseController) dataAuth(user *model.Admin) {
 	serverGroups := ""
 	taskGroups := ""
 	for _, v := range Result {
-		serverGroups += v.ServerGroupIds + ","
-		taskGroups += v.TaskGroupIds + ","
+		serverGroups += v.ServerGroupIDs + ","
+		taskGroups += v.TaskGroupIDs + ","
 	}
 
 	self.serverGroups = strings.Trim(serverGroups, ",")
@@ -148,7 +148,7 @@ func (self *BaseController) AdminAuth() {
 	filters = append(filters, "status", 1)
 	if self.userId != 1 {
 		//普通管理员
-		adminAuthIds, _ := model.RoleAuthGetByIds(self.user.RoleIds)
+		adminAuthIds, _ := model.RoleAuthGetByIds(self.user.RoleIDs)
 		adminAuthIdArr := strings.Split(adminAuthIds, ",")
 		filters = append(filters, "id__in", adminAuthIdArr)
 	}
@@ -162,23 +162,23 @@ func (self *BaseController) AdminAuth() {
 			allow_url += v.AuthUrl
 		}
 		row := make(map[string]interface{})
-		if v.Pid == 1 && v.IsShow == 1 {
-			row["Id"] = int(v.Id)
+		if v.PID == 1 && v.IsShow == 1 {
+			row["Id"] = int(v.ID)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
 			row["AuthUrl"] = v.AuthUrl
 			row["Icon"] = v.Icon
-			row["Pid"] = int(v.Pid)
+			row["Pid"] = int(v.PID)
 			list[i] = row
 			i++
 		}
-		if v.Pid != 1 && v.IsShow == 1 {
-			row["Id"] = int(v.Id)
+		if v.PID != 1 && v.IsShow == 1 {
+			row["Id"] = int(v.ID)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
 			row["AuthUrl"] = v.AuthUrl
 			row["Icon"] = v.Icon
-			row["Pid"] = int(v.Pid)
+			row["Pid"] = int(v.PID)
 			list2[j] = row
 			j++
 		}
@@ -258,7 +258,7 @@ func serverGroupLists(authStr string, adminId int) (sgl map[int]string) {
 	groupResult, n := model.ServerGroupGetList(1, 1000, Filters...)
 	sgl = make(map[int]string, n)
 	for _, gv := range groupResult {
-		sgl[gv.Id] = gv.GroupName
+		sgl[gv.ID] = gv.GroupName
 	}
 	//sgl[0] = "默认分组"
 	return sgl
@@ -279,7 +279,7 @@ func taskGroupLists(authStr string, adminId int) (gl map[int]string) {
 	groupResult, n := model.GroupGetList(1, 1000, groupFilters...)
 	gl = make(map[int]string, n)
 	for _, gv := range groupResult {
-		gl[gv.Id] = gv.GroupName
+		gl[gv.ID] = gv.GroupName
 	}
 	return gl
 }
@@ -292,7 +292,7 @@ func serverListByGroupId(groupId int) []string {
 
 	servers := make([]string, 0)
 	for _, v := range Result {
-		servers = append(servers, strconv.Itoa(v.Id), v.ServerName)
+		servers = append(servers, strconv.Itoa(v.ID), v.ServerName)
 	}
 
 	return servers
@@ -323,7 +323,7 @@ func AllAdminInfo(adminIds string) []*AdminInfo {
 	adminInfos := make([]*AdminInfo, 0)
 	for _, v := range Result {
 		ai := AdminInfo{
-			Id:       v.Id,
+			Id:       v.ID,
 			Email:    v.Email,
 			Phone:    v.Phone,
 			RealName: v.RealName,
@@ -352,8 +352,8 @@ func serverLists(authStr string, adminId int) (sls []serverList) {
 		sl.GroupName = v
 		servers := make(map[int]string)
 		for _, sv := range Result {
-			if sv.GroupId == k {
-				servers[sv.Id] = sv.ServerName
+			if sv.GroupID == k {
+				servers[sv.ID] = sv.ServerName
 			}
 		}
 		sl.Servers = servers

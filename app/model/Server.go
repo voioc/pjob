@@ -16,22 +16,22 @@ import (
 )
 
 type TaskServer struct {
-	Id             int
-	GroupId        int
-	ConnectionType int
-	ServerName     string
-	ServerAccount  string
-	ServerOuterIp  string
-	ServerIp       string
-	Port           int
-	Password       string
-	PrivateKeySrc  string
-	PublicKeySrc   string
-	Type           int
-	Detail         string
-	CreateTime     int64
-	UpdateTime     int64
-	Status         int
+	ID             int    `xorm:"id pk" json:"id"`
+	GroupID        int    `xorm:"group_id" json:"group_id"`
+	ConnectionType int    `xorm:"connection_type" json:"connection_type"`
+	ServerName     string `xorm:"server_name" json:"server_name"`
+	ServerAccount  string `xorm:"server_account" json:"server_account"`
+	ServerOuterIP  string `xorm:"server_outer_ip" json:"server_outer_ip"`
+	ServerIP       string `xorm:"server_ip" json:"server_ip"`
+	Port           int    `xorm:"port" json:"port"`
+	Password       string `xorm:"password" json:"password"`
+	PrivateKeySrc  string `xorm:"private_key_src" json:"private_key_src"`
+	PublicKeySrc   string `xorm:"public_key_src" json:"public_key_src"`
+	Type           int    `xorm:"type" json:"type"`
+	Detail         string `xorm:"detail" json:"detail"`
+	CreatedAt      int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt      int64  `xorm:"update_time" json:"created_at"`
+	Status         int    `xorm:"status" json:"status"`
 }
 
 func (t *TaskServer) TableName() string {
@@ -42,7 +42,7 @@ func (t *TaskServer) Update(fields ...string) error {
 	if t.ServerName == "" {
 		return fmt.Errorf("服务器名不能为空")
 	}
-	if t.ServerIp == "" {
+	if t.ServerIP == "" {
 		return fmt.Errorf("服务器IP不能为空")
 	}
 
@@ -68,7 +68,7 @@ func TaskServerAdd(obj *TaskServer) (int64, error) {
 	if obj.ServerName == "" {
 		return 0, fmt.Errorf("服务器名不能为空")
 	}
-	if obj.ServerIp == "" {
+	if obj.ServerIP == "" {
 		return 0, fmt.Errorf("服务器IP不能为空")
 	}
 
@@ -88,7 +88,7 @@ func TaskServerAdd(obj *TaskServer) (int64, error) {
 
 func TaskServerGetById(id int) (*TaskServer, error) {
 	obj := &TaskServer{
-		Id: id,
+		ID: id,
 	}
 	err := orm.NewOrm().Read(obj)
 	if err != nil {
@@ -106,7 +106,7 @@ func TaskServerForActuator(serverIp string, port int) int {
 	server, _ := TaskServerGetList(1, 1, serverFilters...)
 
 	if len(server) == 1 {
-		return server[0].Id
+		return server[0].ID
 	}
 	return 0
 }

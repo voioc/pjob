@@ -16,8 +16,8 @@ import (
 )
 
 type RoleAuth struct {
-	AuthId int `orm:"pk"`
-	RoleId int64
+	AuthID int   `xorm:"auth_id pk" orm:"pk" json:"auth_id"`
+	RoleID int64 `xorm:"role_id" json:"role_id"`
 }
 
 func (ra *RoleAuth) TableName() string {
@@ -59,8 +59,8 @@ func RoleAuthGetByIds(RoleIds string) (Authids string, err error) {
 	}
 	b := bytes.Buffer{}
 	for _, v := range list {
-		if v.AuthId != 0 && v.AuthId != 1 {
-			b.WriteString(strconv.Itoa(v.AuthId))
+		if v.AuthID != 0 && v.AuthID != 1 {
+			b.WriteString(strconv.Itoa(v.AuthID))
 			b.WriteString(",")
 		}
 	}

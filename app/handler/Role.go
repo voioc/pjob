@@ -39,7 +39,7 @@ func (self *RoleController) Add(c *gin.Context) {
 	data["uri"] = utils.URI("")
 
 	uid := c.GetInt("uid")
-	tg, sg := service.TaskGroups(uid, c.GetString("role_id"))
+	tg, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 
 	data["zTree"] = true //引入ztreecss
 	data["taskGroup"] = taskGroupLists(tg, uid)
@@ -53,7 +53,7 @@ func (self *RoleController) Edit(c *gin.Context) {
 	data := map[string]interface{}{}
 	data["uri"] = utils.URI("")
 	uid := c.GetInt("uid")
-	tg, sg := service.TaskGroups(uid, c.GetString("role_id"))
+	tg, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 
 	data["zTree"] = true //引入ztreecss
 	data["pageTitle"] = "编辑角色"
@@ -67,25 +67,25 @@ func (self *RoleController) Edit(c *gin.Context) {
 	row["id"] = role.Id
 	row["role_name"] = role.RoleName
 	row["detail"] = role.Detail
-	row["task_group_ids"] = role.TaskGroupIds
-	row["server_group_ids"] = role.ServerGroupIds
+	row["task_group_ids"] = role.TaskGroupIDs
+	row["server_group_ids"] = role.ServerGroupIDs
 	data["role"] = row
 
 	//获取选择的树节点
 	roleAuth, _ := model.RoleAuthGetById(id)
 	authId := make([]int, 0)
 	for _, v := range roleAuth {
-		authId = append(authId, v.AuthId)
+		authId = append(authId, v.AuthID)
 	}
 
-	taskGroupIdsArr := strings.Split(role.TaskGroupIds, ",")
+	taskGroupIdsArr := strings.Split(role.TaskGroupIDs, ",")
 	taskGroupIds := make([]int, 0)
 	for _, v := range taskGroupIdsArr {
 		id, _ := strconv.Atoi(v)
 		taskGroupIds = append(taskGroupIds, id)
 	}
 
-	serverGroupIdsArr := strings.Split(role.ServerGroupIds, ",")
+	serverGroupIdsArr := strings.Split(role.ServerGroupIDs, ",")
 	serverGroupIds := make([]int, 0)
 	for _, v := range serverGroupIdsArr {
 		id, _ := strconv.Atoi(v)
@@ -107,20 +107,20 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 	role := new(model.Role)
 	role.RoleName = strings.TrimSpace(c.DefaultPostForm("role_name", ""))
 	role.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
-	role.ServerGroupIds = strings.TrimSpace(c.DefaultPostForm("server_group_ids", ""))
-	role.TaskGroupIds = strings.TrimSpace(c.DefaultPostForm("task_group_ids", ""))
-	role.CreateTime = time.Now().Unix()
-	role.UpdateTime = time.Now().Unix()
+	role.ServerGroupIDs = strings.TrimSpace(c.DefaultPostForm("server_group_ids", ""))
+	role.TaskGroupIDs = strings.TrimSpace(c.DefaultPostForm("task_group_ids", ""))
+	role.CreatedAt = time.Now().Unix()
+	role.UpdatedAt = time.Now().Unix()
 	role.Status = 1
 
 	auths := strings.TrimSpace(c.DefaultPostForm("nodes_data", ""))
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	if id == 0 {
 		//新增
-		role.CreateTime = time.Now().Unix()
-		role.UpdateTime = time.Now().Unix()
-		role.CreateId = uid
-		role.UpdateId = uid
+		role.CreatedAt = time.Now().Unix()
+		role.UpdatedAt = time.Now().Unix()
+		role.CreatedID = uid
+		role.UpdatedID = uid
 
 		id, err := model.RoleAdd(role)
 		if err != nil {
@@ -135,8 +135,8 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 			//ra := new(model.RoleAuth)
 			ra := model.RoleAuth{}
 			aid, _ := strconv.Atoi(v)
-			ra.AuthId = aid
-			ra.RoleId = id
+			ra.AuthID = aid
+			ra.RoleID = id
 			ras = append(ras, ra)
 		}
 
@@ -151,8 +151,8 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 
 	//修改
 	role.Id = id
-	role.UpdateTime = time.Now().Unix()
-	role.UpdateId = self.userId
+	role.UpdatedAt = time.Now().Unix()
+	role.UpdatedID = self.userId
 	if err := role.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -167,8 +167,8 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 		//ra := new(model.RoleAuth)
 		ra := model.RoleAuth{}
 		aid, _ := strconv.Atoi(v)
-		ra.AuthId = aid
-		ra.RoleId = int64(id)
+		ra.AuthID = aid
+		ra.RoleID = int64(id)
 		ras = append(ras, ra)
 	}
 	if len(ras) > 0 {
@@ -195,7 +195,7 @@ func (self *RoleController) AjaxDel(c *gin.Context) {
 
 	role.Status = 0
 	role.Id = id
-	role.UpdateTime = time.Now().Unix()
+	role.UpdatedAt = time.Now().Unix()
 
 	if err := role.Update(); err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -228,8 +228,8 @@ func (self *RoleController) Table(c *gin.Context) {
 		row["id"] = v.Id
 		row["role_name"] = v.RoleName
 		row["detail"] = v.Detail
-		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
-		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
 

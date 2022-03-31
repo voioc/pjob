@@ -20,17 +20,17 @@ const (
 )
 
 type NotifyTpl struct {
-	Id         int
-	Type       string
-	TplName    string
-	TplType    int
-	Title      string
-	Content    string
-	Status     int
-	CreateId   int
-	UpdateId   int
-	CreateTime int64
-	UpdateTime int64
+	Id        int    `xorm:"id pk" json:"id"`
+	Type      string `xorm:"type" json:"type"`
+	TplName   string `xorm:"tpl_name" json:"tpl_name"`
+	TplType   int    `xorm:"tpl_type" json:"tpl_type"`
+	Title     string `xorm:"title" json:"title"`
+	Content   string `xorm:"content" json:"content"`
+	Status    int    `xorm:"status" json:"status"`
+	CreatedID int    `xorm:"create_id" json:"created_id"`
+	UpdatedID int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt int64  `xorm:"update_time" json:"created_at"`
 }
 
 func (t *NotifyTpl) TableName() string {
@@ -46,8 +46,8 @@ func (t *NotifyTpl) Update(fields ...string) error {
 		return fmt.Errorf("模板内容不能为空")
 	}
 
-	if t.CreateTime == 0 {
-		t.CreateTime = time.Now().Unix()
+	if t.CreatedAt == 0 {
+		t.CreatedAt = time.Now().Unix()
 	}
 
 	if _, err := orm.NewOrm().Update(t, fields...); err != nil {
@@ -63,8 +63,8 @@ func NotifyTplAdd(obj *NotifyTpl) (int64, error) {
 	if obj.Content == "" {
 		return 0, fmt.Errorf("模板内容不能为空")
 	}
-	if obj.CreateTime == 0 {
-		obj.CreateTime = time.Now().Unix()
+	if obj.CreatedAt == 0 {
+		obj.CreatedAt = time.Now().Unix()
 	}
 	return orm.NewOrm().Insert(obj)
 }

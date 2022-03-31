@@ -1,0 +1,30 @@
+[app]
+    env = "dev"
+
+[log]
+    access = "/log/lemon.log"
+    error  = "/log/lemon_error.log"
+    closed = false
+
+[db.main]
+    driver = "mysql"
+    dsn = [
+        "root:123456@tcp(127.0.0.1:3306)/pp_job?charset=utf8&loc=Local",
+    ]
+    log = "/log/lemon_sql.log"
+
+[[cache]]
+    driver =  "redis"
+    nodes = ["127.0.0.1:6379"]
+    password = ""
+    expire= 300
+    flush=300
+    
+[riot]
+    amount = 2
+    gse ="data/riot/dict"
+
+[geo]
+    amap_key = "99b7c33c53906ee93dc250e3d11bbb41"
+    ip138_token = "c5c250dbc1fb1bd08b1d1a8a3c0074e2"
+    

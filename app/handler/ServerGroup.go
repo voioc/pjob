@@ -57,7 +57,7 @@ func (self *ServerGroupController) Edit(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	group, _ := model.TaskGroupGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = group.Id
+	row["id"] = group.ID
 	row["group_name"] = group.GroupName
 	row["description"] = group.Description
 	data["group"] = row
@@ -78,10 +78,10 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 	uid := c.GetInt("uid")
 	if servergroup_id == 0 {
 		//新增
-		servergroup.CreateTime = time.Now().Unix()
-		servergroup.UpdateTime = time.Now().Unix()
-		servergroup.CreateId = uid
-		servergroup.UpdateId = uid
+		servergroup.CreatedAt = time.Now().Unix()
+		servergroup.UpdatedAt = time.Now().Unix()
+		servergroup.CreatedID = uid
+		servergroup.UpdatedID = uid
 		if _, err := model.ServerGroupAdd(servergroup); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -93,9 +93,9 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 	}
 
 	//修改
-	servergroup.Id = servergroup_id
-	servergroup.UpdateTime = time.Now().Unix()
-	servergroup.UpdateId = uid
+	servergroup.ID = servergroup_id
+	servergroup.UpdatedAt = time.Now().Unix()
+	servergroup.UpdatedID = uid
 	if err := servergroup.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -110,8 +110,8 @@ func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 	group_id, _ := strconv.Atoi(c.PostForm("id"))
 	group, _ := model.TaskGroupGetById(group_id)
 	group.Status = 0
-	group.Id = group_id
-	group.UpdateTime = time.Now().Unix()
+	group.ID = group_id
+	group.UpdatedAt = time.Now().Unix()
 	//TODO 如果分组下有服务器 需要处理
 	filters := make([]interface{}, 0)
 	filters = append(filters, "group_id", group_id)
@@ -143,7 +143,7 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 
 	uid := c.GetInt("uid")
 	if uid != 1 {
-		_, sg := service.TaskGroups(uid, c.GetString("role_id"))
+		_, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 		groups := strings.Split(sg, ",")
 
 		groupsIds := make([]int, 0)
@@ -160,11 +160,11 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["group_name"] = v.GroupName
 		row["description"] = v.Description
-		row["create_time"] = beego.Date(time.Unix(v.CreateTime, 0), "Y-m-d H:i:s")
-		row["update_time"] = beego.Date(time.Unix(v.UpdateTime, 0), "Y-m-d H:i:s")
+		row["create_time"] = beego.Date(time.Unix(v.CreatedAt, 0), "Y-m-d H:i:s")
+		row["update_time"] = beego.Date(time.Unix(v.UpdatedAt, 0), "Y-m-d H:i:s")
 		list[k] = row
 	}
 

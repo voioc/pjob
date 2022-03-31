@@ -67,17 +67,17 @@ func (self *AdminController) Edit(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	Admin, _ := model.AdminGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = Admin.Id
+	row["id"] = Admin.ID
 	row["login_name"] = Admin.LoginName
 	row["real_name"] = Admin.RealName
 	row["phone"] = Admin.Phone
 	row["email"] = Admin.Email
 	row["dingtalk"] = Admin.Dingtalk
 	row["wechat"] = Admin.Wechat
-	row["role_ids"] = Admin.RoleIds
+	row["role_ids"] = Admin.RoleIDs
 	data["admin"] = row
 
-	role_ids := strings.Split(Admin.RoleIds, ",")
+	role_ids := strings.Split(Admin.RoleIDs, ",")
 
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
@@ -114,9 +114,9 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Email = strings.TrimSpace(c.DefaultPostForm("email", ""))
 		Admin.Dingtalk = strings.TrimSpace(c.DefaultPostForm("dingtalk", ""))
 		Admin.Wechat = strings.TrimSpace(c.DefaultPostForm("wechat", ""))
-		Admin.RoleIds = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
-		Admin.UpdateTime = time.Now().Unix()
-		Admin.UpdateId = uid
+		Admin.RoleIDs = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
+		Admin.UpdatedAt = time.Now().Unix()
+		Admin.UpdatedID = uid
 		Admin.Status = 1
 
 		// 检查登录名是否已经存在
@@ -131,8 +131,8 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		pwd, salt := libs.Password(4, "")
 		Admin.Password = pwd
 		Admin.Salt = salt
-		Admin.CreateTime = time.Now().Unix()
-		Admin.CreateId = uid
+		Admin.CreatedAt = time.Now().Unix()
+		Admin.CreatedID = uid
 		if _, err := model.AdminAdd(Admin); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -147,16 +147,16 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 	Admin, _ := model.AdminGetById(id)
 	//修改
 	// Admin.Id = id
-	Admin.UpdateTime = time.Now().Unix()
-	Admin.UpdateId = uid
+	Admin.UpdatedAt = time.Now().Unix()
+	Admin.UpdatedID = uid
 	Admin.LoginName = strings.TrimSpace(c.DefaultPostForm("login_name", ""))
 	Admin.RealName = strings.TrimSpace(c.DefaultPostForm("real_name", ""))
 	Admin.Phone = strings.TrimSpace(c.DefaultPostForm("phone", ""))
 	Admin.Email = strings.TrimSpace(c.DefaultPostForm("email", ""))
 	Admin.Dingtalk = strings.TrimSpace(c.DefaultPostForm("dingtalk", ""))
 	Admin.Wechat = strings.TrimSpace(c.DefaultPostForm("wechat", ""))
-	Admin.RoleIds = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
-	Admin.UpdateTime = time.Now().Unix()
+	Admin.RoleIDs = strings.TrimSpace(c.DefaultPostForm("roleids", ""))
+	Admin.UpdatedAt = time.Now().Unix()
 	Admin.Status = 1
 
 	resetPwd, _ := strconv.Atoi(c.DefaultPostForm("reset_pwd", "0"))
@@ -167,7 +167,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 	}
 
 	//普通管理员不可修改超级管理员资料
-	if uid != 1 && Admin.Id == 1 {
+	if uid != 1 && Admin.ID == 1 {
 		// self.ajaxMsg("不可修改超级管理员资料", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "不可修改超级管理员资料"))
 		return
@@ -198,9 +198,9 @@ func (self *AdminController) AjaxDel(c *gin.Context) {
 	}
 
 	Admin, _ := model.AdminGetById(id)
-	Admin.UpdateTime = time.Now().Unix()
+	Admin.UpdatedAt = time.Now().Unix()
 	Admin.Status = Admin_status
-	Admin.Id = id
+	Admin.ID = id
 
 	if err := Admin.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
@@ -233,16 +233,16 @@ func (self *AdminController) Table(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["login_name"] = v.LoginName
 		row["real_name"] = v.RealName
 		row["phone"] = v.Phone
 		row["email"] = v.Email
 		row["dingtalk"] = v.Dingtalk
 		row["wechat"] = v.Wechat
-		row["role_ids"] = v.RoleIds
-		row["create_time"] = time.Unix(v.CreateTime, 0).Format("2006-01-02 15:04:05")
-		row["update_time"] = time.Unix(v.UpdateTime, 0).Format("2006-01-02 15:04:05")
+		row["role_ids"] = v.RoleIDs
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 		row["status"] = v.Status
 		row["status_text"] = StatusText[v.Status]
 		list[k] = row

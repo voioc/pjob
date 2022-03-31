@@ -22,27 +22,27 @@ const (
 )
 
 type Task struct {
-	Id            int
-	GroupId       int
-	ServerIds     string
-	ServerType    int
-	TaskName      string
-	Description   string
-	CronSpec      string
-	Concurrent    int
-	Command       string
-	Timeout       int
-	ExecuteTimes  int
-	PrevTime      int64
-	Status        int
-	IsNotify      int
-	NotifyType    int
-	NotifyTplId   int
-	NotifyUserIds string
-	CreateId      int
-	UpdateId      int
-	CreateTime    int64
-	UpdateTime    int64
+	ID            int    `xorm:"id pk" json:"id"`
+	GroupID       int    `xorm:"group_id" json:"group_id"`
+	ServerIDs     string `xorm:"server_ids" json:"server_ids"`
+	ServerType    int    `xorm:"server_type" json:"server_type"`
+	TaskName      string `xorm:"task_name" json:"task_name"`
+	Description   string `xorm:"description" json:"description"`
+	CronSpec      string `xorm:"cron_spec" json:"cron_spec"`
+	Concurrent    int    `xorm:"concurrent" json:"concurrent"`
+	Command       string `xorm:"command" json:"command"`
+	Timeout       int    `xorm:"timeout" json:"timeout"`
+	ExecuteTimes  int    `xorm:"execute_times" json:"execute_times"`
+	PrevTime      int64  `xorm:"prev_time" json:"prev_time"`
+	Status        int    `xorm:"status" json:"status"`
+	IsNotify      int    `xorm:"is_notify" json:"is_notify"`
+	NotifyType    int    `xorm:"notify_type" json:"notify_type"`
+	NotifyTplID   int    `xorm:"notify_tpl_id" json:"notify_tpl_id"`
+	NotifyUserIds string `xorm:"notify_user_ids" json:"notify_user_ids"`
+	CreatedID     int    `xorm:"create_id" json:"created_id"`
+	UpdatedID     int    `xorm:"update_id" json:"updated_id"`
+	CreatedAt     int64  `xorm:"create_time" json:"created_at"`
+	UpdatedAt     int64  `xorm:"update_time" json:"created_at"`
 }
 
 func (t *Task) TableName() string {
@@ -67,8 +67,8 @@ func TaskAdd(task *Task) (int64, error) {
 	if task.Command == "" {
 		return 0, fmt.Errorf("命令内容不能为空")
 	}
-	if task.CreateTime == 0 {
-		task.CreateTime = time.Now().Unix()
+	if task.CreatedAt == 0 {
+		task.CreatedAt = time.Now().Unix()
 	}
 	return orm.NewOrm().Insert(task)
 }
@@ -99,7 +99,7 @@ func TaskResetGroupId(groupId int) (int64, error) {
 
 func TaskGetById(id int) (*Task, error) {
 	task := &Task{
-		Id: id,
+		ID: id,
 	}
 
 	err := orm.NewOrm().Read(task)
@@ -114,8 +114,9 @@ func TaskDel(id int) (int64, error) {
 	return orm.NewOrm().QueryTable(TableName("task")).Filter("id", id).Update(orm.Params{
 		"status": -1,
 	})
-	//_, err := orm.NewOrm().QueryTable(TableName("task")).Filter("id", id).Delete()
-	//return err
+
+	// _, err := orm.NewOrm().QueryTable(TableName("task")).Filter("id", id).Delete()
+	// return err
 }
 
 //运行总次数

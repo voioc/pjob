@@ -5,7 +5,7 @@
 * @Last Modified time: 2019-02-17 22:10:15
  */
 
-package jobs
+package job
 
 import (
 	"bytes"
@@ -22,6 +22,7 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	"github.com/voioc/cjob/app/model"
+	cron "github.com/voioc/cjob/crons"
 	"github.com/voioc/cjob/libs"
 
 	"runtime"
@@ -34,6 +35,12 @@ import (
 	gote "github.com/linxiaozhi/go-telnet"
 	"github.com/voioc/cjob/notify"
 	"golang.org/x/crypto/ssh"
+)
+
+var (
+	mainCron *cron.Cron
+	workPool chan bool
+	lock     sync.Mutex
 )
 
 type Job struct {
@@ -840,4 +847,26 @@ func AllAdminInfo(adminIds string) []*adminInfo {
 	}
 
 	return adminInfos
+}
+
+func runCmdWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	var err error
+	select {
+	case <-time.After(timeout):
+		beego.Warn(fmt.Sprintf("任务执行时间超过%d秒，进程将被强制杀掉: %d", int(timeout/time.Second), cmd.Process.Pid))
+		go func() {
+			<-done // 读出上面的goroutine数据，避免阻塞导致无法退出
+		}()
+		if err = cmd.Process.Kill(); err != nil {
+			beego.Error(fmt.Sprintf("进程无法杀掉: %d, 错误信息: %s", cmd.Process.Pid, err))
+		}
+		return err, true
+	case err = <-done:
+		return err, false
+	}
 }

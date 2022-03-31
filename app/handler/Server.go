@@ -31,7 +31,7 @@ func (self *ServerController) List(c *gin.Context) {
 	data["uri"] = utils.URI("")
 
 	data["pageTitle"] = "执行资源管理"
-	_, sg := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
@@ -44,7 +44,7 @@ func (self *ServerController) Add(c *gin.Context) {
 
 	data["pageTitle"] = "新增执行资源"
 
-	_, sg := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
@@ -74,7 +74,7 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 		"密钥",
 	}
 
-	_, sg := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	serverGroup := serverGroupLists(sg, c.GetInt("uid"))
 
 	//查询条件
@@ -86,14 +86,14 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["connection_type"] = v.ConnectionType
 		row["server_name"] = v.ServerName
 		row["detail"] = v.Detail
-		if serverGroup[v.GroupId] == "" {
-			v.GroupId = 0
+		if serverGroup[v.GroupID] == "" {
+			v.GroupID = 0
 		}
-		row["group_name"] = serverGroup[v.GroupId]
+		row["group_name"] = serverGroup[v.GroupID]
 		row["type"] = loginType[v.Type]
 		row["status"] = v.Status
 		row["status_text"] = StatusText[v.Status]
@@ -112,13 +112,13 @@ func (self *ServerController) Edit(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	server, _ := model.TaskServerGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = server.Id
+	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
 	row["server_name"] = server.ServerName
-	row["group_id"] = server.GroupId
-	row["server_ip"] = server.ServerIp
+	row["group_id"] = server.GroupID
+	row["server_ip"] = server.ServerIP
 	row["server_account"] = server.ServerAccount
-	row["server_outer_ip"] = server.ServerOuterIp
+	row["server_outer_ip"] = server.ServerOuterIP
 	row["port"] = server.Port
 	row["type"] = server.Type
 	row["password"] = server.Password
@@ -127,7 +127,7 @@ func (self *ServerController) Edit(c *gin.Context) {
 	row["detail"] = server.Detail
 	data["server"] = row
 
-	_, sg := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
@@ -140,15 +140,15 @@ func (self *ServerController) AjaxTestServer(c *gin.Context) {
 	server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "0"))
 	server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", ""))
 	server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", ""))
-	server.ServerOuterIp = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
-	server.ServerIp = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+	server.ServerOuterIP = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
+	server.ServerIP = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 	server.PrivateKeySrc = strings.TrimSpace(c.DefaultPostForm("private_key_src", ""))
 	server.PublicKeySrc = strings.TrimSpace(c.DefaultPostForm("public_key_src", ""))
 	server.Password = strings.TrimSpace(c.DefaultPostForm("password", ""))
 	server.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
 	server.Type, _ = strconv.Atoi(c.DefaultPostForm("type", "0"))
 	server.Port, _ = strconv.Atoi(c.DefaultPostForm("port", "0"))
-	server.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+	server.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 
 	var err error
 
@@ -209,13 +209,13 @@ func (self *ServerController) Copy(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	server, _ := model.TaskServerGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = server.Id
+	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
 	row["server_name"] = server.ServerName
-	row["group_id"] = server.GroupId
-	row["server_ip"] = server.ServerIp
+	row["group_id"] = server.GroupID
+	row["server_ip"] = server.ServerIP
 	row["server_account"] = server.ServerAccount
-	row["server_outer_ip"] = server.ServerOuterIp
+	row["server_outer_ip"] = server.ServerOuterIP
 	row["port"] = server.Port
 	row["type"] = server.Type
 	row["password"] = server.Password
@@ -224,7 +224,7 @@ func (self *ServerController) Copy(c *gin.Context) {
 	row["detail"] = server.Detail
 	data["server"] = row
 
-	_, sg := service.TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
 	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
 
 	// self.display()
@@ -239,8 +239,8 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "0"))
 		server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", ""))
 		server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", ""))
-		server.ServerOuterIp = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
-		server.ServerIp = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+		server.ServerOuterIP = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
+		server.ServerIP = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 		server.PrivateKeySrc = strings.TrimSpace(c.DefaultPostForm("private_key_src", ""))
 		server.PublicKeySrc = strings.TrimSpace(c.DefaultPostForm("public_key_src", ""))
 		server.Password = strings.TrimSpace(c.DefaultPostForm("password", ""))
@@ -248,10 +248,10 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		server.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
 		server.Type, _ = strconv.Atoi(c.DefaultPostForm("type", "0"))
 		server.Port, _ = strconv.Atoi(c.DefaultPostForm("port", "0"))
-		server.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+		server.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 
-		server.CreateTime = time.Now().Unix()
-		server.UpdateTime = time.Now().Unix()
+		server.CreatedAt = time.Now().Unix()
+		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
 
 		if _, err := model.TaskServerAdd(server); err != nil {
@@ -268,13 +268,13 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 
 	//修改
 	// server.Id = server_id
-	server.UpdateTime = time.Now().Unix()
+	server.UpdatedAt = time.Now().Unix()
 
 	server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "0"))
 	server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", ""))
 	server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", ""))
-	server.ServerOuterIp = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
-	server.ServerIp = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+	server.ServerOuterIP = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
+	server.ServerIP = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 	server.PrivateKeySrc = strings.TrimSpace(c.DefaultPostForm("private_key_src", ""))
 	server.PublicKeySrc = strings.TrimSpace(c.DefaultPostForm("public_key_src", ""))
 	server.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
@@ -282,7 +282,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 
 	server.Type, _ = strconv.Atoi(c.DefaultPostForm("type", "0"))
 	server.Port, _ = strconv.Atoi(c.DefaultPostForm("port", "0"))
-	server.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+	server.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 
 	if err := server.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
@@ -308,9 +308,9 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	server.UpdateTime = time.Now().Unix()
+	server.UpdatedAt = time.Now().Unix()
 	server.Status = 2
-	server.Id = id
+	server.ID = id
 
 	// TODO 查询服务器是否用于定时任务
 	if err := server.Update(); err != nil {
@@ -347,7 +347,7 @@ func (self *ServerController) Table(c *gin.Context) {
 	}
 
 	uid := c.GetInt("uid")
-	_, sg := service.TaskGroups(uid, c.GetString("role_id"))
+	_, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 	serverGroup := serverGroupLists(sg, uid)
 
 	// self.pageSize = limit
@@ -385,15 +385,15 @@ func (self *ServerController) Table(c *gin.Context) {
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["connection_type"] = connectionType[v.ConnectionType]
 		row["server_name"] = StatusText[v.Status] + " " + v.ServerName
 		row["detail"] = v.Detail
-		if serverGroup[v.GroupId] == "" {
-			v.GroupId = 0
+		if serverGroup[v.GroupID] == "" {
+			v.GroupID = 0
 		}
-		row["ip_port"] = v.ServerIp + ":" + strconv.Itoa(v.Port)
-		row["group_name"] = serverGroup[v.GroupId]
+		row["ip_port"] = v.ServerIP + ":" + strconv.Itoa(v.Port)
+		row["group_name"] = serverGroup[v.GroupID]
 		//row["type"] = loginType[v.Type]
 		row["status"] = v.Status
 		list[k] = row
@@ -426,8 +426,8 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "3"))
 		server.ServerName = strings.TrimSpace(c.DefaultPostForm("server_name", defaultActName))
 		server.ServerAccount = strings.TrimSpace(c.DefaultPostForm("server_account", "agent"))
-		server.ServerOuterIp = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
-		server.ServerIp = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+		server.ServerOuterIP = strings.TrimSpace(c.DefaultPostForm("server_outer_ip", ""))
+		server.ServerIP = strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 		server.PrivateKeySrc = strings.TrimSpace(c.DefaultPostForm("private_key_src", ""))
 		server.PublicKeySrc = strings.TrimSpace(c.DefaultPostForm("public_key_src", ""))
 		server.Password = strings.TrimSpace(c.DefaultPostForm("password", "agent"))
@@ -435,11 +435,11 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		server.Detail = strings.TrimSpace(c.DefaultPostForm("detail", ""))
 		server.Type, _ = strconv.Atoi(c.DefaultPostForm("type", "0"))
 		server.Port, _ = strconv.Atoi(c.DefaultPostForm("port", "0"))
-		server.GroupId, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
+		server.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 		server.Status = 0
 
-		server.CreateTime = time.Now().Unix()
-		server.UpdateTime = time.Now().Unix()
+		server.CreatedAt = time.Now().Unix()
+		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
 		serverId, err := model.TaskServerAdd(server)
 		if err != nil {
@@ -454,7 +454,7 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 	} else {
 		//修改状态
 		server, _ := model.TaskServerGetById(id)
-		server.UpdateTime = time.Now().Unix()
+		server.UpdatedAt = time.Now().Unix()
 		server.Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
 		if err := server.Update(); err != nil {
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -494,9 +494,9 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	}
 
 	server, _ := model.TaskServerGetById(id)
-	server.UpdateTime = time.Now().Unix()
+	server.UpdatedAt = time.Now().Unix()
 	server.Status = status
-	server.Id = id
+	server.ID = id
 
 	logs.Info(server)
 

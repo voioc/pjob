@@ -9,7 +9,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
 )
@@ -49,8 +49,8 @@ func (self *AuthController) List(c *gin.Context) {
 //获取全部节点
 func (self *AuthController) GetNodes(c *gin.Context) {
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
-	result, count := model.AuthGetList(1, 1000, filters...)
+	filters = append(filters, "status = ", 1)
+	result, count, _ := service.AuthS(c).AuthList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -69,7 +69,7 @@ func (self *AuthController) GetNodes(c *gin.Context) {
 //获取一个节点
 func (self *AuthController) GetNode(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	result, _ := model.AuthGetById(id)
+	result, _ := service.AuthS(c).AuthByID(id) // model.AuthGetById(id)
 	// if err == nil {
 	// 	self.ajaxMsg(err.Error(), MSG_ERR)
 	// }
@@ -82,7 +82,7 @@ func (self *AuthController) GetNode(c *gin.Context) {
 	row["is_show"] = result.IsShow
 	row["icon"] = result.Icon
 
-	fmt.Println(row)
+	// fmt.Println(row)
 
 	// self.ajaxList("成功", MSG_OK, 0, row)
 	ext := map[string]int{"total": 0}
@@ -111,7 +111,7 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 		auth.CreatedAt = time.Now().Unix()
 		auth.CreatedID = uid
 		auth.UpdatedID = uid
-		if _, err := model.AuthAdd(auth); err != nil {
+		if _, err := service.AuthS(c).AuthAdd(auth); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -119,7 +119,7 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 	} else {
 		auth.ID = id
 		auth.UpdatedID = self.userId
-		if err := auth.Update(); err != nil {
+		if err := service.AuthS(c).Update(auth); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -133,7 +133,7 @@ func (self *AuthController) AjaxSave(c *gin.Context) {
 //删除
 func (self *AuthController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	auth, err := model.AuthGetById(id)
+	auth, err := service.AuthS(c).AuthByID(id)
 	if err != nil || auth == nil {
 		msg := "角色ID错误"
 		if err != nil {
@@ -146,7 +146,7 @@ func (self *AuthController) AjaxDel(c *gin.Context) {
 
 	auth.ID = id
 	auth.Status = 0
-	if err := auth.Update(); err != nil {
+	if err := service.AuthS(c).Update(auth); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return

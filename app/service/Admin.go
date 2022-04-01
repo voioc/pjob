@@ -20,7 +20,7 @@ func AdminS(c *gin.Context) *AdminService {
 func (s *AdminService) AdminGetByID(id int) (*model.Admin, error) {
 	user := new(model.Admin)
 	if _, err := model.GetDB().Where("id = ?", id).Get(user); err != nil {
-		fmt.Println(err.Error())
+		// fmt.Println(err.Error())
 		return nil, err
 	}
 
@@ -58,4 +58,19 @@ func (s *AdminService) AdminList(page, pageSize int, filters ...interface{}) ([]
 	// }
 
 	return data, total, nil
+}
+
+func (s *AdminService) AdminInfo(ids []int) ([]*model.Admin, error) {
+	data := make([]*model.Admin, 0)
+
+	db := model.GetDB().Select("id, email, phone, real_name").Where("status = 1")
+	if len(ids) > 0 {
+		db.In("id", ids)
+	}
+
+	if err := db.Find(&data); err != nil {
+		return nil, err
+	}
+
+	return data, nil
 }

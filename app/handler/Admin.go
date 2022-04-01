@@ -8,7 +8,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -91,12 +90,13 @@ func (self *AdminController) Edit(c *gin.Context) {
 			if role_id == v.Id {
 				row["checked"] = 1
 			}
-			fmt.Println(role_ids[i])
+			// fmt.Println(role_ids[i])
 		}
 		row["id"] = v.Id
 		row["role_name"] = v.RoleName
 		list[k] = row
 	}
+
 	data["role"] = list
 	// self.display()
 

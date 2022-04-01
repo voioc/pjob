@@ -8,7 +8,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -118,7 +117,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	tasklog, err := model.TaskLogGetById(id)
 
-	fmt.Println(tasklog)
+	// fmt.Println(tasklog)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "日志不存在"))
 		return

@@ -14,6 +14,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/libs"
 )
 
@@ -59,7 +60,7 @@ func (self *BaseController) Prepare(c *gin.Context) {
 	self.Data["loginUserName"] = self.userName
 }
 
-//登录权限验证
+// 登录权限验证
 func (self *BaseController) Auth(c *gin.Context) {
 	// arr := strings.Split(self.Ctx.GetCookie("auth"), "|")
 	cookie, _ := c.Cookie("auth")
@@ -78,7 +79,7 @@ func (self *BaseController) Auth(c *gin.Context) {
 				self.userName = user.RealName
 				self.user = user
 				self.AdminAuth()
-				self.dataAuth(user)
+				// self.dataAuth(user)
 			}
 
 			isHasAuth := strings.Contains(self.allowUrl, self.controllerName+"/"+self.actionName)
@@ -112,35 +113,35 @@ func (self *BaseController) Auth(c *gin.Context) {
 	}
 }
 
-func (self *BaseController) dataAuth(user *model.Admin) {
-	if user.RoleIDs == "0" || user.ID == 1 {
-		return
-	}
+// func (self *BaseController) dataAuth(user *model.Admin) {
+// 	if user.RoleIDs == "0" || user.ID == 1 {
+// 		return
+// 	}
 
-	Filters := make([]interface{}, 0)
-	Filters = append(Filters, "status", 1)
+// 	Filters := make([]interface{}, 0)
+// 	Filters = append(Filters, "status", 1)
 
-	RoleIdsArr := strings.Split(user.RoleIDs, ",")
+// 	RoleIdsArr := strings.Split(user.RoleIDs, ",")
 
-	RoleIds := make([]int, 0)
-	for _, v := range RoleIdsArr {
-		id, _ := strconv.Atoi(v)
-		RoleIds = append(RoleIds, id)
-	}
+// 	RoleIds := make([]int, 0)
+// 	for _, v := range RoleIdsArr {
+// 		id, _ := strconv.Atoi(v)
+// 		RoleIds = append(RoleIds, id)
+// 	}
 
-	Filters = append(Filters, "id__in", RoleIds)
+// 	Filters = append(Filters, "id", RoleIds)
 
-	Result, _ := model.RoleGetList(1, 1000, Filters...)
-	serverGroups := ""
-	taskGroups := ""
-	for _, v := range Result {
-		serverGroups += v.ServerGroupIDs + ","
-		taskGroups += v.TaskGroupIDs + ","
-	}
+// 	Result, _, _ := service.RoleS(c).RoleList(1, 1000, Filters...)
+// 	serverGroups := ""
+// 	taskGroups := ""
+// 	for _, v := range Result {
+// 		serverGroups += v.ServerGroupIDs + ","
+// 		taskGroups += v.TaskGroupIDs + ","
+// 	}
 
-	self.serverGroups = strings.Trim(serverGroups, ",")
-	self.taskGroups = strings.Trim(taskGroups, ",")
-}
+// 	self.serverGroups = strings.Trim(serverGroups, ",")
+// 	self.taskGroups = strings.Trim(taskGroups, ",")
+// }
 
 func (self *BaseController) AdminAuth() {
 	// 左侧导航栏
@@ -152,7 +153,9 @@ func (self *BaseController) AdminAuth() {
 		adminAuthIdArr := strings.Split(adminAuthIds, ",")
 		filters = append(filters, "id__in", adminAuthIdArr)
 	}
-	result, _ := model.AuthGetList(1, 1000, filters...)
+
+	c := &gin.Context{}
+	result, _, _ := service.AuthS(c).AuthList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	list2 := make([]map[string]interface{}, len(result))
 	allow_url := ""

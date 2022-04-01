@@ -76,6 +76,26 @@ func (s *ServerGroupService) ServerGroupLists(authStr string, adminId int) (sgl 
 	return sgl
 }
 
+// 根据任务组id获取对应的名字
+func (s *ServerGroupService) GroupIDName(ids string) (map[int]string, error) {
+	ids = strings.Trim(strings.Trim(ids, ","), "")
+	gid := strings.Split(ids, ",")
+	fmt.Println(gid)
+
+	group := make([]*model.ServerGroup, 0)
+	// err := model.GetDB().Where("status = 1").In("id", gid).Find(&group)
+	err := model.GetDB().Where("status = 1").Find(&group)
+	if err != nil {
+		return nil, err
+	}
+
+	data := map[int]string{}
+	for _, gv := range group {
+		data[gv.ID] = gv.GroupName
+	}
+	return data, nil
+}
+
 // func (s *TaskLogService) GetLogNum(status int) (int64, error) {
 // 	// return orm.NewOrm().QueryTable(TableName("task_log")).Filter("status", status).Count()
 

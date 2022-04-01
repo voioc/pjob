@@ -30,7 +30,7 @@
             <div class="layui-input-inline">
                 <select name="group_id" lay-verify="required">
                 {{range $k, $v := .taskGroup}}
-                    <option value="{{$k}}" {{if eq $k $.task.GroupId}}selected{{end}}>{{$v}}</option>
+                    <option value="{{$k}}" {{if eq $k $.task.GroupID}}selected{{end}}>{{$v}}</option>
                 {{end}}
                 </select>
             </div>
@@ -133,7 +133,7 @@
                 <select name="notify_tpl_id" lay-filter="notify_tpl_id">
                     <option value="0">请选择</option>
                     {{range $k, $v := .notifyTpl}}
-                        <option value="{{$v.id}}" {{if eq $.task.NotifyTplId $v.id}} selected {{end}}>{{$v.tpl_name}}</option>
+                        <option value="{{$v.id}}" {{if eq $.task.NotifyTplID $v.id}} selected {{end}}>{{$v.tpl_name}}</option>
                     {{end}}
                 </select>
             </div>
@@ -146,7 +146,7 @@
                 <select name="notify_user"  lay-search xm-select="select_notify" >
                     <option value="">请选择</option>
                     {{range $k, $v := .adminInfo}}
-                        <option value="{{$v.Id}}">{{$v.RealName}}</option>
+                        <option value="{{$v.ID}}">{{$v.RealName}}</option>
                     {{end}}
                 </select>
             </div>
@@ -154,7 +154,7 @@
         </div>
 
 
-        <input type="hidden" name="id" id="id" value="{{.task.Id}}">
+        <input type="hidden" name="id" id="id" value="{{.task.ID}}">
         <div class="layui-form-item">
             <label class="layui-form-label mw200"></label>
             <div class="layui-input-inline mw400">

@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"fmt"
-
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -73,7 +71,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 	group.Status = 1
 
 	group_id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	fmt.Println(group_id)
+	// fmt.Println(group_id)
 
 	uid := c.GetInt("uid")
 	if group_id == 0 {

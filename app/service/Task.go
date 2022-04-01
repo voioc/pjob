@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
@@ -21,17 +22,35 @@ func (s *TaskService) TaskGetList(page, pageSize int, filters ...interface{}) ([
 	offset := (page - 1) * pageSize
 	tasks := make([]*model.Task, 0)
 
-	// query := model.GetDB()
-	// var count int
+	db := model.GetDB().Where("1=1")
+
+	in := map[string]interface{}{}
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
+			// 如果是数组则单独筛出来
+			if _, flag := filters[k+1].([]int); flag {
+				in[filters[k].(string)] = filters[k+1]
+			} else {
+				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
+			}
 		}
 	}
-	fmt.Println(condition)
 
-	total, err := model.GetDB().Where(condition).Count(&model.Task{})
+	if len(in) > 0 {
+		for col, v := range in {
+			if col != "" {
+				regex := strings.Split(col, " ")
+				if len(regex) == 2 && regex[1] == "not" {
+					db = db.NotIn(col, v)
+				} else {
+					db = db.In(col, v)
+				}
+			}
+		}
+	}
+
+	total, err := db.Where(condition).Count(&model.Task{})
 	if err != nil {
 		return nil, 0, err
 	}

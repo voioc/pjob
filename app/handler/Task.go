@@ -8,7 +8,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,7 +20,6 @@ import (
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 
-	"github.com/astaxie/beego"
 	cron "github.com/voioc/cjob/crons"
 	"github.com/voioc/cjob/jobs"
 )
@@ -31,10 +29,14 @@ type TaskController struct {
 }
 
 func (self *TaskController) List(c *gin.Context) {
+
 	data := map[string]interface{}{}
 	data["uri"] = utils.URI("")
 	data["pageTitle"] = "任务管理"
-	data["taskGroup"] = taskGroupLists(self.taskGroups, self.userId)
+
+	tg, _ := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_ids"))
+
+	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg)
 	data["groupId"] = 0
 	//arr := strings.Split(self.Ctx.GetCookie("groupid"), "|")
 	//if len(arr) > 0 {
@@ -75,7 +77,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑任务"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	task, err := model.TaskGetById(id)
+	task, err := service.TaskS(c).TaskByID(id) // model.TaskGetById(id)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -89,13 +91,14 @@ func (self *TaskController) Edit(c *gin.Context) {
 	}
 
 	data["task"] = task
-	data["adminInfo"] = AllAdminInfo("")
+	data["adminInfo"], _ = service.AdminS(c).AdminInfo(nil) // AllAdminInfo("")
 
 	uid := c.GetInt("uid")
 	tg, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
+
 	// 分组列表
-	data["taskGroup"] = taskGroupLists(tg, uid)
-	data["serverGroup"] = serverLists(sg, uid)
+	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg)      // taskGroupLists(tg, uid)
+	data["serverGroup"], _ = service.ServerS(c).ServerLists(sg) // serverLists(sg, uid)
 	data["isAdmin"] = uid
 
 	var notifyUserIds []int
@@ -118,7 +121,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 
 	data["service_ids"] = server_ids_arr
 
-	notifyTplList, _, err := model.NotifyTplGetByTplTypeList(task.NotifyType)
+	notifyTplList, err := service.NotifyS(c).NotifyTypeList(task.NotifyType) // model.NotifyTplGetByTplTypeList(task.NotifyType)
 	tplList := make([]map[string]interface{}, len(notifyTplList))
 
 	if err == nil {
@@ -214,7 +217,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	data["pageTitle"] = "任务详细"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	task, err := model.TaskGetById(id)
+	task, err := service.TaskS(c).TaskByID(id) // model.TaskGetById(id)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		// self.ajaxMsg(err.Error(), MSG_ERR)
@@ -229,14 +232,14 @@ func (self *TaskController) Detail(c *gin.Context) {
 	}
 
 	data["TextStatus"] = TextStatus[task.Status]
-	data["CreateTime"] = beego.Date(time.Unix(task.CreatedAt, 0), "Y-m-d H:i:s")
-	data["UpdateTime"] = beego.Date(time.Unix(task.UpdatedAt, 0), "Y-m-d H:i:s")
+	data["CreateTime"] = time.Unix(task.CreatedAt, 0).Format("2006-01-02 15:04:05") //beego.Date(time.Unix(task.CreatedAt, 0), "Y-m-d H:i:s")
+	data["UpdateTime"] = time.Unix(task.UpdatedAt, 0).Format("2006-01-02 15:04:05") //beego.Date(time.Unix(task.UpdatedAt, 0), "Y-m-d H:i:s")
 	data["task"] = task
 
 	tg, _ := service.AuthS(c).TaskGroups(uid, c.GetString("role_ids"))
 
 	// 分组列表
-	data["taskGroup"] = taskGroupLists(tg, uid)
+	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg) //taskGroupLists(tg, uid)
 
 	serverName := ""
 	if task.ServerIDs == "0" {
@@ -248,18 +251,33 @@ func (self *TaskController) Detail(c *gin.Context) {
 				serverName = "本地服务器 <br>"
 			}
 		}
-		servers, n := model.TaskServerGetByIds(task.ServerIDs)
-		if n > 0 {
+
+		sids := []int{}
+		for _, row := range strings.Split(task.ServerIDs, ",") {
+			sid, _ := strconv.Atoi(row)
+			if sid != 0 {
+				sids = append(sids, sid)
+			}
+		}
+
+		servers, err := service.ServerS(c).ServersListID(sids)
+		if err != nil || len(servers) == 0 {
+			serverName += "服务器异常!!"
+		} else {
+
+			// servers, n := model.TaskServerGetByIds(task.ServerIDs)
+			// if n > 0 {
 			for _, server := range servers {
-				fmt.Println(server.Status)
+				// fmt.Println(server.Status)
 				if server.Status != 0 {
 					serverName += server.ServerName + " <i class='fa fa-ban' style='color:#FF5722'></i> <br/> "
 				} else {
 					serverName += server.ServerName + " <br/> "
 				}
 			}
-		} else {
-			serverName += "服务器异常!!"
+			// } else {
+
+			// }
 		}
 	}
 
@@ -269,10 +287,10 @@ func (self *TaskController) Detail(c *gin.Context) {
 		data["ServerType"] = "轮询执行"
 	}
 
-	//任务分组
+	// 任务分组
 	groupName := "默认分组"
 	if task.GroupID > 0 {
-		group, err := model.GroupGetById(task.GroupID)
+		group, err := service.TaskGroupS(c).GroupByID(task.GroupID) //model.GroupGetById(task.GroupID)
 		if err == nil {
 			groupName = group.GroupName
 		}
@@ -284,14 +302,14 @@ func (self *TaskController) Detail(c *gin.Context) {
 	createName := "未知"
 	updateName := "未知"
 	if task.CreatedID > 0 {
-		admin, err := model.AdminGetById(task.CreatedID)
+		admin, err := service.AdminS(c).AdminGetByID(task.CreatedID) // model.AdminGetById(task.CreatedID)
 		if err == nil {
 			createName = admin.RealName
 		}
 	}
 
 	if task.UpdatedID > 0 {
-		admin, err := model.AdminGetById(task.UpdatedID)
+		admin, err := service.AdminS(c).AdminGetByID(task.UpdatedID) // model.AdminGetById(task.UpdatedID)
 		if err == nil {
 			updateName = admin.RealName
 		}
@@ -300,7 +318,15 @@ func (self *TaskController) Detail(c *gin.Context) {
 	//是否出错通知
 	data["adminInfo"] = []*AdminInfo{}
 	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
-		data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
+		ids := []int{}
+		for _, row := range strings.Split(task.NotifyUserIds, ",") {
+			id, _ := strconv.Atoi(row)
+			if id != 0 {
+				ids = append(ids, id)
+			}
+		}
+
+		data["adminInfo"], _ = service.AdminS(c).AdminInfo(ids) // AllAdminInfo(task.NotifyUserIds)
 	}
 	data["CreateName"] = createName
 	data["UpdateName"] = updateName
@@ -308,9 +334,9 @@ func (self *TaskController) Detail(c *gin.Context) {
 
 	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
-		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplID)
-		if err == nil {
-			self.Data["NotifyTplName"] = notifyTpl.TplName
+		notifyTpl, err := service.NotifyS(c).NotifyListIDs([]int{task.NotifyTplID}) // model.NotifyTplGetById(task.NotifyTplID)
+		if err == nil && len(notifyTpl) > 0 {
+			data["NotifyTplName"] = notifyTpl[0].TplName
 		}
 	}
 
@@ -633,7 +659,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 		}
 
 		task, err := model.TaskGetById(id)
-		fmt.Println(task)
+		// fmt.Println(task)
 
 		// 移出任务
 		TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
@@ -831,42 +857,41 @@ func (self *TaskController) Table(c *gin.Context) {
 	}
 
 	uid := c.GetInt("uid")
-	taskGroups, _ := service.AuthS(c).TaskGroups(uid, "0")
-	taskGroup := taskGroupLists(taskGroups, uid)
-	self.pageSize = pagesize
+	tg, _ := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
+	taskGroup, _ := service.TaskGroupS(c).GroupIDName(tg) //taskGroupLists(taskGroups, uid)
+	// self.pageSize = pagesize
 
 	// 查询条件
 	filters := make([]interface{}, 0)
 
 	if status == 2 {
-		//审核中，审核失败
-		ids := []int{2, 3}
-		filters = append(filters, "status__in", ids)
+		// 审核中，审核失败
+		filters = append(filters, "status", []int{2, 3})
 	} else {
-		ids := []int{0, 1}
-		filters = append(filters, "status__in", ids)
+		filters = append(filters, "status", []int{0, 1})
 	}
 
 	// 搜索全部
 	if groupId == 0 {
 		if uid != 1 {
-			groups := strings.Split(taskGroups, ",")
+			groups := strings.Split(tg, ",")
 			groupsIds := make([]int, 0)
 			for _, v := range groups {
 				id, _ := strconv.Atoi(v)
 				groupsIds = append(groupsIds, id)
 			}
-			filters = append(filters, "group_id__in", groupsIds)
+
+			filters = append(filters, "group_id", groupsIds)
 		}
 	} else if groupId > 0 {
 		filters = append(filters, "group_id", groupId)
 	}
 
 	if taskName != "" {
-		filters = append(filters, "task_name__icontains", taskName)
+		filters = append(filters, "task_name LIKE %"+taskName+"%", " ")
 	}
 
-	result, count := model.TaskGetList(page, pagesize, filters...)
+	result, count, _ := service.TaskS(c).TaskGetList(page, pagesize, filters...) // model.TaskGetList(page, pagesize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
@@ -885,7 +910,7 @@ func (self *TaskController) Table(c *gin.Context) {
 
 		//row["status_text"] = StatusText[v.Status]
 		row["status"] = v.Status
-		row["pre_time"] = beego.Date(time.Unix(v.PrevTime, 0), "Y-m-d H:i:s")
+		row["pre_time"] = time.Unix(v.PrevTime, 0).Format("2006-01-02 15:04:05") // beego.Date(time.Unix(v.PrevTime, 0), "Y-m-d H:i:s")
 		row["execute_times"] = v.ExecuteTimes
 		row["cron_spec"] = v.CronSpec
 
@@ -894,22 +919,23 @@ func (self *TaskController) Table(c *gin.Context) {
 		if len(TaskServerIdsArr) > 0 {
 			serverId, _ = strconv.Atoi(TaskServerIdsArr[0])
 		}
+
 		jobskey := libs.JobKey(v.ID, serverId)
 		e := jobs.GetEntryById(jobskey)
 
 		if e != nil {
-			row["next_time"] = beego.Date(e.Next, "Y-m-d H:i:s")
+			row["next_time"] = e.Next.Format("2006-01-02 15:04:05")
 			row["prev_time"] = "-"
 			if e.Prev.Unix() > 0 {
-				row["prev_time"] = beego.Date(e.Prev, "Y-m-d H:i:s")
+				row["prev_time"] = e.Prev.Format("2006-01-02 15:04:05")
 			} else if v.PrevTime > 0 {
-				row["prev_time"] = beego.Date(time.Unix(v.PrevTime, 0), "Y-m-d H:i:s")
+				row["prev_time"] = time.Unix(v.PrevTime, 0).Format("2006-01-02 :15:04:05")
 			}
 			row["running"] = 1
 		} else {
 			row["next_time"] = "-"
 			if v.PrevTime > 0 {
-				row["prev_time"] = beego.Date(time.Unix(v.PrevTime, 0), "Y-m-d H:i:s")
+				row["prev_time"] = time.Unix(v.PrevTime, 0).Format("2006-01-02 15:04:05")
 			} else {
 				row["prev_time"] = "-"
 			}

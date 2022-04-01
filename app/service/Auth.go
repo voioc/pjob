@@ -10,6 +10,7 @@ import (
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
+	"github.com/voioc/coco/db"
 )
 
 type AuthService struct {
@@ -33,7 +34,7 @@ func (s *AuthService) AuthList(page, pageSize int, filters ...interface{}) ([]*m
 			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
-	fmt.Println(condition)
+	// fmt.Println(condition)
 
 	total, err := model.GetDB().Where(condition).Count(&model.Auth{})
 	if err != nil {
@@ -45,6 +46,20 @@ func (s *AuthService) AuthList(page, pageSize int, filters ...interface{}) ([]*m
 	}
 
 	return data, total, nil
+}
+
+func (s *AuthService) AuthByID(id int) (*model.Auth, error) {
+	a := new(model.Auth)
+
+	if flag, err := model.GetDB().Where("id", id).Get(a); !flag || err != nil {
+		if !flag {
+			err = fmt.Errorf("auth not found")
+		}
+
+		return nil, err
+	}
+
+	return a, nil
 }
 
 //获取多个
@@ -153,4 +168,16 @@ func (s *AuthService) TaskGroups(uid int, roleIDs string) (string, string) {
 	}
 
 	return strings.Trim(serverGroups, ","), strings.Trim(taskGroups, ",")
+}
+
+func (s *AuthService) AuthAdd(auth *model.Auth) (int64, error) {
+	return db.GetMySQL().Insert(auth)
+}
+
+func (s *AuthService) Update(auth *model.Auth) error {
+	if _, err := db.GetMySQL().Where("id = ?", auth.ID).Update(auth); err != nil {
+		return err
+	}
+
+	return nil
 }

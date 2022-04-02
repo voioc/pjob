@@ -93,8 +93,31 @@ func (s *TaskService) TaskByID(id int) (*model.Task, error) {
 	return task, nil
 }
 
-func (s *TaskService) Update(task *model.Task) error {
-	if _, err := model.GetDB().Where("id = ?", task.ID).Update(task); err != nil {
+func (s *TaskService) Add(task *model.Task) (int, error) {
+	_, err := model.GetDB().Insert(task)
+	return task.ID, err
+}
+
+func (s *TaskService) Update(task *model.Task, args ...bool) error {
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().Cols("status").Where("id = ?", task.ID).Update(task); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", task.ID).Update(task); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *TaskService) Del(ids interface{}) error {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
+
+	if flag1 || flag2 {
+		_, err := model.GetDB().In("id", ids).Delete(&model.Task{})
 		return err
 	}
 

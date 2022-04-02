@@ -96,8 +96,25 @@ func (s *ServerGroupService) GroupIDName(ids string) (map[int]string, error) {
 	return data, nil
 }
 
-// func (s *TaskLogService) GetLogNum(status int) (int64, error) {
-// 	// return orm.NewOrm().QueryTable(TableName("task_log")).Filter("status", status).Count()
+func (s *ServerGroupService) Add(sg *model.ServerGroup) (int, error) {
+	_, err := model.GetDB().Insert(sg)
+	return sg.ID, err
+}
 
-// 	return model.GetDB().Where("status = ?", status).Count(&model.TaskLog{})
-// }
+func (s *ServerGroupService) Update(data *model.ServerGroup, args ...bool) error {
+	if data.GroupName == "" {
+		return fmt.Errorf("组名不能为空")
+	}
+
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().ID(data.ID).Cols("status").Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

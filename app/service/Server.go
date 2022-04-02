@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/define"
 	"github.com/voioc/cjob/app/model"
@@ -14,6 +17,58 @@ type ServerService struct {
 // ServerS instance
 func ServerS(c *gin.Context) *ServerService {
 	return &ServerService{Base: common.Base{C: c}}
+}
+
+func (s *ServerService) ServerList(page, pageSize int, filters ...interface{}) ([]*model.TaskServer, int64, error) {
+	offset := (page - 1) * pageSize
+	data := make([]*model.TaskServer, 0)
+
+	db := model.GetDB().Where("1=1")
+
+	in := map[string]interface{}{}
+	condition := " 1 = 1 "
+	if len(filters) > 0 {
+		for k := 0; k < len(filters); k += 2 {
+			// 如果是数组则单独筛出来
+			if _, flag := filters[k+1].([]int); flag {
+				in[filters[k].(string)] = filters[k+1]
+			} else {
+				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
+			}
+		}
+	}
+
+	if len(in) > 0 {
+		for col, v := range in {
+			if col != "" {
+				regex := strings.Split(col, " ")
+				if len(regex) == 2 && regex[1] == "not" {
+					db = db.NotIn(col, v)
+				} else {
+					db = db.In(col, v)
+				}
+			}
+		}
+	}
+
+	total, err := db.Where(condition).Count(&model.TaskServer{})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if err := model.GetDB().Where(condition).OrderBy("field(status, 1, 2, 3, 0), id desc ").Limit(pageSize, offset).Find(&data); err != nil {
+		return nil, 0, err
+	}
+
+	// query := orm.NewOrm().QueryTable(TableName("task"))
+	// if len(filters) > 0 {
+	// 	l := len(filters)
+	// 	for k := 0; k < l; k += 2 {
+	// 		query = query.Filter(filters[k].(string), filters[k+1])
+	// 	}
+	// }
+
+	return data, total, nil
 }
 
 func (s *ServerService) ServersListID(ids interface{}) ([]*model.TaskServer, error) {
@@ -86,4 +141,9 @@ func (s *ServerService) ServerLists(ServerGroupIDS string) ([]define.ServerList,
 		data = append(data, sl)
 	}
 	return data, nil
+}
+
+func (s *ServerService) Add(server *model.TaskServer) (int, error) {
+	_, err := model.GetDB().Insert(server)
+	return server.ID, err
 }

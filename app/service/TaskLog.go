@@ -124,3 +124,16 @@ func (s *TaskLogService) LogDelID(ids interface{}) error {
 
 	return fmt.Errorf("record not found")
 }
+
+func (s *TaskLogService) LogDelTaskID(ids interface{}) error {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
+
+	if flag1 || flag2 {
+		if _, err := model.GetDB().In("task_id", ids).Delete(&model.TaskLog{}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

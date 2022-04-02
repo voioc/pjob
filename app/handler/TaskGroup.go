@@ -8,7 +8,6 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -55,7 +54,6 @@ func (self *GroupController) Edit(c *gin.Context) {
 	group := &model.TaskGroup{}
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	group, _ = service.TaskGroupS(c).GroupByID(id) // model.GroupGetById(id)
-	fmt.Println("00000000", group)
 
 	row := make(map[string]interface{})
 	row["id"] = group.ID
@@ -74,8 +72,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 	group.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	group.Status = 1
 
-	groupID, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	// fmt.Println(group_id)
+	groupID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 
 	uid := c.GetInt("uid")
 	if groupID == 0 {
@@ -134,7 +131,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	//	self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 	//}
 
-	if err := service.TaskGroupS(c).Update(group); err != nil { // group.Update(); err != nil {
+	if err := service.TaskGroupS(c).Update(group, true); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -170,7 +167,7 @@ func (self *GroupController) Table(c *gin.Context) {
 	}
 
 	if groupName != "" {
-		filters = append(filters, "group_name LIKE %"+groupName+"%", "")
+		filters = append(filters, "group_name LIKE '%"+groupName+"%'", "")
 	}
 
 	result, count, _ := service.TaskGroupS(c).GroupList(page, pageSize, filters...) // model.GroupGetList(page, pageSize, filters...)

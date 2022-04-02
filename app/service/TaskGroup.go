@@ -51,14 +51,21 @@ func (s *TaskGroupService) GroupList(page, pageSize int, filters ...interface{})
 	return data, total, nil
 }
 
-func (s *TaskGroupService) Update(data *model.TaskGroup) error {
+func (s *TaskGroupService) Update(data *model.TaskGroup, args ...bool) error {
 	if data.GroupName == "" {
 		return fmt.Errorf("组名不能为空")
 	}
 
-	if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
-		return err
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().ID(data.ID).Cols("status").Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 

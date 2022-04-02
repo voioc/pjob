@@ -12,11 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"fmt"
-
 	"strconv"
 
-	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
@@ -55,7 +52,7 @@ func (self *ServerGroupController) Edit(c *gin.Context) {
 	data["hideTop"] = true
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ := model.TaskGroupGetById(id)
+	group, _ := service.TaskGroupS(c).GroupByID(id) // model.TaskGroupGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = group.ID
 	row["group_name"] = group.GroupName
@@ -74,7 +71,6 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 
 	servergroup_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 
-	fmt.Println(servergroup_id)
 	uid := c.GetInt("uid")
 	if servergroup_id == 0 {
 		//新增
@@ -82,7 +78,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 		servergroup.UpdatedAt = time.Now().Unix()
 		servergroup.CreatedID = uid
 		servergroup.UpdatedID = uid
-		if _, err := model.ServerGroupAdd(servergroup); err != nil {
+		if _, err := service.ServerGroupS(c).Add(servergroup); err != nil { //  model.ServerGroupAdd(servergroup); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -96,7 +92,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 	servergroup.ID = servergroup_id
 	servergroup.UpdatedAt = time.Now().Unix()
 	servergroup.UpdatedID = uid
-	if err := servergroup.Update(); err != nil {
+	if err := service.ServerGroupS(c).Update(servergroup); err != nil { // servergroup.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -108,21 +104,23 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 
 	group_id, _ := strconv.Atoi(c.PostForm("id"))
-	group, _ := model.TaskGroupGetById(group_id)
+	group, _ := service.TaskGroupS(c).GroupByID(group_id) // model.TaskGroupGetById(group_id)
 	group.Status = 0
 	group.ID = group_id
 	group.UpdatedAt = time.Now().Unix()
+
 	//TODO 如果分组下有服务器 需要处理
 	filters := make([]interface{}, 0)
-	filters = append(filters, "group_id", group_id)
-	filters = append(filters, "status", 0)
-	_, n := model.TaskServerGetList(1, 1, filters...)
+	filters = append(filters, "group_id =", group_id)
+	filters = append(filters, "status =", 0)
+	_, n, _ := service.ServerS(c).ServerList(1, 1, filters...) // model.TaskServerGetList(1, 1, filters...)
 	if n > 0 {
 		// self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "分组下有服务器资源，请先处理"))
 		return
 	}
-	if err := group.Update(); err != nil {
+
+	if err := service.TaskGroupS(c).Update(group, true); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -139,7 +137,7 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 	groupName := strings.TrimSpace(c.DefaultQuery("groupName", ""))
 	//查询条件
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
+	filters = append(filters, "status =", 1)
 
 	uid := c.GetInt("uid")
 	if uid != 1 {
@@ -151,20 +149,20 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 			id, _ := strconv.Atoi(v)
 			groupsIds = append(groupsIds, id)
 		}
-		filters = append(filters, "id__in", groupsIds)
+		filters = append(filters, "id", groupsIds)
 	}
 	if groupName != "" {
-		filters = append(filters, "group_name__contains", groupName)
+		filters = append(filters, "group_name LIKE '%"+groupName+"'%", "")
 	}
-	result, count := model.ServerGroupGetList(page, pageSize, filters...)
+	result, count, _ := service.ServerGroupS(c).List(page, pageSize, filters...) // model.ServerGroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["id"] = v.ID
 		row["group_name"] = v.GroupName
 		row["description"] = v.Description
-		row["create_time"] = beego.Date(time.Unix(v.CreatedAt, 0), "Y-m-d H:i:s")
-		row["update_time"] = beego.Date(time.Unix(v.UpdatedAt, 0), "Y-m-d H:i:s")
+		row["create_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
+		row["update_time"] = time.Unix(v.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 		list[k] = row
 	}
 

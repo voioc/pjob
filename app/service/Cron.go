@@ -6,7 +6,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
-	"github.com/voioc/cjob/app/job"
+	"github.com/voioc/cjob/app/job2"
 	"github.com/voioc/cjob/common"
 	cron "github.com/voioc/cjob/crons"
 )
@@ -35,7 +35,7 @@ func CronS(c *gin.Context) *CronService {
 	return &CronService{Base: common.Base{C: c}}
 }
 
-func (s *CronService) AddJob(spec string, job *job.Job) bool {
+func (s *CronService) AddJob(spec string, job *job2.Job) bool {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -53,7 +53,7 @@ func (s *CronService) AddJob(spec string, job *job.Job) bool {
 
 func (s *CronService) RemoveJob(jobKey int) {
 	mainCron.RemoveJob(func(e *cron.Entry) bool {
-		if v, ok := e.Job.(*job.Job); ok {
+		if v, ok := e.Job.(*job2.Job); ok {
 			if v.JobKey == jobKey {
 				return true
 			}
@@ -65,7 +65,7 @@ func (s *CronService) RemoveJob(jobKey int) {
 func (s *CronService) GetEntryByID(jobKey int) *cron.Entry {
 	entries := mainCron.Entries()
 	for _, e := range entries {
-		if v, ok := e.Job.(*job.Job); ok {
+		if v, ok := e.Job.(*job2.Job); ok {
 			if v.JobKey == jobKey {
 				return e
 			}

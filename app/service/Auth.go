@@ -10,7 +10,6 @@ import (
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
-	"github.com/voioc/coco/db"
 )
 
 type AuthService struct {
@@ -171,11 +170,11 @@ func (s *AuthService) TaskGroups(uid int, roleIDs string) (string, string) {
 }
 
 func (s *AuthService) AuthAdd(auth *model.Auth) (int64, error) {
-	return db.GetMySQL().Insert(auth)
+	return model.GetDB().Insert(auth)
 }
 
 func (s *AuthService) Update(auth *model.Auth) error {
-	if _, err := db.GetMySQL().Where("id = ?", auth.ID).Update(auth); err != nil {
+	if _, err := model.GetDB().Where("id = ?", auth.ID).Update(auth); err != nil {
 		return err
 	}
 

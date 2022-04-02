@@ -97,8 +97,8 @@ func (self *TaskController) Edit(c *gin.Context) {
 	tg, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
 
 	// 分组列表
-	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg)      // taskGroupLists(tg, uid)
-	data["serverGroup"], _ = service.ServerS(c).ServerLists(sg) // serverLists(sg, uid)
+	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg) // taskGroupLists(tg, uid)
+	data["serverGroup"], _ = service.ServerS(c).ServerLists(sg)  // serverLists(sg, uid)
 	data["isAdmin"] = uid
 
 	var notifyUserIds []int
@@ -345,8 +345,20 @@ func (self *TaskController) Detail(c *gin.Context) {
 
 func (self *TaskController) Save(c *gin.Context) {
 	uid := c.GetInt("uid")
-	task_id, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
-	if task_id == 0 {
+	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
+
+	command, err := service.BanS(c).CheckCommand(c.DefaultPostForm("command", ""))
+	if err != nil {
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
+	}
+
+	if command != "" {
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+command))
+		return
+	}
+
+	if taskID == 0 {
 		task := new(model.Task)
 		task.CreatedID = c.GetInt("uid")
 		task.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
@@ -370,19 +382,14 @@ func (self *TaskController) Save(c *gin.Context) {
 			return
 		}
 
-		msg, isBan := checkCommand(task.Command)
-		if !isBan {
-			// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
-			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
-			return
-		}
-
 		task.CreatedAt = time.Now().Unix()
 		task.UpdatedAt = time.Now().Unix()
 		task.Status = 2 //审核中
+
 		if uid == 1 {
 			task.Status = 0 //审核中,超级管理员不需要
 		}
+
 		if task.TaskName == "" || task.CronSpec == "" || task.Command == "" {
 			// self.ajaxMsg("", MSG_ERR)
 			// fmt.Println("11111")
@@ -408,9 +415,9 @@ func (self *TaskController) Save(c *gin.Context) {
 		return
 	}
 
-	task, _ := model.TaskGetById(task_id)
-	//修改
-	task.ID = task_id
+	task, _ := service.TaskS(c).TaskByID(taskID) // model.TaskGetById(task_id)
+	// 修改
+	task.ID = taskID
 	task.UpdatedAt = time.Now().Unix()
 	task.TaskName = strings.TrimSpace(c.DefaultPostForm("task_name", ""))
 	task.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
@@ -434,14 +441,8 @@ func (self *TaskController) Save(c *gin.Context) {
 		return
 	}
 
-	if self.userId == 1 {
+	if uid == 1 {
 		task.Status = 0
-	}
-	msg, isBan := checkCommand(task.Command)
-	if !isBan {
-		// self.ajaxMsg("含有禁止命令："+msg, MSG_ERR)
-		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "含有禁止命令："+msg))
-		return
 	}
 
 	if _, err := cron.Parse(task.CronSpec); err != nil {
@@ -450,7 +451,7 @@ func (self *TaskController) Save(c *gin.Context) {
 		return
 	}
 
-	if err := task.Update(); err != nil {
+	if err := service.TaskS(c).Update(task); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return

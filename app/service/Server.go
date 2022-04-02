@@ -16,12 +16,20 @@ func ServerS(c *gin.Context) *ServerService {
 	return &ServerService{Base: common.Base{C: c}}
 }
 
-func (s *ServerService) ServersListID(ids []int) ([]*model.TaskServer, error) {
-	data := make([]*model.TaskServer, 0)
-	if err := model.GetDB().Where("status = 1").In("id", ids).Find(&data); err != nil {
-		return nil, err
+func (s *ServerService) ServersListID(ids interface{}) ([]*model.TaskServer, error) {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
 
+	db := model.GetDB().Where("status = 1")
+	if flag1 || flag2 {
+		db = db.In("id", ids)
 	}
+
+	data := make([]*model.TaskServer, 0)
+	if err := db.Find(&data); err != nil {
+		return nil, err
+	}
+
 	return data, nil
 }
 

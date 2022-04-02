@@ -55,7 +55,7 @@ func (s *TaskService) TaskGetList(page, pageSize int, filters ...interface{}) ([
 		return nil, 0, err
 	}
 
-	if err := model.GetDB().Where(condition).Limit(pageSize, offset).Find(&tasks); err != nil {
+	if err := model.GetDB().Where(condition).OrderBy("field(status, 1, 2, 3, 0), id desc ").Limit(pageSize, offset).Find(&tasks); err != nil {
 		return nil, 0, err
 	}
 
@@ -91,4 +91,12 @@ func (s *TaskService) TaskByID(id int) (*model.Task, error) {
 	}
 
 	return task, nil
+}
+
+func (s *TaskService) Update(task *model.Task) error {
+	if _, err := model.GetDB().Where("id = ?", task.ID).Update(task); err != nil {
+		return err
+	}
+
+	return nil
 }

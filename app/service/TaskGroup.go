@@ -92,12 +92,11 @@ func (s *TaskGroupService) GroupIDName(ids string) (map[int]string, error) {
 
 func (s *TaskGroupService) GroupByID(id int) (*model.TaskGroup, error) {
 	obj := &model.TaskGroup{}
-
-	if flag, err := model.GetDB().Where("id = ?", id).Get(&obj); !flag || err != nil {
-		if !flag {
+	if flag, err := model.GetDB().Where("id = ?", id).Get(obj); !flag || err != nil {
+		if err == nil && !flag {
 			err = fmt.Errorf("task group not found")
 		}
-		return nil, err
+		return obj, err
 	}
 
 	return obj, nil

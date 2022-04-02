@@ -96,3 +96,31 @@ func (s *TaskLogService) SumByDays(limit int, status string) (map[string]int, er
 	return data, nil
 
 }
+
+func (s *TaskLogService) LogByID(id []int) (map[int]*model.TaskLog, error) {
+	logs := make([]*model.TaskLog, 0)
+
+	if err := model.GetDB().In("id", id).Find(&logs); err != nil {
+		return nil, err
+	}
+
+	data := map[int]*model.TaskLog{}
+	for _, row := range logs {
+		data[row.ID] = row
+	}
+
+	return data, nil
+}
+
+func (s *TaskLogService) LogDelID(ids interface{}) error {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
+
+	if flag1 || flag2 {
+		if _, err := model.GetDB().In("id", ids).Delete(&model.TaskLog{}); err != nil {
+			return err
+		}
+	}
+
+	return fmt.Errorf("record not found")
+}

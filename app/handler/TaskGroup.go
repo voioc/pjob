@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -51,8 +52,11 @@ func (self *GroupController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑分组"
 	data["hideTop"] = true
 
+	group := &model.TaskGroup{}
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ := model.GroupGetById(id)
+	group, _ = service.TaskGroupS(c).GroupByID(id) // model.GroupGetById(id)
+	fmt.Println("00000000", group)
+
 	row := make(map[string]interface{})
 	row["id"] = group.ID
 	row["group_name"] = group.GroupName
@@ -70,17 +74,17 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 	group.Description = strings.TrimSpace(c.DefaultPostForm("description", ""))
 	group.Status = 1
 
-	group_id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
+	groupID, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
 	// fmt.Println(group_id)
 
 	uid := c.GetInt("uid")
-	if group_id == 0 {
+	if groupID == 0 {
 		//新增
 		group.CreatedAt = time.Now().Unix()
 		group.UpdatedAt = time.Now().Unix()
 		group.CreatedID = uid
 		group.UpdatedID = uid
-		if _, err := model.GroupAdd(group); err != nil {
+		if _, err := service.TaskGroupS(c).GroupAdd(group); err != nil { // model.GroupAdd(group); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -89,11 +93,12 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 		c.JSON(http.StatusOK, common.Success(c))
 		return
 	}
+
 	//修改
-	group.ID = group_id
+	group.ID = groupID
 	group.UpdatedAt = time.Now().Unix()
-	group.UpdatedID = self.userId
-	if err := group.Update(); err != nil {
+	group.UpdatedID = uid
+	if err := service.TaskGroupS(c).Update(group); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -105,8 +110,8 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 
 func (self *GroupController) AjaxDel(c *gin.Context) {
 
-	group_id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	group, err := model.GroupGetById(group_id)
+	groupID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
+	group, err := service.TaskGroupS(c).GroupByID(groupID) // model.GroupGetById(group_id)
 	if err != nil || group.ID == 0 {
 		msg := "内部错误"
 		if err != nil {
@@ -118,7 +123,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	}
 
 	group.Status = 0
-	group.ID = group_id
+	group.ID = groupID
 	group.UpdatedAt = time.Now().Unix()
 	//TODO 如果分组下有任务 不处理
 	//filters := make([]interface{}, 0)
@@ -129,7 +134,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	//	self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 	//}
 
-	if err := group.Update(); err != nil {
+	if err := service.TaskGroupS(c).Update(group); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -150,7 +155,7 @@ func (self *GroupController) Table(c *gin.Context) {
 
 	//查询条件
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
+	filters = append(filters, "status =", 1)
 
 	if uid != 1 {
 		tg, _ := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
@@ -161,12 +166,14 @@ func (self *GroupController) Table(c *gin.Context) {
 			id, _ := strconv.Atoi(v)
 			groupsIds = append(groupsIds, id)
 		}
-		filters = append(filters, "id__in", groupsIds)
+		filters = append(filters, "id", groupsIds)
 	}
+
 	if groupName != "" {
-		filters = append(filters, "group_name__contains", groupName)
+		filters = append(filters, "group_name LIKE %"+groupName+"%", "")
 	}
-	result, count := model.GroupGetList(page, pageSize, filters...)
+
+	result, count, _ := service.TaskGroupS(c).GroupList(page, pageSize, filters...) // model.GroupGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

@@ -61,3 +61,23 @@ func (s *BanService) BanList(page, pageSize int, filters ...interface{}) ([]*mod
 
 	return data, total, nil
 }
+
+// 检查是否含有禁用命令
+func (s *BanService) CheckCommand(command string) (string, error) {
+	ban := make([]model.Ban, 0)
+	if err := model.GetDB().Where("status = 0").Find(&ban); err != nil {
+		return "", err
+	}
+
+	// filters := make([]interface{}, 0)
+	// filters = append(filters, "status", 0)
+	// ban, _ := model.BanGetList(1, 1000, filters...)
+
+	for _, v := range ban {
+		if strings.Contains(command, v.Code) {
+			return v.Code, nil
+		}
+	}
+
+	return "", nil
+}

@@ -11,9 +11,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
@@ -27,12 +25,12 @@ type TaskLogController struct {
 }
 
 func (self *TaskLogController) List(c *gin.Context) {
-	taskId, _ := strconv.Atoi(c.DefaultQuery("task_id", "0"))
+	taskID, _ := strconv.Atoi(c.DefaultQuery("task_id", "0"))
 	// if err != nil {
 	// 	taskId = 1
 	// }
 
-	task, err := model.TaskGetById(taskId)
+	task, err := service.TaskS(c).TaskByID(taskID) // model.TaskGetById(taskId)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -61,7 +59,7 @@ func (self *TaskLogController) Table(c *gin.Context) {
 	// self.pageSize = limit
 	//查询条件
 	filters := make([]interface{}, 0)
-	taskId, err := strconv.Atoi(c.DefaultQuery("task_id", "0"))
+	taskID, err := strconv.Atoi(c.DefaultQuery("task_id", "0"))
 	// if err != nil {
 	// 	taskId = 1
 	// }
@@ -75,19 +73,19 @@ func (self *TaskLogController) Table(c *gin.Context) {
 	// Status, err := self.GetInt("status")
 	Status, err := strconv.Atoi(c.DefaultQuery("status", "0"))
 	if err == nil && Status != 9 {
-		filters = append(filters, "status", Status)
+		filters = append(filters, "status =", Status)
 	}
 
-	filters = append(filters, "task_id", taskId)
+	filters = append(filters, "task_id =", taskID)
 
-	result, count := model.TaskLogGetList(page, pageSize, filters...)
+	result, count, _ := service.TaskLogS(c).LogList(page, pageSize, filters...) // model.TaskLogGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["id"] = v.ID
 		row["task_id"] = libs.JobKey(v.TaskID, v.ServerID)
-		row["start_time"] = beego.Date(time.Unix(v.CreatedAt, 0), "Y-m-d H:i:s")
+		row["start_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
 		row["process_time"] = float64(v.ProcessTime) / 1000
 
 		row["server_id"] = v.ServerID
@@ -115,13 +113,15 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	//日志内容
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	tasklog, err := model.TaskLogGetById(id)
+	tasklogs, err := service.TaskLogS(c).LogByID([]int{id}) // model.TaskLogGetById(id)
 
 	// fmt.Println(tasklog)
-	if err != nil {
+	if err != nil || len(tasklogs) < 1 {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "日志不存在"))
 		return
 	}
+
+	tasklog := tasklogs[id]
 
 	LogTextStatus := []string{
 		"<font color='orange'><i class='fa fa-question-circle'></i>超时</font>",
@@ -133,7 +133,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	row := make(map[string]interface{})
 	row["id"] = tasklog.ID
 	row["task_id"] = tasklog.TaskID
-	row["start_time"] = beego.Date(time.Unix(tasklog.CreatedAt, 0), "Y-m-d H:i:s")
+	row["start_time"] = time.Unix(tasklog.CreatedAt, 0).Format("2006-01-02 15:04:05")
 	row["process_time"] = float64(tasklog.ProcessTime) / 1000
 	if tasklog.Status == 0 {
 		row["output_size"] = libs.SizeFormat(float64(len(tasklog.Output)))
@@ -155,7 +155,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	data["taskLog"] = row
 
 	//任务详情
-	task, err := model.TaskGetById(tasklog.TaskID)
+	task, err := service.TaskS(c).TaskByID(tasklog.TaskID) // model.TaskGetById(tasklog.TaskID)
 	if err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
@@ -170,12 +170,13 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	}
 
 	data["TextStatus"] = TextStatus[task.Status]
-	data["CreateTime"] = beego.Date(time.Unix(task.CreatedAt, 0), "Y-m-d H:i:s")
-	data["UpdateTime"] = beego.Date(time.Unix(task.UpdatedAt, 0), "Y-m-d H:i:s")
+	data["CreateTime"] = time.Unix(task.CreatedAt, 0).Format("2006-01-02 15:04:05")
+	data["UpdateTime"] = time.Unix(task.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 	data["task"] = task
+
 	// 分组列表
 	tg, _ := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	data["taskGroup"] = taskGroupLists(tg, c.GetInt("uid"))
+	data["taskGroup"], _ = service.TaskGroupS(c).GroupIDName(tg) // taskGroupLists(tg, c.GetInt("uid"))
 
 	serverName := ""
 	if task.ServerIDs == "0" {
@@ -187,17 +188,18 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 				serverName = "本地服务器"
 			}
 		}
-		servers, n := model.TaskServerGetByIds(task.ServerIDs)
-		if n > 0 {
-			for _, server := range servers {
-				if server.Status != 0 {
-					serverName += server.ServerName + "【无效】 "
-				} else {
-					serverName += server.ServerName + " "
-				}
-			}
-		} else {
+
+		servers, err := service.ServerS(c).ServersListID(strings.Split(task.ServerIDs, ",")) // model.TaskServerGetByIds(task.ServerIDs)
+		if err != nil || len(servers) == 0 {
 			serverName = "服务器异常!!  "
+		}
+
+		for _, server := range servers {
+			if server.Status != 0 {
+				serverName += server.ServerName + "【无效】 "
+			} else {
+				serverName += server.ServerName + " "
+			}
 		}
 	}
 
@@ -206,7 +208,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	//任务分组
 	groupName := "默认分组"
 	if task.GroupID > 0 {
-		group, err := model.GroupGetById(task.GroupID)
+		group, err := service.TaskGroupS(c).GroupByID(task.GroupID) // model.GroupGetById(task.GroupID)
 		if err == nil {
 			groupName = group.GroupName
 		}
@@ -217,14 +219,14 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	createName := "未知"
 	updateName := "未知"
 	if task.CreatedID > 0 {
-		admin, err := model.AdminGetById(task.CreatedID)
+		admin, err := service.AdminS(c).AdminGetByID(task.CreatedID) // model.AdminGetById(task.CreatedID)
 		if err == nil {
 			createName = admin.RealName
 		}
 	}
 
 	if task.UpdatedID > 0 {
-		admin, err := model.AdminGetById(task.UpdatedID)
+		admin, err := service.AdminS(c).AdminGetByID(task.UpdatedID) // model.AdminGetById(task.UpdatedID)
 		if err == nil {
 			updateName = admin.RealName
 		}
@@ -233,7 +235,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	//是否出错通知
 	data["adminInfo"] = []int{0}
 	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
-		data["adminInfo"] = AllAdminInfo(task.NotifyUserIds)
+		data["adminInfo"], _ = service.AdminS(c).AdminInfo(nil) // AllAdminInfo(task.NotifyUserIds)
 	}
 
 	data["CreateName"] = createName
@@ -242,9 +244,9 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	data["NotifyTplName"] = "未知"
 	if task.IsNotify == 1 {
-		notifyTpl, err := model.NotifyTplGetById(task.NotifyTplID)
-		if err == nil {
-			data["NotifyTplName"] = notifyTpl.TplName
+		notifyTpl, err := service.NotifyS(c).NotifyListIDs([]int{task.NotifyTplID}) // model.NotifyTplGetById(task.NotifyTplID)
+		if err == nil && len(notifyTpl) > 0 {
+			data["NotifyTplName"] = notifyTpl[0].TplName
 		}
 	}
 
@@ -263,12 +265,17 @@ func (self *TaskLogController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	for _, v := range idArr {
-		id, _ := strconv.Atoi(v)
-		if id < 1 {
-			continue
-		}
-		model.TaskLogDelById(id)
+	// for _, v := range idArr {
+	// 	id, _ := strconv.Atoi(v)
+	// 	if id < 1 {
+	// 		continue
+	// 	}
+
+	// 	// model.TaskLogDelById(id)
+	// }
+	if err := service.TaskLogS(c).LogDelID(idArr); err != nil {
+		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
+		return
 	}
 
 	// self.ajaxMsg("", MSG_OK)

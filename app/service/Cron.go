@@ -39,7 +39,7 @@ func (s *CronService) AddJob(spec string, job *job.Job) bool {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if s.GetEntryById(job.JobKey) != nil {
+	if s.GetEntryByID(job.JobKey) != nil {
 		return false
 	}
 	err := mainCron.AddJob(spec, job)
@@ -62,7 +62,7 @@ func (s *CronService) RemoveJob(jobKey int) {
 	})
 }
 
-func (s *CronService) GetEntryById(jobKey int) *cron.Entry {
+func (s *CronService) GetEntryByID(jobKey int) *cron.Entry {
 	entries := mainCron.Entries()
 	for _, e := range entries {
 		if v, ok := e.Job.(*job.Job); ok {

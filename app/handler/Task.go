@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/job2"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/jobs"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 
@@ -127,7 +127,7 @@ func (self *TaskController) Edit(c *gin.Context) {
 	if err == nil {
 		for k, v := range notifyTplList {
 			row := make(map[string]interface{})
-			row["id"] = v.Id
+			row["id"] = v.ID
 			row["tpl_name"] = v.TplName
 			row["tpl_type"] = v.TplType
 			tplList[k] = row
@@ -196,7 +196,7 @@ func (self *TaskController) Copy(c *gin.Context) {
 	if err == nil {
 		for k, v := range notifyTplList {
 			row := make(map[string]interface{})
-			row["id"] = v.Id
+			row["id"] = v.ID
 			row["tpl_name"] = v.TplName
 			row["tpl_type"] = v.TplType
 			tplList[k] = row
@@ -572,7 +572,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := job2.NewJobFromTask(task)
+	jobArr, err := jobs.NewJobFromTask(task)
 
 	if err != nil {
 		// self.ajaxMsg("创建任务失败", MSG_ERR)
@@ -581,7 +581,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 	}
 
 	for _, job := range jobArr {
-		if job2.AddJob(task.CronSpec, job) {
+		if jobs.AddJob(task.CronSpec, job) {
 			task.Status = 1
 			service.TaskS(c).Update(task)
 		}
@@ -611,7 +611,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
 		jobKey := libs.JobKey(task.ID, server_id_int)
-		job2.RemoveJob(jobKey)
+		jobs.RemoveJob(jobKey)
 	}
 
 	task.Status = 0
@@ -631,7 +631,7 @@ func (self *TaskController) AjaxRun(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := job2.NewJobFromTask(task)
+	jobArr, err := jobs.NewJobFromTask(task)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -661,10 +661,10 @@ func (self *TaskController) AjaxBatchStart(c *gin.Context) {
 		}
 
 		if task, err := service.TaskS(c).TaskByID(id); err == nil { // model.TaskGetById(id); err == nil {
-			jobArr, err := job2.NewJobFromTask(task)
+			jobArr, err := jobs.NewJobFromTask(task)
 			if err == nil {
 				for _, job := range jobArr {
-					job2.AddJob(task.CronSpec, job)
+					jobs.AddJob(task.CronSpec, job)
 				}
 
 				task.Status = 1
@@ -702,7 +702,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 		for _, server_id := range TaskServerIdsArr {
 			server_id_int, _ := strconv.Atoi(server_id)
 			jobKey := libs.JobKey(task.ID, server_id_int)
-			job2.RemoveJob(jobKey)
+			jobs.RemoveJob(jobKey)
 		}
 
 		if err == nil {
@@ -740,7 +740,7 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 		for _, server_id := range TaskServerIdsArr {
 			server_id_int, _ := strconv.Atoi(server_id)
 			jobKey := libs.JobKey(task.ID, server_id_int)
-			job2.RemoveJob(jobKey)
+			jobs.RemoveJob(jobKey)
 		}
 
 		service.TaskS(c).Del([]int{id})
@@ -859,7 +859,7 @@ func (self *TaskController) AjaxNotifyType(c *gin.Context) {
 
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["tpl_name"] = v.TplName
 		row["tpl_type"] = v.TplType
 		list[k] = row
@@ -978,7 +978,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		}
 
 		jobskey := libs.JobKey(v.ID, serverId)
-		e := job2.GetEntryById(jobskey)
+		e := jobs.GetEntryById(jobskey)
 
 		if e != nil {
 			row["next_time"] = e.Next.Format("2006-01-02 15:04:05")
@@ -1159,7 +1159,7 @@ func (self *TaskController) ApiStart(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := job2.NewJobFromTask(task)
+	jobArr, err := jobs.NewJobFromTask(task)
 	if err != nil {
 		// self.ajaxMsg("创建任务失败", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "创建任务失败"))
@@ -1167,7 +1167,7 @@ func (self *TaskController) ApiStart(c *gin.Context) {
 	}
 
 	for _, job := range jobArr {
-		if job2.AddJob(task.CronSpec, job) {
+		if jobs.AddJob(task.CronSpec, job) {
 			task.Status = 1
 			// task.Update()
 			service.TaskS(c).Update(task)
@@ -1200,7 +1200,7 @@ func (self *TaskController) ApiPause(c *gin.Context) {
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
 		jobKey := libs.JobKey(task.ID, server_id_int)
-		job2.RemoveJob(jobKey)
+		jobs.RemoveJob(jobKey)
 	}
 
 	task.Status = 0

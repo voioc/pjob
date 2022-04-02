@@ -88,6 +88,20 @@ func (s *ServerService) ServersListID(ids interface{}) ([]*model.TaskServer, err
 	return data, nil
 }
 
+func (s *ServerService) ServerByID(id int) (*model.TaskServer, error) {
+	data := &model.TaskServer{}
+
+	if _, err := model.GetDB().Where("id = ?", id).Get(data); err != nil {
+		return nil, err
+	}
+
+	if data.ID == 0 {
+		return nil, fmt.Errorf("server not found")
+	}
+
+	return data, nil
+}
+
 // // 根据任务组id获取对应的名字
 // func (s *ServerService) GroupIDName(ids interface{}) (map[int]string, error) {
 // 	_, flag1 := ids.([]int)
@@ -146,4 +160,18 @@ func (s *ServerService) ServerLists(ServerGroupIDS string) ([]define.ServerList,
 func (s *ServerService) Add(server *model.TaskServer) (int, error) {
 	_, err := model.GetDB().Insert(server)
 	return server.ID, err
+}
+
+func (s *ServerService) Update(data *model.TaskServer, args ...bool) error {
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

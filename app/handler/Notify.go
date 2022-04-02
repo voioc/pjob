@@ -41,7 +41,7 @@ func (self *NotifyController) Add(c *gin.Context) {
 
 	uid := c.GetInt("uid")
 	_, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
-	data["serverGroup"] = serverGroupLists(sg, uid)
+	data["serverGroup"], _ = service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, uid)
 	// self.display()
 
 	c.HTML(http.StatusOK, "notify/add.html", data)
@@ -53,9 +53,9 @@ func (self *NotifyController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑通知模板"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	notifyTpl, _ := model.NotifyTplGetById(id)
+	notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
 	row := make(map[string]interface{})
-	row["id"] = notifyTpl.Id
+	row["id"] = notifyTpl.ID
 	row["tpl_name"] = notifyTpl.TplName
 	row["tpl_type"] = notifyTpl.TplType
 	row["title"] = notifyTpl.Title
@@ -94,7 +94,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 			}
 		}
 
-		if _, err := model.NotifyTplAdd(notifyTpl); err != nil {
+		if _, err := service.NotifyS(c).Add(notifyTpl); err != nil { // model.NotifyTplAdd(notifyTpl); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -104,7 +104,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	notifyTpl, _ := model.NotifyTplGetById(id)
+	notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
 	//修改
 	// notifyTpl.Id = id
 	notifyTpl.UpdatedID = uid
@@ -132,7 +132,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	if err := notifyTpl.Update(); err != nil {
+	if err := service.NotifyS(c).Update(notifyTpl); err != nil { // notifyTpl.Update(); err != nil {
 		// self.ajaxMsg("更新失败,"+err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "更新失败,"+err.Error()))
 		return
@@ -155,7 +155,7 @@ func (self *NotifyController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	if err := model.NotifyTplDelById(id); err != nil {
+	if err := service.NotifyS(c).Del([]int{id}); err != nil { // model.NotifyTplDelById(id); err != nil {
 		// self.ajaxMsg("删除失败,"+err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "删除失败: "+err.Error()))
 		return
@@ -188,13 +188,14 @@ func (self *NotifyController) Table(c *gin.Context) {
 	filters := make([]interface{}, 0)
 
 	if tplName != "" {
-		filters = append(filters, "tpl_name__icontains", tplName)
+		filters = append(filters, "tpl_name LIKE '%"+tplName+"%'", "")
 	}
-	result, count := model.NotifyTplGetList(page, pageSize, filters...)
+
+	result, count, _ := service.NotifyS(c).NotifyList(page, pageSize, filters...) // model.NotifyTplGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["type"] = v.Type
 		row["tpl_name"] = v.TplName
 		row["tpl_type"] = v.TplType

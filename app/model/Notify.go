@@ -20,7 +20,7 @@ const (
 )
 
 type NotifyTpl struct {
-	Id        int    `xorm:"id pk" json:"id"`
+	ID        int    `xorm:"id pk" json:"id"`
 	Type      string `xorm:"type" json:"type"`
 	TplName   string `xorm:"tpl_name" json:"tpl_name"`
 	TplType   int    `xorm:"tpl_type" json:"tpl_type"`
@@ -81,7 +81,7 @@ func NotifyTplGetByTplType(tpl_type int, typestr string) (NotifyTpl, error) {
 
 func NotifyTplGetById(id int) (*NotifyTpl, error) {
 	obj := &NotifyTpl{
-		Id: id,
+		ID: id,
 	}
 	err := orm.NewOrm().Read(obj)
 	if err != nil {

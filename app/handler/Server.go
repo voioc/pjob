@@ -32,7 +32,7 @@ func (self *ServerController) List(c *gin.Context) {
 
 	data["pageTitle"] = "执行资源管理"
 	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
+	data["serverGroup"], _ = service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
 	c.HTML(http.StatusOK, "server/list.html", data)
@@ -45,7 +45,7 @@ func (self *ServerController) Add(c *gin.Context) {
 	data["pageTitle"] = "新增执行资源"
 
 	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
+	data["serverGroup"], _ = service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
 	c.HTML(http.StatusOK, "server/add.html", data)
@@ -75,14 +75,14 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 	}
 
 	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	serverGroup := serverGroupLists(sg, c.GetInt("uid"))
+	serverGroup, _ := service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, c.GetInt("uid"))
 
 	//查询条件
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 0)
-	filters = append(filters, "group_id", gid)
+	filters = append(filters, "status =", 0)
+	filters = append(filters, "group_id =", gid)
 
-	result, count := model.TaskServerGetList(page, pageSize, filters...)
+	result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -110,7 +110,7 @@ func (self *ServerController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑执行资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := model.TaskServerGetById(id)
+	server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
@@ -128,7 +128,7 @@ func (self *ServerController) Edit(c *gin.Context) {
 	data["server"] = row
 
 	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
+	data["serverGroup"], _ = service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, c.GetInt("uid"))
 	// self.display()
 
 	c.HTML(http.StatusOK, "server/edit.html", data)
@@ -207,7 +207,7 @@ func (self *ServerController) Copy(c *gin.Context) {
 	data["pageTitle"] = "复制服务器资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := model.TaskServerGetById(id)
+	server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
@@ -225,7 +225,7 @@ func (self *ServerController) Copy(c *gin.Context) {
 	data["server"] = row
 
 	_, sg := service.AuthS(c).TaskGroups(c.GetInt("uid"), c.GetString("role_id"))
-	data["serverGroup"] = serverGroupLists(sg, c.GetInt("uid"))
+	data["serverGroup"], _ = service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, c.GetInt("uid"))
 
 	// self.display()
 	c.HTML(http.StatusOK, "group/copy.html", data)
@@ -254,7 +254,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
 
-		if _, err := model.TaskServerAdd(server); err != nil {
+		if _, err := service.ServerS(c).Add(server); err != nil { // model.TaskServerAdd(server); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -264,7 +264,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	server, _ := model.TaskServerGetById(server_id)
+	server, _ := service.ServerS(c).ServerByID(server_id) // model.TaskServerGetById(server_id)
 
 	//修改
 	// server.Id = server_id
@@ -302,14 +302,14 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	server, _ := model.TaskServerGetById(id)
+	server, _ := service.ServerS(c).ServerByID(id) //  model.TaskServerGetById(id)
 	if server == nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "资源不存在"))
 		return
 	}
 
 	server.UpdatedAt = time.Now().Unix()
-	server.Status = 2
+	server.Status = 1
 	server.ID = id
 
 	// TODO 查询服务器是否用于定时任务
@@ -348,13 +348,13 @@ func (self *ServerController) Table(c *gin.Context) {
 
 	uid := c.GetInt("uid")
 	_, sg := service.AuthS(c).TaskGroups(uid, c.GetString("role_id"))
-	serverGroup := serverGroupLists(sg, uid)
+	serverGroup, _ := service.ServerGroupS(c).GroupIDName(sg) // serverGroupLists(sg, uid)
 
 	// self.pageSize = limit
-	//查询条件
+	// 查询条件
 	filters := make([]interface{}, 0)
 	ids := []int{0, 1}
-	filters = append(filters, "status__in", ids)
+	filters = append(filters, "status", ids)
 
 	groupsIds := make([]int, 0)
 	if uid != 1 {
@@ -371,17 +371,17 @@ func (self *ServerController) Table(c *gin.Context) {
 				groupsIds = append(groupsIds, id)
 			}
 		}
-		filters = append(filters, "group_id__in", groupsIds)
+		filters = append(filters, "group_id ", groupsIds)
 	} else if serverGroupId > 0 {
 		groupsIds = append(groupsIds, serverGroupId)
-		filters = append(filters, "group_id__in", groupsIds)
+		filters = append(filters, "group_id ", groupsIds)
 	}
 
 	if serverName != "" {
-		filters = append(filters, "server_name__icontains", serverName)
+		filters = append(filters, "server_name LIKE '%"+serverName+"%'", "")
 	}
 
-	result, count := model.TaskServerGetList(page, pageSize, filters...)
+	result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -408,19 +408,26 @@ func (self *ServerController) Table(c *gin.Context) {
 //注册
 func (self *ServerController) ApiSave(c *gin.Context) {
 	// 唯一确定值 ip+port
-	serverIp := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+	serverIP := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 	port, _ := strconv.Atoi(c.DefaultPostForm("port", "0"))
 
-	if serverIp == "" || port == 0 {
+	if serverIP == "" || port == 0 {
 		// self.ajaxMsg("执行器和端口号必填", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器和端口号必填"))
 		return
 	}
 
-	defaultActName := "agent-" + serverIp + "-" + strconv.Itoa(port)
+	defaultActName := "agent-" + serverIP + "-" + strconv.Itoa(port)
 
-	id := model.TaskServerForActuator(serverIp, port)
-	if id == 0 {
+	filters := make([]interface{}, 0)
+	filters = append(filters, "status__in", []int{0, 1})
+	filters = append(filters, "server_ip", serverIP)
+	filters = append(filters, "port", port)
+
+	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+
+	// id := model.TaskServerForActuator(serverIp, port)
+	if len(server) == 0 {
 		//新增
 		server := new(model.TaskServer)
 		server.ConnectionType, _ = strconv.Atoi(c.DefaultPostForm("connection_type", "3"))
@@ -441,28 +448,28 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		server.CreatedAt = time.Now().Unix()
 		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
-		serverId, err := model.TaskServerAdd(server)
+		serverID, err := service.ServerS(c).Add(server) // model.TaskServerAdd(server)
 		if err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
 		// self.ajaxMsg(serverId, MSG_OK)
-		data := map[string]interface{}{"server": serverId}
+		data := map[string]interface{}{"server": serverID}
 		c.JSON(http.StatusOK, common.Success(c, data))
 		return
 	} else {
 		//修改状态
-		server, _ := model.TaskServerGetById(id)
-		server.UpdatedAt = time.Now().Unix()
-		server.Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
-		if err := server.Update(); err != nil {
+		// server, _ := service.ServerS(c).ServerByID(server[0].ID) // model.TaskServerGetById(id)
+		server[0].UpdatedAt = time.Now().Unix()
+		server[0].Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
+		if err := service.ServerS(c).Update(server[0]); err != nil { // server.Update(); err != nil {
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
 
 		// self.ajaxMsg(id, MSG_OK)
-		data := map[string]interface{}{"server": id}
+		data := map[string]interface{}{"server": server[0].ID}
 		c.JSON(http.StatusOK, common.Success(c, data))
 		return
 	}
@@ -472,18 +479,23 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 //检测0-正常，1-异常，2-删除
 func (self *ServerController) ApiStatus(c *gin.Context) {
 	//唯一确定值 ip+port
-	serverId := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+	serverIP := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 	port, _ := strconv.Atoi(c.DefaultPostForm("port", "0"))
 	status, _ := strconv.Atoi(c.DefaultPostForm("status", "0"))
 
-	if serverId == "" || port == 0 {
+	if serverIP == "" || port == 0 {
 		// self.ajaxMsg("执行器和端口号必填", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器和端口号必填"))
 		return
 	}
 
-	id := model.TaskServerForActuator(serverId, port)
-	if id == 0 {
+	filters := make([]interface{}, 0)
+	filters = append(filters, "status", []int{0, 1})
+	filters = append(filters, "server_ip =", serverIP)
+	filters = append(filters, "port =", port)
+
+	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	if len(server) == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))
 		return
@@ -493,15 +505,15 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 		status = 0
 	}
 
-	server, _ := model.TaskServerGetById(id)
-	server.UpdatedAt = time.Now().Unix()
-	server.Status = status
-	server.ID = id
+	// server, _ := service.ServerS(c).ServerByID(server[0].ID) // model.TaskServerGetById(id)
+	server[0].UpdatedAt = time.Now().Unix()
+	server[0].Status = status
+	server[0].ID = server[0].ID
 
 	logs.Info(server)
 
 	//TODO 查询执行器是否正在使用中
-	if err := server.Update(); err != nil {
+	if err := service.ServerS(c).Update(server[0]); err != nil { // server.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -509,39 +521,32 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	}
 
 	// self.ajaxMsg(id, MSG_OK)
-	data := map[string]interface{}{"server": id}
+	data := map[string]interface{}{"server": server[0].ID}
 	c.JSON(http.StatusOK, common.Success(c, data))
 }
 
 //获取 不检测执行器状态
 func (self *ServerController) ApiGet(c *gin.Context) {
 	//唯一确定值 ip+port
-	serverId := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
+	serverIP := strings.TrimSpace(c.DefaultPostForm("server_ip", ""))
 	port, _ := strconv.Atoi(c.DefaultPostForm("port", "0"))
 
-	if serverId == "" || port == 0 {
+	if serverIP == "" || port == 0 {
 		// self.ajaxMsg("执行器和端口号必填", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器和端口号必填"))
 		return
 	}
 
-	id := model.TaskServerForActuator(serverId, port)
-	if id == 0 {
+	filters := make([]interface{}, 0)
+	filters = append(filters, "server_ip =", serverIP)
+	filters = append(filters, "port =", port)
+	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	if len(server) == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))
 		return
 	}
 
-	server, err := model.TaskServerGetById(id)
-
-	if err != nil {
-		// self.ajaxMsg(err.Error(), MSG_ERR)
-		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
-		return
-	} else {
-		// self.ajaxMsg(server, MSG_OK)
-	}
-
-	data := map[string]interface{}{"server": server}
-	c.JSON(http.StatusOK, common.Success(c, data))
+	// data := map[string]interface{}{"server": server[0]}
+	c.JSON(http.StatusOK, common.Success(c, server[0]))
 }

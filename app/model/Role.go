@@ -12,7 +12,7 @@ import (
 )
 
 type Role struct {
-	Id             int    `xorm:"id pk" json:"id"`
+	ID             int    `xorm:"id pk" json:"id"`
 	RoleName       string `xorm:"role_name" json:"role_name"`
 	Detail         string `xorm:"detail" json:"detail"`
 	ServerGroupIDs string `xorm:"server_group_ids" json:"server_group_ids"`

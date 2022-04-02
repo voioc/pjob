@@ -74,3 +74,34 @@ func (s *AdminService) AdminInfo(ids []int) ([]*model.Admin, error) {
 
 	return data, nil
 }
+
+func (s *AdminService) Add(data *model.Admin) (int, error) {
+	_, err := model.GetDB().Insert(data)
+	return data.ID, err
+}
+
+func (s *AdminService) Update(data *model.Admin, args ...bool) error {
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *AdminService) Del(ids interface{}) error {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
+
+	if flag1 || flag2 {
+		_, err := model.GetDB().In("id", ids).Delete(&model.Admin{})
+		return err
+	}
+
+	return nil
+}

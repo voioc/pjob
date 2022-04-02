@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
@@ -41,12 +42,12 @@ func (self *AdminController) Add(c *gin.Context) {
 	data["pageTitle"] = "新增管理员"
 	// 角色
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
-	result, _ := model.RoleGetList(1, 1000, filters...)
+	filters = append(filters, "status=", 1)
+	result, _, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["role_name"] = v.RoleName
 		list[k] = row
 	}
@@ -64,7 +65,7 @@ func (self *AdminController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑管理员"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	Admin, _ := model.AdminGetById(id)
+	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
 	row := make(map[string]interface{})
 	row["id"] = Admin.ID
 	row["login_name"] = Admin.LoginName
@@ -79,20 +80,20 @@ func (self *AdminController) Edit(c *gin.Context) {
 	role_ids := strings.Split(Admin.RoleIDs, ",")
 
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status", 1)
-	result, _ := model.RoleGetList(1, 1000, filters...)
+	filters = append(filters, "status =", 1)
+	result, _, _ := service.RoleS(c).RoleList(1, 1000, filters...) // model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["checked"] = 0
 		for i := 0; i < len(role_ids); i++ {
 			role_id, _ := strconv.Atoi(role_ids[i])
-			if role_id == v.Id {
+			if role_id == v.ID {
 				row["checked"] = 1
 			}
 			// fmt.Println(role_ids[i])
 		}
-		row["id"] = v.Id
+		row["id"] = v.ID
 		row["role_name"] = v.RoleName
 		list[k] = row
 	}
@@ -120,20 +121,25 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Status = 1
 
 		// 检查登录名是否已经存在
-		_, err := model.AdminGetByName(Admin.LoginName)
+		filters := make([]interface{}, 0)
+		filters = append(filters, "login_name =", Admin.LoginName)
+		filters = append(filters, "status =", 1)
+		result, _, _ := service.RoleS(c).RoleList(1, 1, filters...) // model.RoleGetList(1, 1000, filters...)
 
-		if err == nil {
+		// _, err := model.AdminGetByName(Admin.LoginName)
+		if len(result) > 0 {
 			// self.ajaxMsg("登录名已经存在", MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "登录名已经存在"))
 			return
 		}
+
 		//新增
 		pwd, salt := libs.Password(4, "")
 		Admin.Password = pwd
 		Admin.Salt = salt
 		Admin.CreatedAt = time.Now().Unix()
 		Admin.CreatedID = uid
-		if _, err := model.AdminAdd(Admin); err != nil {
+		if _, err := service.AdminS(c).Add(Admin); err != nil { // model.AdminAdd(Admin); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -144,7 +150,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	Admin, _ := model.AdminGetById(id)
+	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
 	//修改
 	// Admin.Id = id
 	Admin.UpdatedAt = time.Now().Unix()
@@ -166,13 +172,13 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Salt = salt
 	}
 
-	//普通管理员不可修改超级管理员资料
+	// 普通管理员不可修改超级管理员资料
 	if uid != 1 && Admin.ID == 1 {
 		// self.ajaxMsg("不可修改超级管理员资料", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "不可修改超级管理员资料"))
 		return
 	}
-	if err := Admin.Update(); err != nil {
+	if err := service.AdminS(c).Update(Admin); err != nil { // Admin.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -197,12 +203,12 @@ func (self *AdminController) AjaxDel(c *gin.Context) {
 		Admin_status = 1
 	}
 
-	Admin, _ := model.AdminGetById(id)
+	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
 	Admin.UpdatedAt = time.Now().Unix()
 	Admin.Status = Admin_status
 	Admin.ID = id
 
-	if err := Admin.Update(); err != nil {
+	if err := service.AdminS(c).Update(Admin, true); err != nil { // Admin.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -229,7 +235,7 @@ func (self *AdminController) Table(c *gin.Context) {
 		filters = append(filters, "real_name__icontains", realName)
 	}
 
-	result, count := model.AdminGetList(page, pageSize, filters...)
+	result, count, _ := service.AdminS(c).AdminList(page, pageSize, filters...) // model.AdminGetList(page, pageSize, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

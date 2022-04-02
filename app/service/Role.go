@@ -30,11 +30,11 @@ func (s *RoleService) RoleList(page, pageSize int, filters ...interface{}) ([]*m
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
 			// 如果是数组则单独筛出来
-			if _, flag := filters[k+1].([]int); !flag {
+			if _, flag := filters[k+1].([]int); flag {
 				in[filters[k].(string)] = filters[k+1]
+			} else {
+				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 			}
-
-			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 
@@ -98,4 +98,49 @@ func (s *RoleService) TaskGroups(uid int, roleIDs string) (string, string) {
 	}
 
 	return strings.Trim(serverGroups, ","), strings.Trim(taskGroups, ",")
+}
+
+func (s *RoleService) RoleByID(id int) (*model.Role, error) {
+	data := &model.Role{}
+
+	if _, err := model.GetDB().Where("id = ?", id).Get(data); err != nil {
+		return nil, err
+	}
+
+	if data.ID == 0 {
+		return nil, fmt.Errorf("server not found")
+	}
+
+	return data, nil
+}
+
+func (s *RoleService) Add(data *model.Role) (int, error) {
+	_, err := model.GetDB().Insert(data)
+	return data.ID, err
+}
+
+func (s *RoleService) Update(data *model.Role, args ...bool) error {
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *RoleService) Del(ids interface{}) error {
+	_, flag1 := ids.([]int)
+	_, flag2 := ids.([]string)
+
+	if flag1 || flag2 {
+		_, err := model.GetDB().In("id", ids).Delete(&model.Role{})
+		return err
+	}
+
+	return nil
 }

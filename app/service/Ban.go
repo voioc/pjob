@@ -25,15 +25,15 @@ func (s *BanService) BanList(page, pageSize int, filters ...interface{}) ([]*mod
 	db := model.GetDB().Where("1=1")
 
 	in := map[string]interface{}{}
-	condition := " 1 = 1 "
+	condition := " 1=1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
 			// 如果是数组则单独筛出来
-			if _, flag := filters[k+1].([]int); !flag {
+			if _, flag := filters[k+1].([]int); flag {
 				in[filters[k].(string)] = filters[k+1]
+			} else {
+				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 			}
-
-			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 		}
 	}
 
@@ -80,4 +80,37 @@ func (s *BanService) CheckCommand(command string) (string, error) {
 	}
 
 	return "", nil
+}
+
+func (s *BanService) BanByID(id int) (*model.Ban, error) {
+	data := &model.Ban{}
+
+	if _, err := model.GetDB().Where("id = ?", id).Get(data); err != nil {
+		return nil, err
+	}
+
+	if data.ID == 0 {
+		return nil, fmt.Errorf("server not found")
+	}
+
+	return data, nil
+}
+
+func (s *BanService) Add(data *model.Ban) (int, error) {
+	_, err := model.GetDB().Insert(data)
+	return data.ID, err
+}
+
+func (s *BanService) Update(data *model.Ban, args ...bool) error {
+	if len(args) > 0 && args[0] {
+		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	} else {
+		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -12,7 +12,6 @@ import (
 
 	"html/template"
 
-	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
@@ -69,9 +68,11 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 }
 
 //登出
-func (self *LoginController) LoginOut() {
-	self.Ctx.SetCookie("auth", "")
-	self.redirect(beego.URLFor("LoginController.Login"))
+func (self *LoginController) LoginOut(c *gin.Context) {
+	c.SetCookie("auth", "1|authkey", -1, "/", "10.74.6.23", false, true)
+	c.Redirect(302, "/home/start")
+	// self.Ctx.SetCookie("auth", "")
+	// self.redirect(beego.URLFor("LoginController.Login"))
 }
 
 func (self *LoginController) NoAuth() {

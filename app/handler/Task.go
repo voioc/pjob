@@ -316,7 +316,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	}
 
 	//是否出错通知
-	data["adminInfo"] = []*AdminInfo{}
+	data["adminInfo"] = []*model.Admin{}
 	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
 		ids := []int{}
 		for _, row := range strings.Split(task.NotifyUserIds, ",") {

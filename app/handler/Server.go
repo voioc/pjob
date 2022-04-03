@@ -332,6 +332,7 @@ func (self *ServerController) Table(c *gin.Context) {
 	serverName := strings.TrimSpace(c.DefaultQuery("serverName", ""))
 	StatusText := []string{
 		"<i class='fa fa-refresh' style='color:#5FB878'></i>",
+		"<i class='fa fa-bolt' style='color:#5FB878'></i>",
 		"<i class='fa fa-ban' style='color:#FF5722'></i>",
 	}
 	//

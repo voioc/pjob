@@ -23,7 +23,8 @@ func (s *ServerService) ServerList(page, pageSize int, filters ...interface{}) (
 	offset := (page - 1) * pageSize
 	data := make([]*model.TaskServer, 0)
 
-	db := model.GetDB().Where("1=1")
+	// db := model.GetDB().Where("1=1")
+	// clone := model.GetDB().Where("1=1")
 
 	in := map[string]interface{}{}
 	condition := " 1 = 1 "
@@ -38,25 +39,34 @@ func (s *ServerService) ServerList(page, pageSize int, filters ...interface{}) (
 		}
 	}
 
+	db := model.GetDB().Where("1=1").Where(condition)
+	clone := model.GetDB().Where("1=1").Where(condition)
 	if len(in) > 0 {
 		for col, v := range in {
 			if col != "" {
 				regex := strings.Split(col, " ")
 				if len(regex) == 2 && regex[1] == "not" {
 					db = db.NotIn(col, v)
+					clone = db.NotIn(col, v)
 				} else {
 					db = db.In(col, v)
+					clone = db.In(col, v)
 				}
 			}
 		}
 	}
 
-	total, err := db.Where(condition).Count(&model.TaskServer{})
+	x := *db
+	clone = &x
+	fmt.Printf("%p \n", db)
+	fmt.Printf("%p \n", clone)
+
+	total, err := clone.Count(&model.TaskServer{})
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if err := model.GetDB().Where(condition).OrderBy("field(status, 1, 2, 3, 0), id desc ").Limit(pageSize, offset).Find(&data); err != nil {
+	if err := db.OrderBy("field(status, 1, 2, 3, 0), id desc ").Limit(pageSize, offset).Find(&data); err != nil {
 		return nil, 0, err
 	}
 

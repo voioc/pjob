@@ -41,15 +41,15 @@ func GetCmdMap(key string) *exec.Cmd {
 
 func RestJobFromTask(task *model.Task, serverId int) (*Job, error) {
 
-	if task.Id < 1 {
+	if task.ID < 1 {
 		return nil, fmt.Errorf("ToJob: 缺少id")
 	}
 
-	if task.ServerIds == "" {
+	if task.ServerIDs == "" {
 		return nil, fmt.Errorf("任务执行失败，找不到执行的服务器")
 	}
 
-	job := ResetCommandJob(task.Id, serverId, task.TaskName, task.Command)
+	job := ResetCommandJob(task.ID, serverId, task.TaskName, task.Command)
 	job.Task = task
 	job.Concurrent = task.Concurrent == 1
 	job.ServerId = serverId

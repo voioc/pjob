@@ -43,7 +43,7 @@ func (self *AdminController) Add(c *gin.Context) {
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status=", 1)
-	result, _, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
+	result, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -81,7 +81,7 @@ func (self *AdminController) Edit(c *gin.Context) {
 
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status =", 1)
-	result, _, _ := service.RoleS(c).RoleList(1, 1000, filters...) // model.RoleGetList(1, 1000, filters...)
+	result, _ := service.RoleS(c).RoleList(1, 1000, filters...) // model.RoleGetList(1, 1000, filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -124,7 +124,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		filters := make([]interface{}, 0)
 		filters = append(filters, "login_name =", Admin.LoginName)
 		filters = append(filters, "status =", 1)
-		result, _, _ := service.RoleS(c).RoleList(1, 1, filters...) // model.RoleGetList(1, 1000, filters...)
+		result, _ := service.RoleS(c).RoleList(1, 1, filters...) // model.RoleGetList(1, 1000, filters...)
 
 		// _, err := model.AdminGetByName(Admin.LoginName)
 		if len(result) > 0 {

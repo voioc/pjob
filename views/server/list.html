@@ -60,7 +60,7 @@
             })
             return;
         }
-        //方法级渲染
+        // 方法级渲染
         table.render({
             elem: '#table_list'
             ,url: '{{.uri}}/server/table'
@@ -72,6 +72,7 @@
                 ,{field:'connection_type', title: '类型',width:100}
                 ,{field:'ip_port', title: 'IP端口'}
                 ,{field:'group_name',title: '分组名称',width:200}
+                // ,{field:'status',title: '状态',width:200, templet: function(d){if(d.status == 0){return '正常'}else{return '删除'}} }
                 ,{field:'detail', title: '备注'}
                 ,{fixed: 'right', width:160, align:'center', toolbar: '#bar'}
             ]]

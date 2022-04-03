@@ -158,7 +158,7 @@ func (s *AuthService) TaskGroups(uid int, roleIDs string) (string, string) {
 
 	filters = append(filters, "id", RoleIds)
 
-	result, _, _ := RoleS(s.C).RoleList(1, 1000, filters...)
+	result, _ := RoleS(s.C).RoleList(1, 1000, filters...)
 	serverGroups := ""
 	taskGroups := ""
 	for _, v := range result {

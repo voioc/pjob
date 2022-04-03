@@ -227,7 +227,8 @@ func (self *RoleController) Table(c *gin.Context) {
 	if roleName != "" {
 		filters = append(filters, "role_name LIKE '%"+roleName+"%'", "")
 	}
-	result, count, _ := service.RoleS(c).RoleList(page, pageSize, filters...) // model.RoleGetList(page, pageSize, filters...)
+	result, _ := service.RoleS(c).RoleList(page, pageSize, filters...) // model.RoleGetList(page, pageSize, filters...)
+	count, _ := service.RoleS(c).RoleListCount(filters...)
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

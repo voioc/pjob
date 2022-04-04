@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
-	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
 )
@@ -41,7 +41,12 @@ func (self *BanController) Add(c *gin.Context) {
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status", 1)
-	result, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
+	// result, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
+	result := make([]model.Role, 0)
+	if err := model.List(&result, 1, 1000, filters); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -62,7 +67,12 @@ func (self *BanController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑禁用命令"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	ban, _ := service.BanS(c).BanByID(id) // model.BanGetById(id)
+	// ban, _ := service.BanS(c).BanByID(id) // model.BanGetById(id)
+	ban := &model.Ban{}
+	if err := model.DataByID(ban, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = ban.ID
 	row["code"] = ban.Code
@@ -78,7 +88,7 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 		ban.Code = strings.TrimSpace(c.DefaultPostForm("code", ""))
 		ban.CreatedAt = time.Now().Unix()
 
-		if _, err := service.BanS(c).Add(ban); err != nil { // model.BanAdd(ban); err != nil {
+		if err := model.Add(ban); err != nil { // model.BanAdd(ban); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -88,13 +98,17 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	ban, _ := service.BanS(c).BanByID(id) // model.BanGetById(id)
+	ban := &model.Ban{}
+	if err := model.DataByID(ban, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	//修改
 	// ban.Id = id
 	ban.UpdatedAt = time.Now().Unix()
 	ban.Code = strings.TrimSpace(c.DefaultPostForm("code", ""))
 
-	if err := service.BanS(c).Update(ban); err != nil { // ban.Update(); err != nil {
+	if err := model.Update(ban.ID, ban); err != nil { // ban.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -106,11 +120,16 @@ func (self *BanController) AjaxSave(c *gin.Context) {
 func (self *BanController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
 
-	ban, _ := service.BanS(c).BanByID(id) // model.BanGetById(id)
+	// ban, _ := service.BanS(c).BanByID(id) // model.BanGetById(id)
+	ban := &model.Ban{}
+	if err := model.DataByID(ban, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	ban.UpdatedAt = time.Now().Unix()
 	ban.Status = 1
 
-	if err := service.BanS(c).Update(ban); err != nil { // ban.Update(); err != nil {
+	if err := model.Update(ban.ID, ban, true); err != nil { // ban.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -134,7 +153,14 @@ func (self *BanController) Table(c *gin.Context) {
 		filters = append(filters, "code LIKE '%"+code+"%'", code)
 	}
 
-	result, count, _ := service.BanS(c).BanList(page, pageSize, filters...) // model.BanGetList(page, pageSize, filters...)
+	// result, count, _ := service.BanS(c).BanList(page, pageSize, filters...) // model.BanGetList(page, pageSize, filters...)
+	result := make([]model.Ban, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, _ := model.ListCount(&model.Ban{}, filters...)
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

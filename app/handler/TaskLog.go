@@ -8,10 +8,12 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
@@ -30,8 +32,9 @@ func (self *TaskLogController) List(c *gin.Context) {
 	// 	taskId = 1
 	// }
 
-	task, err := service.TaskS(c).TaskByID(taskID) // model.TaskGetById(taskId)
-	if err != nil {
+	// task, err := service.TaskS(c).TaskByID(taskID) // model.TaskGetById(taskId)
+	task := model.Task{}
+	if err := model.DataByID(&task, taskID); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -78,9 +81,18 @@ func (self *TaskLogController) Table(c *gin.Context) {
 
 	filters = append(filters, "task_id =", taskID)
 
-	result, count, _ := service.TaskLogS(c).LogList(page, pageSize, filters...) // model.TaskLogGetList(page, pageSize, filters...)
-	list := make([]map[string]interface{}, len(result))
+	// result, count, _ := service.TaskLogS(c).LogList(page, pageSize, filters...) // model.TaskLogGetList(page, pageSize, filters...)
+	result := make([]model.TaskLog, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
 
+	count, err := model.ListCount(&model.TaskLog{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["id"] = v.ID
@@ -110,18 +122,21 @@ func (self *TaskLogController) Table(c *gin.Context) {
 }
 
 func (self *TaskLogController) Detail(c *gin.Context) {
-
 	//日志内容
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	tasklogs, err := service.TaskLogS(c).LogByID([]int{id}) // model.TaskLogGetById(id)
-
-	// fmt.Println(tasklog)
-	if err != nil || len(tasklogs) < 1 {
-		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "日志不存在"))
-		return
+	// tasklogs, err := service.TaskLogS(c).LogByID([]int{id}) // model.TaskLogGetById(id)
+	tasklog := model.TaskLog{}
+	if err := model.DataByID(&tasklog, id); err != nil {
+		fmt.Println(err.Error())
 	}
 
-	tasklog := tasklogs[id]
+	// fmt.Println(tasklog)
+	// if err != nil || len(tasklogs) < 1 {
+	// 	c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "日志不存在"))
+	// 	return
+	// }
+
+	// tasklog := tasklogs[id]
 
 	LogTextStatus := []string{
 		"<font color='orange'><i class='fa fa-question-circle'></i>超时</font>",
@@ -154,9 +169,10 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	data["taskLog"] = row
 
-	//任务详情
-	task, err := service.TaskS(c).TaskByID(tasklog.TaskID) // model.TaskGetById(tasklog.TaskID)
-	if err != nil {
+	// 任务详情
+	// task, err := service.TaskS(c).TaskByID(tasklog.TaskID) // model.TaskGetById(tasklog.TaskID)
+	task := model.Task{}
+	if err := model.DataByID(&task, tasklog.TaskID); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -208,8 +224,9 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	//任务分组
 	groupName := "默认分组"
 	if task.GroupID > 0 {
-		group, err := service.TaskGroupS(c).GroupByID(task.GroupID) // model.GroupGetById(task.GroupID)
-		if err == nil {
+		// group, err := service.TaskGroupS(c).GroupByID(task.GroupID) // model.GroupGetById(task.GroupID)
+		group := model.TaskGroup{}
+		if err := model.DataByID(&group, task.GroupID); err == nil {
 			groupName = group.GroupName
 		}
 	}
@@ -219,16 +236,18 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	createName := "未知"
 	updateName := "未知"
 	if task.CreatedID > 0 {
-		admin, err := service.AdminS(c).AdminGetByID(task.CreatedID) // model.AdminGetById(task.CreatedID)
-		if err == nil {
+		// admin, err := service.AdminS(c).AdminGetByID(task.CreatedID) // model.AdminGetById(task.CreatedID)
+		admin := model.Admin{}
+		if err := model.DataByID(&admin, task.GroupID); err == nil {
 			createName = admin.RealName
 		}
 	}
 
 	if task.UpdatedID > 0 {
-		admin, err := service.AdminS(c).AdminGetByID(task.UpdatedID) // model.AdminGetById(task.UpdatedID)
-		if err == nil {
-			updateName = admin.RealName
+		// admin, err := service.AdminS(c).AdminGetByID(task.UpdatedID) // model.AdminGetById(task.UpdatedID)
+		admin := model.Admin{}
+		if err := model.DataByID(&admin, task.GroupID); err == nil {
+			createName = admin.RealName
 		}
 	}
 
@@ -273,7 +292,7 @@ func (self *TaskLogController) AjaxDel(c *gin.Context) {
 
 	// 	// model.TaskLogDelById(id)
 	// }
-	if err := service.TaskLogS(c).LogDelID(idArr); err != nil {
+	if err := model.Del(&model.TaskLog{}, idArr); err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
 	}

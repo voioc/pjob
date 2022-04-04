@@ -19,38 +19,38 @@ func ServerGroupS(c *gin.Context) *ServerGroupService {
 	return &ServerGroupService{Base: common.Base{C: c}}
 }
 
-func (s *ServerGroupService) List(page, pageSize int, filters ...interface{}) ([]*model.ServerGroup, int64, error) {
-	offset := (page - 1) * pageSize
-	data := make([]*model.ServerGroup, 0)
+// func (s *ServerGroupService) List(page, pageSize int, filters ...interface{}) ([]*model.ServerGroup, int64, error) {
+// 	offset := (page - 1) * pageSize
+// 	data := make([]*model.ServerGroup, 0)
 
-	// query := model.GetDB()
-	// var count int
-	condition := " 1 = 1 "
-	if len(filters) > 0 {
-		for k := 0; k < len(filters); k += 2 {
-			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
-		}
-	}
+// 	// query := model.GetDB()
+// 	// var count int
+// 	condition := " 1 = 1 "
+// 	if len(filters) > 0 {
+// 		for k := 0; k < len(filters); k += 2 {
+// 			condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
+// 		}
+// 	}
 
-	total, err := model.GetDB().Where(condition).Count(&model.ServerGroup{})
-	if err != nil {
-		return nil, 0, err
-	}
+// 	total, err := model.GetDB().Where(condition).Count(&model.ServerGroup{})
+// 	if err != nil {
+// 		return nil, 0, err
+// 	}
 
-	if err := model.GetDB().Where(condition).Limit(pageSize, offset).Find(&data); err != nil {
-		return nil, 0, err
-	}
+// 	if err := model.GetDB().Where(condition).Limit(pageSize, offset).Find(&data); err != nil {
+// 		return nil, 0, err
+// 	}
 
-	// 	// query := orm.NewOrm().QueryTable(TableName("task"))
-	// 	// if len(filters) > 0 {
-	// 	// 	l := len(filters)
-	// 	// 	for k := 0; k < l; k += 2 {
-	// 	// 		query = query.Filter(filters[k].(string), filters[k+1])
-	// 	// 	}
-	// 	// }
+// 	// 	// query := orm.NewOrm().QueryTable(TableName("task"))
+// 	// 	// if len(filters) > 0 {
+// 	// 	// 	l := len(filters)
+// 	// 	// 	for k := 0; k < l; k += 2 {
+// 	// 	// 		query = query.Filter(filters[k].(string), filters[k+1])
+// 	// 	// 	}
+// 	// 	// }
 
-	return data, total, nil
-}
+// 	return data, total, nil
+// }
 
 func (s *ServerGroupService) ServerGroupLists(authStr string, adminId int) (sgl map[int]string) {
 	Filters := make([]interface{}, 0)
@@ -65,10 +65,14 @@ func (s *ServerGroupService) ServerGroupLists(authStr string, adminId int) (sgl 
 		Filters = append(Filters, "id", serverGroupIds)
 	}
 
-	groupResult, n, _ := s.List(1, 1000, Filters...)
+	// groupResult, n, _ := s.List(1, 1000, Filters...)
+	group := make([]model.ServerGroup, 0)
+	if err := model.List(&group, 1, 1000, Filters...); err != nil {
+		fmt.Println(err.Error())
+	}
 
-	sgl = make(map[int]string, n)
-	for _, gv := range groupResult {
+	sgl = make(map[int]string, 0)
+	for _, gv := range group {
 		sgl[gv.ID] = gv.GroupName
 	}
 
@@ -96,25 +100,25 @@ func (s *ServerGroupService) GroupIDName(ids string) (map[int]string, error) {
 	return data, nil
 }
 
-func (s *ServerGroupService) Add(sg *model.ServerGroup) (int, error) {
-	_, err := model.GetDB().Insert(sg)
-	return sg.ID, err
-}
+// func (s *ServerGroupService) Add(sg *model.ServerGroup) (int, error) {
+// 	_, err := model.GetDB().Insert(sg)
+// 	return sg.ID, err
+// }
 
-func (s *ServerGroupService) Update(data *model.ServerGroup, args ...bool) error {
-	if data.GroupName == "" {
-		return fmt.Errorf("组名不能为空")
-	}
+// func (s *ServerGroupService) Update(data *model.ServerGroup, args ...bool) error {
+// 	if data.GroupName == "" {
+// 		return fmt.Errorf("组名不能为空")
+// 	}
 
-	if len(args) > 0 && args[0] {
-		if _, err := model.GetDB().ID(data.ID).Cols("status").Update(data); err != nil {
-			return err
-		}
-	} else {
-		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
-			return err
-		}
-	}
+// 	if len(args) > 0 && args[0] {
+// 		if _, err := model.GetDB().ID(data.ID).Cols("status").Update(data); err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

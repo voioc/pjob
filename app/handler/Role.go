@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -63,7 +64,12 @@ func (self *RoleController) Edit(c *gin.Context) {
 	data["serverGroup"], _ = service.ServerS(c).ServerLists(sg)  // serverLists(sg, uid)
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	role, _ := service.RoleS(c).RoleByID(id) // model.RoleGetById(id)
+	// role, _ := service.RoleS(c).RoleByID(id) // model.RoleGetById(id)
+	role := model.Role{}
+	if err := model.DataByID(&role, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = role.ID
 	row["role_name"] = role.RoleName
@@ -73,7 +79,12 @@ func (self *RoleController) Edit(c *gin.Context) {
 	data["role"] = row
 
 	//获取选择的树节点
-	roleAuth, _ := service.RoleAuthS(c).RoleAuthByID(id) // model.RoleAuthGetById(id)
+	// roleAuth, _ := service.RoleAuthS(c).RoleAuthByID(id) // model.RoleAuthGetById(id)
+	roleAuth := make([]model.RoleAuth, 0)
+	if err := model.List(&roleAuth, 1, 1000, "role_id =", id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	authId := make([]int, 0)
 	for _, v := range roleAuth {
 		authId = append(authId, v.AuthID)
@@ -123,8 +134,7 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 		role.CreatedID = uid
 		role.UpdatedID = uid
 
-		id, err := service.RoleS(c).Add(role) // model.RoleAdd(role)
-		if err != nil {
+		if err := model.Add(&role); err != nil { // model.RoleAdd(role)
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -155,7 +165,7 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 	role.ID = id
 	role.UpdatedAt = time.Now().Unix()
 	role.UpdatedID = c.GetInt("uid")
-	if err := service.RoleS(c).Update(role); err != nil { // role.Update(); err != nil {
+	if err := model.Update(role.ID, &role); err != nil { // role.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -188,8 +198,9 @@ func (self *RoleController) AjaxSave(c *gin.Context) {
 
 func (self *RoleController) AjaxDel(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	role, err := service.RoleS(c).RoleByID(id) // model.RoleGetById(id)
-	if err != nil || role == nil {
+	// role, err := service.RoleS(c).RoleByID(id) // model.RoleGetById(id)
+	role := model.Role{}
+	if err := model.DataByID(&role, id); err != nil || role.ID == 0 {
 		msg := "角色ID错误"
 		if err != nil {
 			msg = err.Error()
@@ -203,7 +214,7 @@ func (self *RoleController) AjaxDel(c *gin.Context) {
 	role.ID = id
 	role.UpdatedAt = time.Now().Unix()
 
-	if err := service.RoleS(c).Update(role, true); err != nil { // role.Update(); err != nil {
+	if err := model.Update(role.ID, role, true); err != nil { // role.Update(); err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
 	}
@@ -227,8 +238,20 @@ func (self *RoleController) Table(c *gin.Context) {
 	if roleName != "" {
 		filters = append(filters, "role_name LIKE '%"+roleName+"%'", "")
 	}
-	result, _ := service.RoleS(c).RoleList(page, pageSize, filters...) // model.RoleGetList(page, pageSize, filters...)
-	count, _ := service.RoleS(c).RoleListCount(filters...)
+
+	// result, _ := service.RoleS(c).RoleList(page, pageSize, filters...) // model.RoleGetList(page, pageSize, filters...)
+	// count, _ := service.RoleS(c).RoleListCount(filters...)
+
+	result := make([]model.Role, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.Role{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

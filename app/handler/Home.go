@@ -8,15 +8,16 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"runtime"
 	"sort"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
-	"github.com/voioc/cjob/jobs"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 )
@@ -63,7 +64,8 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["totalJob"] = count
 
 	//日志总量
-	_, totalLog, err := service.TaskLogS(c).LogList(1, 10)
+	// _, totalLog, err := service.TaskLogS(c).LogList(1, 10)
+	totalLog, err := model.ListCount(&model.TaskLog{})
 	data["totalLog"] = totalLog
 
 	// 待审核任务数量
@@ -86,7 +88,8 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["successNum"] = successNum
 
 	// 用户数
-	_, userNum, err := service.AdminS(c).AdminList(1, 10, "status = ", 1)
+	// _, userNum, err := service.AdminS(c).AdminList(1, 10, "status = ", 1)
+	userNum, err := model.ListCount(&model.Admin{}, "status = ", 1)
 	data["userNum"] = userNum
 
 	// 累计运行总次数
@@ -103,9 +106,15 @@ func (self *HomeController) Start(c *gin.Context) {
 	jobList := make([]map[string]interface{}, len(entries))
 	startJob := 0 //即将执行的任务
 	for k, v := range entries {
-		row := make(map[string]interface{})
 		job := v.Job.(*jobs.Job)
-		task, _ := service.TaskS(c).TaskByID(job.GetId())
+
+		// task, _ := service.TaskS(c).TaskByID(job.GetId())
+		task := &model.Task{}
+		if err := model.DataByID(task, job.GetId()); err != nil {
+			fmt.Println(err.Error())
+		}
+
+		row := make(map[string]interface{})
 		row["task_id"] = job.GetId()
 		row["task_name"] = job.GetName()
 		row["task_group"] = groups_map[task.GroupID]
@@ -117,11 +126,21 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["recentLogs"] = jobList
 
 	// 最近执行失败的日志
-	logs, _, _ := service.TaskLogS(c).LogList(1, 30, "status != ", 0)
+	// logs, _, _ := service.TaskLogS(c).LogList(1, 30, "status != ", 0)
+	logs := make([]model.TaskLog, 0)
+	if err := model.List(&logs, 1, 30, "status != ", 0); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	errLogs := make([]map[string]interface{}, len(logs))
 
 	for k, v := range logs {
-		task, err := service.TaskS(c).TaskByID(v.TaskID)
+		// task, err := service.TaskS(c).TaskByID(v.TaskID)
+		task := model.Task{}
+		if err := model.DataByID(task, v.TaskID); err != nil {
+			fmt.Println(err.Error())
+		}
+
 		taskName := ""
 		if err == nil {
 			taskName = task.TaskName

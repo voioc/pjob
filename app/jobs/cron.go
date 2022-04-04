@@ -5,18 +5,20 @@
 * @Last Modified time: 2017-06-23 11:04:25
  */
 
-package job2
+package jobs
 
 import (
+	"sync"
+
 	"github.com/astaxie/beego"
 	cron "github.com/voioc/cjob/crons"
 )
 
-// var (
-// 	mainCron *cron.Cron
-// 	workPool chan bool
-// 	lock     sync.Mutex
-// )
+var (
+	mainCron *cron.Cron
+	workPool chan bool
+	lock     sync.Mutex
+)
 
 func init() {
 	if size, _ := beego.AppConfig.Int("jobs.pool"); size > 0 {

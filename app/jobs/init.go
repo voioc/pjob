@@ -17,7 +17,12 @@ import (
 )
 
 func InitJobs() {
-	list, _ := model.TaskGetList(1, 1000000, "status", 1)
+	// list, _ := model.TaskGetList(1, 1000000, "status", 1)
+	list := make([]*model.Task, 0)
+	if err := model.List(&list, 1, 1000000, "status =", 1); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	for _, task := range list {
 		jobs, err := NewJobFromTask(task)
 		if err != nil {

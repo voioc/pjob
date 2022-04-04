@@ -79,47 +79,47 @@ func (s *TaskService) TaskTotalRunNum() (int64, error) {
 	return model.GetDB().SumInt(&model.Task{}, "execute_times")
 }
 
-func (s *TaskService) TaskByID(id int) (*model.Task, error) {
-	task := &model.Task{}
+// func (s *TaskService) TaskByID(id int) (*model.Task, error) {
+// 	task := &model.Task{}
 
-	if _, err := model.GetDB().Where("id = ?", id).Get(task); err != nil {
-		return nil, err
-	}
+// 	if _, err := model.GetDB().Where("id = ?", id).Get(task); err != nil {
+// 		return nil, err
+// 	}
 
-	if task.ID == 0 {
-		return nil, fmt.Errorf("task not found")
-	}
+// 	if task.ID == 0 {
+// 		return nil, fmt.Errorf("task not found")
+// 	}
 
-	return task, nil
-}
+// 	return task, nil
+// }
 
-func (s *TaskService) Add(task *model.Task) (int, error) {
-	_, err := model.GetDB().Insert(task)
-	return task.ID, err
-}
+// func (s *TaskService) Add(task *model.Task) (int, error) {
+// 	_, err := model.GetDB().Insert(task)
+// 	return task.ID, err
+// }
 
-func (s *TaskService) Update(task *model.Task, args ...bool) error {
-	if len(args) > 0 && args[0] {
-		if _, err := model.GetDB().Cols("status").Where("id = ?", task.ID).Update(task); err != nil {
-			return err
-		}
-	} else {
-		if _, err := model.GetDB().Where("id = ?", task.ID).Update(task); err != nil {
-			return err
-		}
-	}
+// func (s *TaskService) Update(task *model.Task, args ...bool) error {
+// 	if len(args) > 0 && args[0] {
+// 		if _, err := model.GetDB().Cols("status").Where("id = ?", task.ID).Update(task); err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		if _, err := model.GetDB().Where("id = ?", task.ID).Update(task); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (s *TaskService) Del(ids interface{}) error {
-	_, flag1 := ids.([]int)
-	_, flag2 := ids.([]string)
+// func (s *TaskService) Del(ids interface{}) error {
+// 	_, flag1 := ids.([]int)
+// 	_, flag2 := ids.([]string)
 
-	if flag1 || flag2 {
-		_, err := model.GetDB().In("id", ids).Delete(&model.Task{})
-		return err
-	}
+// 	if flag1 || flag2 {
+// 		_, err := model.GetDB().In("id", ids).Delete(&model.Task{})
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

@@ -25,29 +25,29 @@ func (s *RoleAuthService) RoleAuthByID(roleID int) ([]model.RoleAuth, error) {
 	return data, nil
 }
 
-func (s *RoleAuthService) Add(data *model.RoleAuth) (int, error) {
-	_, err := model.GetDB().Insert(data)
-	return int(data.RoleID), err
-}
+// func (s *RoleAuthService) Add(data *model.RoleAuth) (int, error) {
+// 	_, err := model.GetDB().Insert(data)
+// 	return int(data.RoleID), err
+// }
 
 func (s *RoleAuthService) BatchAdd(data []*model.RoleAuth) error {
 	_, err := model.GetDB().Insert(data)
 	return err
 }
 
-func (s *RoleAuthService) Update(data *model.Admin, args ...bool) error {
-	if len(args) > 0 && args[0] {
-		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
-			return err
-		}
-	} else {
-		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
-			return err
-		}
-	}
+// func (s *RoleAuthService) Update(data *model.Admin, args ...bool) error {
+// 	if len(args) > 0 && args[0] {
+// 		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (s *RoleAuthService) Del(ids interface{}) error {
 	_, flag1 := ids.([]int)

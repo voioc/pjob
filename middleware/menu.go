@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 )
@@ -18,8 +19,10 @@ func Menu() gin.HandlerFunc {
 		fmt.Println("arr:", arr)
 		// uid, _ := strconv.Atoi(arr[0])
 		uid := 1
-		user, err := service.AdminS(c).AdminGetByID(uid)
-		if err != nil {
+		// user, err := service.AdminS(c).AdminGetByID(uid)
+		user := &model.Admin{}
+		if err := model.DataByID(user, uid); err != nil {
+			fmt.Println(err.Error())
 			c.JSON(http.StatusOK, common.Error(c, common.ERROR_AUTH))
 			c.Abort()
 			return

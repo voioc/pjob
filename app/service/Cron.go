@@ -6,9 +6,9 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
+	"github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/common"
 	cron "github.com/voioc/cjob/crons"
-	"github.com/voioc/cjob/jobs"
 )
 
 var (

@@ -88,47 +88,47 @@ func (s *NotifyService) NotifyList(page, pageSize int, filters ...interface{}) (
 	return data, total, nil
 }
 
-func (s *NotifyService) NotifyByID(id int) (*model.NotifyTpl, error) {
-	data := &model.NotifyTpl{}
+// func (s *NotifyService) NotifyByID(id int) (*model.NotifyTpl, error) {
+// 	data := &model.NotifyTpl{}
 
-	if _, err := model.GetDB().Where("id = ?", id).Get(data); err != nil {
-		return nil, err
-	}
+// 	if _, err := model.GetDB().Where("id = ?", id).Get(data); err != nil {
+// 		return nil, err
+// 	}
 
-	if data.ID == 0 {
-		return nil, fmt.Errorf("record not found")
-	}
+// 	if data.ID == 0 {
+// 		return nil, fmt.Errorf("record not found")
+// 	}
 
-	return data, nil
-}
+// 	return data, nil
+// }
 
-func (s *NotifyService) Add(data *model.NotifyTpl) (int, error) {
-	_, err := model.GetDB().Insert(data)
-	return data.ID, err
-}
+// func (s *NotifyService) Add(data *model.NotifyTpl) (int, error) {
+// 	_, err := model.GetDB().Insert(data)
+// 	return data.ID, err
+// }
 
-func (s *NotifyService) Update(data *model.NotifyTpl, args ...bool) error {
-	if len(args) > 0 && args[0] {
-		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
-			return err
-		}
-	} else {
-		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
-			return err
-		}
-	}
+// func (s *NotifyService) Update(data *model.NotifyTpl, args ...bool) error {
+// 	if len(args) > 0 && args[0] {
+// 		if _, err := model.GetDB().Cols("status").Where("id = ?", data.ID).Update(data); err != nil {
+// 			return err
+// 		}
+// 	} else {
+// 		if _, err := model.GetDB().Where("id = ?", data.ID).Update(data); err != nil {
+// 			return err
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (s *NotifyService) Del(ids interface{}) error {
-	_, flag1 := ids.([]int)
-	_, flag2 := ids.([]string)
+// func (s *NotifyService) Del(ids interface{}) error {
+// 	_, flag1 := ids.([]int)
+// 	_, flag2 := ids.([]string)
 
-	if flag1 || flag2 {
-		_, err := model.GetDB().In("id", ids).Delete(&model.NotifyTpl{})
-		return err
-	}
+// 	if flag1 || flag2 {
+// 		_, err := model.GetDB().In("id", ids).Delete(&model.NotifyTpl{})
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }

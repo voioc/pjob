@@ -148,17 +148,22 @@ func (s *AuthService) TaskGroups(uid int, roleIDs string) (string, string) {
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status = ", 1)
 
-	RoleIdsArr := strings.Split(roleIDs, ",")
+	RoleIDsArr := strings.Split(roleIDs, ",")
 
-	RoleIds := make([]int, 0)
-	for _, v := range RoleIdsArr {
+	RoleIDs := make([]int, 0)
+	for _, v := range RoleIDsArr {
 		id, _ := strconv.Atoi(v)
-		RoleIds = append(RoleIds, id)
+		RoleIDs = append(RoleIDs, id)
 	}
 
-	filters = append(filters, "id", RoleIds)
+	filters = append(filters, "id", RoleIDs)
 
-	result, _ := RoleS(s.C).RoleList(1, 1000, filters...)
+	// result, _ := RoleS(s.C).RoleList(1, 1000, filters...)
+	result := make([]model.Role, 0)
+	if err := model.List(result, 1, 1000, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	serverGroups := ""
 	taskGroups := ""
 	for _, v := range result {

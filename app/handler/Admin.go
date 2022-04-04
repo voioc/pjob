@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
-	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
@@ -43,7 +43,12 @@ func (self *AdminController) Add(c *gin.Context) {
 	// 角色
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status=", 1)
-	result, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
+	// result, _ := service.RoleS(c).RoleList(1, 1000, filters) // model.RoleGetList(1, 1000, filters...)
+	result := make([]model.Role, 0)
+	if err := model.List(&result, 1, 1000, filters); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -65,23 +70,33 @@ func (self *AdminController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑管理员"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	// Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	admin := model.Admin{}
+	if err := model.DataByID(&admin, id); err != nil {
+		fmt.Println(id)
+	}
+
 	row := make(map[string]interface{})
-	row["id"] = Admin.ID
-	row["login_name"] = Admin.LoginName
-	row["real_name"] = Admin.RealName
-	row["phone"] = Admin.Phone
-	row["email"] = Admin.Email
-	row["dingtalk"] = Admin.Dingtalk
-	row["wechat"] = Admin.Wechat
-	row["role_ids"] = Admin.RoleIDs
+	row["id"] = admin.ID
+	row["login_name"] = admin.LoginName
+	row["real_name"] = admin.RealName
+	row["phone"] = admin.Phone
+	row["email"] = admin.Email
+	row["dingtalk"] = admin.Dingtalk
+	row["wechat"] = admin.Wechat
+	row["role_ids"] = admin.RoleIDs
 	data["admin"] = row
 
-	role_ids := strings.Split(Admin.RoleIDs, ",")
+	role_ids := strings.Split(admin.RoleIDs, ",")
 
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status =", 1)
-	result, _ := service.RoleS(c).RoleList(1, 1000, filters...) // model.RoleGetList(1, 1000, filters...)
+	// result, _ := service.RoleS(c).RoleList(1, 1000, filters...) // model.RoleGetList(1, 1000, filters...)
+	result := make([]model.Role, 0)
+	if err := model.List(&result, 1, 1000, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -124,7 +139,11 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		filters := make([]interface{}, 0)
 		filters = append(filters, "login_name =", Admin.LoginName)
 		filters = append(filters, "status =", 1)
-		result, _ := service.RoleS(c).RoleList(1, 1, filters...) // model.RoleGetList(1, 1000, filters...)
+		// result, _ := service.RoleS(c).RoleList(1, 1, filters...) // model.RoleGetList(1, 1000, filters...)
+		result := make([]model.Role, 0)
+		if err := model.List(&result, 1, 1000, filters...); err != nil {
+			fmt.Println(err.Error())
+		}
 
 		// _, err := model.AdminGetByName(Admin.LoginName)
 		if len(result) > 0 {
@@ -139,7 +158,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		Admin.Salt = salt
 		Admin.CreatedAt = time.Now().Unix()
 		Admin.CreatedID = uid
-		if _, err := service.AdminS(c).Add(Admin); err != nil { // model.AdminAdd(Admin); err != nil {
+		if err := model.Add(Admin); err != nil { // model.AdminAdd(Admin); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -150,7 +169,11 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	// Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	Admin := model.Admin{}
+	if err := model.DataByID(&Admin, id); err != nil {
+		fmt.Println(err.Error())
+	}
 	//修改
 	// Admin.Id = id
 	Admin.UpdatedAt = time.Now().Unix()
@@ -178,7 +201,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "不可修改超级管理员资料"))
 		return
 	}
-	if err := service.AdminS(c).Update(Admin); err != nil { // Admin.Update(); err != nil {
+	if err := model.Update(Admin.ID, &Admin); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -203,12 +226,16 @@ func (self *AdminController) AjaxDel(c *gin.Context) {
 		Admin_status = 1
 	}
 
-	Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	// Admin, _ := service.AdminS(c).AdminGetByID(id) // model.AdminGetById(id)
+	Admin := model.Admin{}
+	if err := model.DataByID(&Admin, id); err != nil {
+		fmt.Println(err.Error())
+	}
 	Admin.UpdatedAt = time.Now().Unix()
 	Admin.Status = Admin_status
 	Admin.ID = id
 
-	if err := service.AdminS(c).Update(Admin, true); err != nil { // Admin.Update(); err != nil {
+	if err := model.Update(Admin.ID, &Admin, true); err != nil { // Admin.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -232,10 +259,20 @@ func (self *AdminController) Table(c *gin.Context) {
 	//查询条件
 	filters := make([]interface{}, 0)
 	if realName != "" {
-		filters = append(filters, "real_name__icontains", realName)
+		filters = append(filters, "real_name LIKE '%"+realName+"%'", "")
 	}
 
-	result, count, _ := service.AdminS(c).AdminList(page, pageSize, filters...) // model.AdminGetList(page, pageSize, filters...)
+	// result, count, _ := service.AdminS(c).AdminList(page, pageSize, filters...) // model.AdminGetList(page, pageSize, filters...)
+	result := make([]model.Admin, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.Admin{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

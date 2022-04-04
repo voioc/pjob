@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -51,9 +52,13 @@ func (self *GroupController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑分组"
 	data["hideTop"] = true
 
-	group := &model.TaskGroup{}
+	// group := &model.TaskGroup{}
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ = service.TaskGroupS(c).GroupByID(id) // model.GroupGetById(id)
+	// group, _ = service.TaskGroupS(c).GroupByID(id) // model.GroupGetById(id)
+	group := model.TaskGroup{}
+	if err := model.DataByID(&group, id); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	row := make(map[string]interface{})
 	row["id"] = group.ID
@@ -81,7 +86,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 		group.UpdatedAt = time.Now().Unix()
 		group.CreatedID = uid
 		group.UpdatedID = uid
-		if _, err := service.TaskGroupS(c).GroupAdd(group); err != nil { // model.GroupAdd(group); err != nil {
+		if err := model.Add(group); err != nil { // model.GroupAdd(group); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -95,7 +100,7 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 	group.ID = groupID
 	group.UpdatedAt = time.Now().Unix()
 	group.UpdatedID = uid
-	if err := service.TaskGroupS(c).Update(group); err != nil { // group.Update(); err != nil {
+	if err := model.Update(group.ID, group); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -108,8 +113,10 @@ func (self *GroupController) AjaxSave(c *gin.Context) {
 func (self *GroupController) AjaxDel(c *gin.Context) {
 
 	groupID, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	group, err := service.TaskGroupS(c).GroupByID(groupID) // model.GroupGetById(group_id)
-	if err != nil || group.ID == 0 {
+	// group, err := service.TaskGroupS(c).GroupByID(groupID) // model.GroupGetById(group_id)
+
+	group := model.TaskGroup{}
+	if err := model.DataByID(&group, groupID); err != nil || group.ID == 0 {
 		msg := "内部错误"
 		if err != nil {
 			msg = err.Error()
@@ -131,7 +138,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 	//	self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 	//}
 
-	if err := service.TaskGroupS(c).Update(group, true); err != nil { // group.Update(); err != nil {
+	if err := model.Update(group.ID, group, true); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -170,7 +177,17 @@ func (self *GroupController) Table(c *gin.Context) {
 		filters = append(filters, "group_name LIKE '%"+groupName+"%'", "")
 	}
 
-	result, count, _ := service.TaskGroupS(c).GroupList(page, pageSize, filters...) // model.GroupGetList(page, pageSize, filters...)
+	// result, count, _ := service.TaskGroupS(c).GroupList(page, pageSize, filters...) // model.GroupGetList(page, pageSize, filters...)
+	result := make([]model.TaskGroup, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.TaskGroup{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

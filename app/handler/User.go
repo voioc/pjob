@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -30,7 +31,12 @@ func (self *UserController) Edit(c *gin.Context) {
 	data["pageTitle"] = "资料修改"
 
 	uid := c.GetInt("uid")
-	Admin, _ := model.AdminGetById(uid)
+	// Admin, _ := model.AdminGetById(uid)
+	Admin := model.Admin{}
+	if err := model.DataByID(&Admin, uid); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = Admin.ID
 	row["login_name"] = Admin.LoginName
@@ -47,8 +53,9 @@ func (self *UserController) Edit(c *gin.Context) {
 
 func (self *UserController) AjaxSave(c *gin.Context) {
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	admin, err := model.AdminGetById(id)
-	if err != nil || admin == nil {
+	// admin, err := model.AdminGetById(id)
+	admin := model.Admin{}
+	if err := model.DataByID(&admin, c.GetInt("uid")); err != nil || admin.ID == 0 {
 		msg := "用户ID错误"
 		if err != nil {
 			msg = err.Error()
@@ -101,7 +108,7 @@ func (self *UserController) AjaxSave(c *gin.Context) {
 	admin.UpdatedID = c.GetInt("uid")
 	admin.Status = 1
 
-	if err := admin.Update(); err != nil {
+	if err := model.Update(admin.ID, &admin); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return

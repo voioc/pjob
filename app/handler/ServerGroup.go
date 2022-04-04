@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -52,7 +53,12 @@ func (self *ServerGroupController) Edit(c *gin.Context) {
 	data["hideTop"] = true
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	group, _ := service.TaskGroupS(c).GroupByID(id) // model.TaskGroupGetById(id)
+	// group, _ := service.TaskGroupS(c).GroupByID(id) // model.TaskGroupGetById(id)
+	group := model.ServerGroup{}
+	if err := model.DataByID(&group, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = group.ID
 	row["group_name"] = group.GroupName
@@ -78,7 +84,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 		servergroup.UpdatedAt = time.Now().Unix()
 		servergroup.CreatedID = uid
 		servergroup.UpdatedID = uid
-		if _, err := service.ServerGroupS(c).Add(servergroup); err != nil { //  model.ServerGroupAdd(servergroup); err != nil {
+		if err := model.Add(servergroup); err != nil { //  model.ServerGroupAdd(servergroup); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -92,7 +98,7 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 	servergroup.ID = servergroup_id
 	servergroup.UpdatedAt = time.Now().Unix()
 	servergroup.UpdatedID = uid
-	if err := service.ServerGroupS(c).Update(servergroup); err != nil { // servergroup.Update(); err != nil {
+	if err := model.Update(servergroup.ID, servergroup); err != nil { // servergroup.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -104,7 +110,12 @@ func (self *ServerGroupController) AjaxSave(c *gin.Context) {
 func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 
 	group_id, _ := strconv.Atoi(c.PostForm("id"))
-	group, _ := service.TaskGroupS(c).GroupByID(group_id) // model.TaskGroupGetById(group_id)
+	// group, _ := service.TaskGroupS(c).GroupByID(group_id) // model.TaskGroupGetById(group_id)
+	group := model.ServerGroup{}
+	if err := model.DataByID(&group, group_id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	group.Status = 0
 	group.ID = group_id
 	group.UpdatedAt = time.Now().Unix()
@@ -113,14 +124,19 @@ func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 	filters := make([]interface{}, 0)
 	filters = append(filters, "group_id =", group_id)
 	filters = append(filters, "status =", 0)
-	_, n, _ := service.ServerS(c).ServerList(1, 1, filters...) // model.TaskServerGetList(1, 1, filters...)
-	if n > 0 {
+	// _, n, _ := service.ServerS(c).ServerList(1, 1, filters...) // model.TaskServerGetList(1, 1, filters...)
+	count, err := model.ListCount(&model.ServerGroup{}, 1, 1, filters)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	if count > 0 {
 		// self.ajaxMsg("分组下有服务器资源，请先处理", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "分组下有服务器资源，请先处理"))
 		return
 	}
 
-	if err := service.TaskGroupS(c).Update(group, true); err != nil { // group.Update(); err != nil {
+	if err := model.Update(group.ID, group, true); err != nil { // group.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -151,10 +167,22 @@ func (self *ServerGroupController) Table(c *gin.Context) {
 		}
 		filters = append(filters, "id", groupsIds)
 	}
+
 	if groupName != "" {
 		filters = append(filters, "group_name LIKE '%"+groupName+"'%", "")
 	}
-	result, count, _ := service.ServerGroupS(c).List(page, pageSize, filters...) // model.ServerGroupGetList(page, pageSize, filters...)
+
+	// result, count, _ := service.ServerGroupS(c).List(page, pageSize, filters...) // model.ServerGroupGetList(page, pageSize, filters...)
+	result := make([]model.ServerGroup, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.ServerGroup{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})

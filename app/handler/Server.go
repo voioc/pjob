@@ -8,6 +8,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -82,7 +83,17 @@ func (self *ServerController) GetServerByGroupId(c *gin.Context) {
 	filters = append(filters, "status =", 0)
 	filters = append(filters, "group_id =", gid)
 
-	result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
+	// result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
+	result := make([]model.TaskServer, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.TaskServer{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -110,7 +121,12 @@ func (self *ServerController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑执行资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
+	// server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
@@ -207,7 +223,12 @@ func (self *ServerController) Copy(c *gin.Context) {
 	data["pageTitle"] = "复制服务器资源"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
+	// server, _ := service.ServerS(c).ServerByID(id) // model.TaskServerGetById(id)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = server.ID
 	row["connection_type"] = server.ConnectionType
@@ -254,7 +275,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
 
-		if _, err := service.ServerS(c).Add(server); err != nil { // model.TaskServerAdd(server); err != nil {
+		if err := model.Add(server); err != nil { // model.TaskServerAdd(server); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -264,7 +285,11 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	server, _ := service.ServerS(c).ServerByID(server_id) // model.TaskServerGetById(server_id)
+	// server, _ := service.ServerS(c).ServerByID(server_id) // model.TaskServerGetById(server_id)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, server_id); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	//修改
 	// server.Id = server_id
@@ -284,7 +309,7 @@ func (self *ServerController) AjaxSave(c *gin.Context) {
 	server.Port, _ = strconv.Atoi(c.DefaultPostForm("port", "0"))
 	server.GroupID, _ = strconv.Atoi(c.DefaultPostForm("group_id", "0"))
 
-	if err := server.Update(); err != nil {
+	if err := model.Update(server.ID, &server); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -302,8 +327,12 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	server, _ := service.ServerS(c).ServerByID(id) //  model.TaskServerGetById(id)
-	if server == nil {
+	// server, _ := service.ServerS(c).ServerByID(id) //  model.TaskServerGetById(id)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, id); err != nil {
+		fmt.Println(err.Error())
+	}
+	if server.ID == 0 {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "资源不存在"))
 		return
 	}
@@ -313,7 +342,7 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 	server.ID = id
 
 	// TODO 查询服务器是否用于定时任务
-	if err := server.Update(); err != nil {
+	if err := model.Update(server.ID, &server); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -382,7 +411,17 @@ func (self *ServerController) Table(c *gin.Context) {
 		filters = append(filters, "server_name LIKE '%"+serverName+"%'", "")
 	}
 
-	result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
+	// result, count, _ := service.ServerS(c).ServerList(page, pageSize, filters...) // model.TaskServerGetList(page, pageSize, filters...)
+	result := make([]model.TaskServer, 0)
+	if err := model.List(&result, page, pageSize, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	count, err := model.ListCount(&model.TaskServer{}, filters...)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	list := make([]map[string]interface{}, len(result))
 	for k, v := range result {
 		row := make(map[string]interface{})
@@ -421,11 +460,15 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 	defaultActName := "agent-" + serverIP + "-" + strconv.Itoa(port)
 
 	filters := make([]interface{}, 0)
-	filters = append(filters, "status__in", []int{0, 1})
+	filters = append(filters, "status", []int{0, 1})
 	filters = append(filters, "server_ip", serverIP)
 	filters = append(filters, "port", port)
 
-	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	// server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	server := make([]model.TaskServer, 0)
+	if err := model.List(&server, 1, 1, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	// id := model.TaskServerForActuator(serverIp, port)
 	if len(server) == 0 {
@@ -449,14 +492,15 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		server.CreatedAt = time.Now().Unix()
 		server.UpdatedAt = time.Now().Unix()
 		server.Status = 0
-		serverID, err := service.ServerS(c).Add(server) // model.TaskServerAdd(server)
-		if err != nil {
+
+		if err := model.Add(&server); err != nil { // model.TaskServerAdd(server)
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
 		// self.ajaxMsg(serverId, MSG_OK)
-		data := map[string]interface{}{"server": serverID}
+
+		data := map[string]interface{}{"server": server.ID}
 		c.JSON(http.StatusOK, common.Success(c, data))
 		return
 	} else {
@@ -464,7 +508,7 @@ func (self *ServerController) ApiSave(c *gin.Context) {
 		// server, _ := service.ServerS(c).ServerByID(server[0].ID) // model.TaskServerGetById(id)
 		server[0].UpdatedAt = time.Now().Unix()
 		server[0].Status, _ = strconv.Atoi(c.DefaultPostForm("status", "0"))
-		if err := service.ServerS(c).Update(server[0]); err != nil { // server.Update(); err != nil {
+		if err := model.Update(server[0].ID, server[0], true); err != nil { // server.Update(); err != nil {
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
@@ -495,7 +539,12 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	filters = append(filters, "server_ip =", serverIP)
 	filters = append(filters, "port =", port)
 
-	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	// server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	server := make([]model.TaskServer, 0)
+	if err := model.List(&server, 1, 1, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	if len(server) == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))
@@ -514,7 +563,7 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	logs.Info(server)
 
 	//TODO 查询执行器是否正在使用中
-	if err := service.ServerS(c).Update(server[0]); err != nil { // server.Update(); err != nil {
+	if err := model.Update(server[0].ID, server[0]); err != nil { // server.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -541,7 +590,12 @@ func (self *ServerController) ApiGet(c *gin.Context) {
 	filters := make([]interface{}, 0)
 	filters = append(filters, "server_ip =", serverIP)
 	filters = append(filters, "port =", port)
-	server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	// server, _, _ := service.ServerS(c).ServerList(1, 1, filters...) // TaskServerGetList(1, 1, serverFilters...)
+	server := make([]model.TaskServer, 0)
+	if err := model.List(&server, 1, 1, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	if len(server) == 0 {
 		// self.ajaxMsg("执行器不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "执行器不存在"))

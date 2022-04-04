@@ -5,7 +5,7 @@
 * @Last Modified time: 2019-02-17 22:10:15
  */
 
-package job2
+package jobs
 
 import (
 	"bytes"
@@ -22,7 +22,6 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	"github.com/voioc/cjob/app/model"
-	cron "github.com/voioc/cjob/crons"
 	"github.com/voioc/cjob/libs"
 
 	"runtime"
@@ -35,12 +34,6 @@ import (
 	gote "github.com/linxiaozhi/go-telnet"
 	"github.com/voioc/cjob/notify"
 	"golang.org/x/crypto/ssh"
-)
-
-var (
-	mainCron *cron.Cron
-	workPool chan bool
-	lock     sync.Mutex
 )
 
 type Job struct {
@@ -113,7 +106,11 @@ func NewJobFromTask(task *model.Task) ([]*Job, error) {
 		} else {
 			server_id_int, _ := strconv.Atoi(server_id)
 			// 远程执行
-			server, _ := model.TaskServerGetById(server_id_int)
+			// server, _ := model.TaskServerGetById(server_id_int)
+			server := model.TaskServer{}
+			if err := model.DataByID(&server, server_id_int); err != nil {
+				fmt.Println(err.Error())
+			}
 
 			if server.Status == 2 {
 				fmt.Println("服务器已禁用")
@@ -123,7 +120,7 @@ func NewJobFromTask(task *model.Task) ([]*Job, error) {
 			if server.ConnectionType == 0 {
 				if server.Type == 0 {
 					// 密码验证登录服务器
-					job := RemoteCommandJobByPassword(task.ID, server_id_int, task.TaskName, task.Command, server)
+					job := RemoteCommandJobByPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
 					job.Task = task
 					job.Concurrent = false
 					if task.Concurrent == 1 {
@@ -134,7 +131,7 @@ func NewJobFromTask(task *model.Task) ([]*Job, error) {
 					job.ServerName = server.ServerName
 					jobArr = append(jobArr, job)
 				} else {
-					job := RemoteCommandJob(task.ID, server_id_int, task.TaskName, task.Command, server)
+					job := RemoteCommandJob(task.ID, server_id_int, task.TaskName, task.Command, &server)
 					job.Task = task
 					job.Concurrent = false
 					if task.Concurrent == 1 {
@@ -148,7 +145,7 @@ func NewJobFromTask(task *model.Task) ([]*Job, error) {
 			} else if server.ConnectionType == 1 {
 				if server.Type == 0 {
 					//密码验证登录服务器
-					job := RemoteCommandJobByTelnetPassword(task.ID, server_id_int, task.TaskName, task.Command, server)
+					job := RemoteCommandJobByTelnetPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
 					job.Task = task
 					job.Concurrent = false
 					if task.Concurrent == 1 {
@@ -161,7 +158,7 @@ func NewJobFromTask(task *model.Task) ([]*Job, error) {
 				}
 			} else if server.ConnectionType == 2 {
 				//密码验证登录服务器
-				job := RemoteCommandJobByAgentPassword(task.ID, server_id_int, task.TaskName, task.Command, server)
+				job := RemoteCommandJobByAgentPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
 				job.Task = task
 				job.Concurrent = false
 				if task.Concurrent == 1 {
@@ -505,8 +502,12 @@ type RpcResult struct {
 }
 
 func (j *Job) agentRun() (reply *JobResult) {
+	// server, _ := model.TaskServerGetById(j.ServerId)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, j.ServerId); err != nil {
+		fmt.Println(err.Error())
+	}
 
-	server, _ := model.TaskServerGetById(j.ServerId)
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", server.ServerIP, server.Port))
 	reply = new(JobResult)
 	if err != nil {
@@ -587,19 +588,27 @@ func PollServer(j *Job) bool {
 	}
 
 	//判断执行器或者服务器是否存活
-	server, _ := model.TaskServerGetById(pollServerId)
+	// server, _ := model.TaskServerGetById(pollServerId)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, pollServerId); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	if server.Status != 0 {
 		return false
 	}
 
-	if err := TestServer(server); err != nil {
+	if err := TestServer(&server); err != nil {
 		server.Status = 1
-		server.Update()
+		if err := model.Update(server.ID, server); err != nil {
+			fmt.Println(err.Error())
+		}
 		return false
 	} else {
 		server.Status = 0
-		server.Update()
+		if err := model.Update(server.ID, server, true); err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 
 	return true
@@ -708,8 +717,9 @@ func (j *Job) Run() {
 
 			title, content, taskOutput, errOutput := "", "", "", ""
 
-			notifyTpl, err := model.NotifyTplGetById(j.Task.NotifyTplID)
-			if err != nil {
+			// notifyTpl, err := model.NotifyTplGetById(j.Task.NotifyTplID)
+			notifyTpl := model.NotifyTpl{}
+			if err := model.DataByID(&notifyTpl, j.Task.NotifyTplID); err != nil {
 				notifyTpl, err := model.NotifyTplGetByTplType(j.Task.NotifyType, model.NotifyTplTypeSystem)
 				if err == nil {
 					title = notifyTpl.Title
@@ -800,12 +810,20 @@ func (j *Job) Run() {
 		}
 	}
 
-	j.LogId, _ = model.TaskLogAdd(log)
+	// j.LogId, _ = model.TaskLogAdd(log)
+
+	if err := model.Add(&log); err != nil {
+		fmt.Println(err.Error())
+	}
+	j.LogId = int64(log.ID)
 
 	// 更新上次执行时间
 	j.Task.PrevTime = t.Unix()
 	j.Task.ExecuteTimes++
-	j.Task.Update("PrevTime", "ExecuteTimes")
+	// j.Task.Update("PrevTime", "ExecuteTimes")
+	if err := model.Update(j.Task.ID, j.Task); err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
 //冗余代码
@@ -831,7 +849,11 @@ func AllAdminInfo(adminIds string) []*adminInfo {
 		}
 		Filters = append(Filters, "id__in", notifyUserIds)
 	}
-	Result, _ := model.AdminGetList(1, 1000, Filters...)
+	// Result, _ := model.AdminGetList(1, 1000, Filters...)
+	Result := make([]model.Admin, 0)
+	if err := model.List(&Result, 1, 1000, Filters...); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	adminInfos := make([]*adminInfo, 0)
 	for _, v := range Result {
@@ -847,26 +869,4 @@ func AllAdminInfo(adminIds string) []*adminInfo {
 	}
 
 	return adminInfos
-}
-
-func runCmdWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-
-	var err error
-	select {
-	case <-time.After(timeout):
-		beego.Warn(fmt.Sprintf("任务执行时间超过%d秒，进程将被强制杀掉: %d", int(timeout/time.Second), cmd.Process.Pid))
-		go func() {
-			<-done // 读出上面的goroutine数据，避免阻塞导致无法退出
-		}()
-		if err = cmd.Process.Kill(); err != nil {
-			beego.Error(fmt.Sprintf("进程无法杀掉: %d, 错误信息: %s", cmd.Process.Pid, err))
-		}
-		return err, true
-	case err = <-done:
-		return err, false
-	}
 }

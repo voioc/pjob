@@ -8,12 +8,6 @@
 
 package model
 
-import (
-	"fmt"
-
-	"github.com/astaxie/beego/orm"
-)
-
 type TaskGroup struct {
 	ID          int    `xorm:"id pk" json:"id"`
 	GroupName   string `xorm:"group_name" json:"group_name"`
@@ -29,50 +23,50 @@ func (t *TaskGroup) TableName() string {
 	return "pp_task_group"
 }
 
-func (t *TaskGroup) Update(fields ...string) error {
-	if t.GroupName == "" {
-		return fmt.Errorf("组名不能为空")
-	}
-	if _, err := orm.NewOrm().Update(t, fields...); err != nil {
-		return err
-	}
-	return nil
-}
+// func (t *TaskGroup) Update(fields ...string) error {
+// 	if t.GroupName == "" {
+// 		return fmt.Errorf("组名不能为空")
+// 	}
+// 	if _, err := orm.NewOrm().Update(t, fields...); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-func GroupAdd(obj *TaskGroup) (int64, error) {
-	if obj.GroupName == "" {
-		return 0, fmt.Errorf("组名不能为空")
-	}
-	return orm.NewOrm().Insert(obj)
-}
+// func GroupAdd(obj *TaskGroup) (int64, error) {
+// 	if obj.GroupName == "" {
+// 		return 0, fmt.Errorf("组名不能为空")
+// 	}
+// 	return orm.NewOrm().Insert(obj)
+// }
 
-func GroupGetById(id int) (*TaskGroup, error) {
-	obj := &TaskGroup{
-		ID: id,
-	}
-	err := orm.NewOrm().Read(obj)
-	if err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
+// func GroupGetById(id int) (*TaskGroup, error) {
+// 	obj := &TaskGroup{
+// 		ID: id,
+// 	}
+// 	err := orm.NewOrm().Read(obj)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return obj, nil
+// }
 
-func GroupDelById(id int) error {
-	_, err := orm.NewOrm().QueryTable(TableName("task_group")).Filter("id", id).Delete()
-	return err
-}
+// func GroupDelById(id int) error {
+// 	_, err := orm.NewOrm().QueryTable(TableName("task_group")).Filter("id", id).Delete()
+// 	return err
+// }
 
-func GroupGetList(page, pageSize int, filters ...interface{}) ([]*TaskGroup, int64) {
-	offset := (page - 1) * pageSize
-	list := make([]*TaskGroup, 0)
-	query := orm.NewOrm().QueryTable(TableName("task_group"))
-	if len(filters) > 0 {
-		l := len(filters)
-		for k := 0; k < l; k += 2 {
-			query = query.Filter(filters[k].(string), filters[k+1])
-		}
-	}
-	total, _ := query.Count()
-	query.OrderBy("-id").Limit(pageSize, offset).All(&list)
-	return list, total
-}
+// func GroupGetList(page, pageSize int, filters ...interface{}) ([]*TaskGroup, int64) {
+// 	offset := (page - 1) * pageSize
+// 	list := make([]*TaskGroup, 0)
+// 	query := orm.NewOrm().QueryTable(TableName("task_group"))
+// 	if len(filters) > 0 {
+// 		l := len(filters)
+// 		for k := 0; k < l; k += 2 {
+// 			query = query.Filter(filters[k].(string), filters[k+1])
+// 		}
+// 	}
+// 	total, _ := query.Count()
+// 	query.OrderBy("-id").Limit(pageSize, offset).All(&list)
+// 	return list, total
+// }

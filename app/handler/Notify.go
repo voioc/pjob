@@ -9,6 +9,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,7 +54,12 @@ func (self *NotifyController) Edit(c *gin.Context) {
 	data["pageTitle"] = "编辑通知模板"
 
 	id, _ := strconv.Atoi(c.DefaultQuery("id", "0"))
-	notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
+	// notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
+	notifyTpl := model.NotifyTpl{}
+	if err := model.DataByID(&notifyTpl, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	row := make(map[string]interface{})
 	row["id"] = notifyTpl.ID
 	row["tpl_name"] = notifyTpl.TplName
@@ -94,7 +100,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 			}
 		}
 
-		if _, err := service.NotifyS(c).Add(notifyTpl); err != nil { // model.NotifyTplAdd(notifyTpl); err != nil {
+		if err := model.Add(&notifyTpl); err != nil { // model.NotifyTplAdd(notifyTpl); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
@@ -104,7 +110,12 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
+	// notifyTpl, _ := service.NotifyS(c).NotifyByID(id) // model.NotifyTplGetById(id)
+	notifyTpl := model.NotifyTpl{}
+	if err := model.DataByID(&notifyTpl, id); err != nil {
+		fmt.Println(err.Error())
+	}
+
 	//修改
 	// notifyTpl.Id = id
 	notifyTpl.UpdatedID = uid
@@ -132,7 +143,7 @@ func (self *NotifyController) AjaxSave(c *gin.Context) {
 		return
 	}
 
-	if err := service.NotifyS(c).Update(notifyTpl); err != nil { // notifyTpl.Update(); err != nil {
+	if err := model.Update(notifyTpl.ID, notifyTpl); err != nil { // notifyTpl.Update(); err != nil {
 		// self.ajaxMsg("更新失败,"+err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "更新失败,"+err.Error()))
 		return
@@ -147,7 +158,11 @@ func (self *NotifyController) AjaxDel(c *gin.Context) {
 	data["uri"] = utils.URI("")
 
 	id, _ := strconv.Atoi(c.DefaultPostForm("id", "0"))
-	notifyTpl, _ := model.NotifyTplGetById(id)
+	// notifyTpl, _ := model.NotifyTplGetById(id)
+	notifyTpl := model.NotifyTpl{}
+	if err := model.DataByID(&notifyTpl, id); err != nil {
+		fmt.Println(err.Error())
+	}
 
 	if notifyTpl.Type == model.NotifyTplTypeSystem {
 		// self.ajaxMsg("系统模板禁止删除", MSG_ERR)
@@ -155,7 +170,7 @@ func (self *NotifyController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	if err := service.NotifyS(c).Del([]int{id}); err != nil { // model.NotifyTplDelById(id); err != nil {
+	if err := model.Del(model.NotifyTpl{}, []int{id}); err != nil { // model.NotifyTplDelById(id); err != nil {
 		// self.ajaxMsg("删除失败,"+err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "删除失败: "+err.Error()))
 		return

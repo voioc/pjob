@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
+	. "github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
-	. "github.com/voioc/cjob/jobs"
 	"github.com/voioc/cjob/libs"
 )
 

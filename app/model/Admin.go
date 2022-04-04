@@ -7,10 +7,6 @@
 ***********************************************/
 package model
 
-import (
-	"github.com/astaxie/beego/orm"
-)
-
 type Admin struct {
 	ID        int    `xorm:"id pk" json:"id"`
 	LoginName string `xorm:"login_name" json:"login_name"`
@@ -35,49 +31,49 @@ func (a *Admin) TableName() string {
 	return "pp_uc_admin"
 }
 
-func AdminAdd(a *Admin) (int64, error) {
-	return orm.NewOrm().Insert(a)
-}
+// func AdminAdd(a *Admin) (int64, error) {
+// 	return orm.NewOrm().Insert(a)
+// }
 
-func AdminGetByName(loginName string) (*Admin, error) {
-	a := new(Admin)
-	err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("login_name", loginName).One(a)
-	if err != nil {
-		return nil, err
-	}
-	return a, nil
-}
+// func AdminGetByName(loginName string) (*Admin, error) {
+// 	a := new(Admin)
+// 	err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("login_name", loginName).One(a)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return a, nil
+// }
 
-func AdminGetList(page, pageSize int, filters ...interface{}) ([]*Admin, int64) {
-	offset := (page - 1) * pageSize
-	list := make([]*Admin, 0)
-	query := orm.NewOrm().QueryTable(TableName("uc_admin"))
-	if len(filters) > 0 {
-		l := len(filters)
-		for k := 0; k < l; k += 2 {
-			query = query.Filter(filters[k].(string), filters[k+1])
-		}
-	}
-	total, _ := query.Count()
-	query.OrderBy("-id").Limit(pageSize, offset).All(&list)
-	return list, total
-}
+// func AdminGetList(page, pageSize int, filters ...interface{}) ([]*Admin, int64) {
+// 	offset := (page - 1) * pageSize
+// 	list := make([]*Admin, 0)
+// 	query := orm.NewOrm().QueryTable(TableName("uc_admin"))
+// 	if len(filters) > 0 {
+// 		l := len(filters)
+// 		for k := 0; k < l; k += 2 {
+// 			query = query.Filter(filters[k].(string), filters[k+1])
+// 		}
+// 	}
+// 	total, _ := query.Count()
+// 	query.OrderBy("-id").Limit(pageSize, offset).All(&list)
+// 	return list, total
+// }
 
-func AdminGetById(id int) (*Admin, error) {
-	r := new(Admin)
-	err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("id", id).One(r)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
-}
+// func AdminGetById(id int) (*Admin, error) {
+// 	r := new(Admin)
+// 	err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("id", id).One(r)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r, nil
+// }
 
-func (a *Admin) Update(fields ...string) error {
-	if _, err := orm.NewOrm().Update(a, fields...); err != nil {
-		return err
-	}
-	return nil
-}
+// func (a *Admin) Update(fields ...string) error {
+// 	if _, err := orm.NewOrm().Update(a, fields...); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 // func RoleAuthDelete(id int) (int64, error) {
 // 	query := orm.NewOrm().QueryTable(TableName("role_auth"))

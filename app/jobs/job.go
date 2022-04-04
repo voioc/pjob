@@ -812,7 +812,7 @@ func (j *Job) Run() {
 
 	// j.LogId, _ = model.TaskLogAdd(log)
 
-	if err := model.Add(&log); err != nil {
+	if err := model.Add(log); err != nil {
 		fmt.Println(err.Error())
 	}
 	j.LogId = int64(log.ID)

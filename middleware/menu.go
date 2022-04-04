@@ -16,7 +16,7 @@ func Menu() gin.HandlerFunc {
 		cookie, _ := c.Cookie("auth")
 		fmt.Println("cookie: ", cookie)
 		arr := strings.Split(cookie, "|")
-		fmt.Println("arr:", arr)
+		fmt.Println("cookie arr:", arr)
 		// uid, _ := strconv.Atoi(arr[0])
 		uid := 1
 		// user, err := service.AdminS(c).AdminGetByID(uid)

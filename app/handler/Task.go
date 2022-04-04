@@ -270,8 +270,12 @@ func (self *TaskController) Detail(c *gin.Context) {
 			}
 		}
 
-		servers, err := service.ServerS(c).ServersListID(sids)
-		if err != nil || len(servers) == 0 {
+		servers := make([]*model.TaskServer, 0)
+		if err := model.DataByIDs(&servers, sids); err != nil || len(servers) == 0 {
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+
 			serverName += "服务器异常!!"
 		} else {
 
@@ -302,7 +306,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 	if task.GroupID > 0 {
 		// group, err := service.TaskGroupS(c).GroupByID(task.GroupID) //model.GroupGetById(task.GroupID)
 		group := model.TaskGroup{}
-		if err := model.DataByID(&group, id); err == nil {
+		if err := model.DataByID(&group, task.GroupID); err == nil {
 			groupName = group.GroupName
 		}
 	}
@@ -1005,6 +1009,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		filters = append(filters, "task_name LIKE %"+taskName+"%", " ")
 	}
 
+	filters = append(filters, "order", "field(status, 1, 2, 3, 0), id desc")
 	// result, count, _ := service.TaskS(c).TaskGetList(page, pagesize, filters...) // model.TaskGetList(page, pagesize, filters...)
 	result := make([]model.Task, 0)
 	if err := model.List(&result, page, pagesize, filters...); err != nil {

@@ -205,8 +205,12 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 			}
 		}
 
-		servers, err := service.ServerS(c).ServersListID(strings.Split(task.ServerIDs, ",")) // model.TaskServerGetByIds(task.ServerIDs)
-		if err != nil || len(servers) == 0 {
+		// servers, err := service.ServerS(c).ServersListID(strings.Split(task.ServerIDs, ",")) // model.TaskServerGetByIds(task.ServerIDs)
+		servers := make([]*model.TaskServer, 0)
+		if err := model.DataByIDs(&servers, strings.Split(task.ServerIDs, ",")); err != nil || len(servers) == 0 {
+			if err != nil {
+				fmt.Println(err.Error())
+			}
 			serverName = "服务器异常!!  "
 		}
 

@@ -22,12 +22,15 @@ func List(dataModel interface{}, page, pageSize int, filters ...interface{}) err
 	// data := make([]*model.Role, 0)
 
 	in := map[string]interface{}{}
+	order := "id asc"
 	condition := " 1 = 1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
 			// 如果是数组则单独筛出来
 			if _, flag := filters[k+1].([]int); flag {
 				in[filters[k].(string)] = filters[k+1]
+			} else if strings.Trim(filters[k].(string), "") == "order" {
+				order = filters[k+1].(string)
 			} else {
 				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 			}
@@ -48,7 +51,7 @@ func List(dataModel interface{}, page, pageSize int, filters ...interface{}) err
 		}
 	}
 
-	if err := db.Where(condition).Limit(pageSize, offset).Find(dataModel); err != nil {
+	if err := db.Where(condition).OrderBy(order).Limit(pageSize, offset).Find(dataModel); err != nil {
 		return err
 	}
 
@@ -96,6 +99,20 @@ func ListCount(dataModel interface{}, filters ...interface{}) (int64, error) {
 
 func DataByID(m interface{}, id int) error {
 	if _, err := GetDB().ID(id).Get(m); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// m 数据类型 ids []int 或者 []string
+func DataByIDs(m interface{}, ids interface{}, col ...string) error {
+	colum := "id"
+	if len(col) > 0 {
+		colum = col[0]
+	}
+
+	if err := GetDB().In(colum, ids).Find(m); err != nil {
 		return err
 	}
 

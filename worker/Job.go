@@ -25,23 +25,23 @@ import (
 )
 
 type Job struct {
-	JobKey int // jobId = id*10000+serverId
-	ID     int // taskID
-	// TaskID     string
-	TaskName   string
-	LogID      int                             // 日志记录ID
-	ServerID   int                             // 执行器信息
-	ServerName string                          // 执行器名称
-	ServerType int                             // 执行器类型，1-ssh 2-telnet 3-agent
-	Name       string                          // 任务名称
-	Task       *model.Task                     // 任务对象
-	RunFunc    func(time.Duration) *JobResult  // 执行函数
-	LogFunc    func(*JobResult, time.Time) int // 日志函数
-	NotifyFunc func(*JobResult, time.Time) int // 通知函数
-	Timeout    int                             // 超时时间:秒
-	Status     int                             // 任务状态，大于0表示正在执行中
-	Concurrent bool                            // 同一个任务是否允许并行执行
-	IsNotify   bool                            // 是否发送失败通知
+	JobKey      int // jobId = id*10000+serverId
+	ID          int // taskID
+	TaskID      int
+	TaskName    string
+	LogID       int                            // 日志记录ID
+	ServerID    int                            // 执行器信息
+	ServerName  string                         // 执行器名称
+	ServerType  int                            // 执行器类型，1-ssh 2-telnet 3-agent
+	Name        string                         // 任务名称
+	Task        *model.Task                    // 任务对象
+	RunFunc     func(time.Duration) *JobResult // 执行函数
+	SuffixFunc  func(*Job, *JobResult)         // 任务执行完成
+	Timeout     int                            // 超时时间:秒
+	Status      int                            // 任务状态，大于0表示正在执行中
+	Concurrent  bool                           // 同一个任务是否允许并行执行
+	StartAt     time.Time                      // 开始时间
+	ProcessTime time.Duration                  // 花费时间
 }
 
 func (j *Job) GetStatus() int {
@@ -132,6 +132,8 @@ func (j *Job) Run() {
 	}()
 
 	t := time.Now()
+	j.StartAt = time.Now()
+
 	timeout := time.Duration(time.Hour * 24)
 	if j.Timeout > 0 {
 		timeout = time.Second * time.Duration(j.Timeout)
@@ -146,11 +148,16 @@ func (j *Job) Run() {
 		jobResult = j.RunFunc(timeout)
 	}
 
-	if j.LogFunc != nil {
-		j.LogID = j.LogFunc(jobResult, t)
-	}
+	// if j.LogFunc != nil {
+	// 	j.LogID = j.LogFunc(jobResult, j.StartAt)
+	// }
 
-	ut := time.Now().Sub(t) / time.Millisecond
+	ut := time.Now().Sub(j.StartAt) / time.Millisecond
+	j.ProcessTime = ut
+
+	if j.SuffixFunc != nil {
+		j.SuffixFunc(j, jobResult)
+	}
 
 	// 插入日志
 	log := new(model.TaskLog)
@@ -160,7 +167,7 @@ func (j *Job) Run() {
 	log.Output = jobResult.OutMsg
 	log.Error = jobResult.ErrMsg
 	log.ProcessTime = int(ut)
-	log.CreatedAt = t.Unix()
+	log.CreatedAt = j.StartAt.Unix()
 
 	if jobResult.IsTimeout {
 		log.Status = model.TASK_TIMEOUT
@@ -171,8 +178,8 @@ func (j *Job) Run() {
 	}
 
 	if log.Status < 0 && j.Task.IsNotify == 1 {
-		if j.Task.NotifyUserIds != "0" && j.Task.NotifyUserIds != "" {
-			adminInfo := AllAdminInfo(j.Task.NotifyUserIds)
+		if j.Task.NotifyUserIDs != "0" && j.Task.NotifyUserIDs != "" {
+			adminInfo := AllAdminInfo(j.Task.NotifyUserIDs)
 			phone := make(map[string]string, 0)
 			dingtalk := make(map[string]string, 0)
 			wechat := make(map[string]string, 0)

@@ -104,8 +104,8 @@ func (self *TaskController) Edit(c *gin.Context) {
 	data["isAdmin"] = uid
 
 	var notifyUserIds []int
-	if task.NotifyUserIds != "0" {
-		notifyUserIdsStr := strings.Split(task.NotifyUserIds, ",")
+	if task.NotifyUserIDs != "0" {
+		notifyUserIdsStr := strings.Split(task.NotifyUserIDs, ",")
 		for _, v := range notifyUserIdsStr {
 			i, _ := strconv.Atoi(v)
 			notifyUserIds = append(notifyUserIds, i)
@@ -177,8 +177,8 @@ func (self *TaskController) Copy(c *gin.Context) {
 	data["isAdmin"] = uid
 
 	var notifyUserIds []int
-	if task.NotifyUserIds != "0" {
-		notifyUserIdsStr := strings.Split(task.NotifyUserIds, ",")
+	if task.NotifyUserIDs != "0" {
+		notifyUserIdsStr := strings.Split(task.NotifyUserIDs, ",")
 		for _, v := range notifyUserIdsStr {
 			i, _ := strconv.Atoi(v)
 			notifyUserIds = append(notifyUserIds, i)
@@ -334,9 +334,9 @@ func (self *TaskController) Detail(c *gin.Context) {
 
 	//是否出错通知
 	data["adminInfo"] = []*model.Admin{}
-	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
+	if task.NotifyUserIDs != "0" && task.NotifyUserIDs != "" {
 		ids := []int{}
-		for _, row := range strings.Split(task.NotifyUserIds, ",") {
+		for _, row := range strings.Split(task.NotifyUserIDs, ",") {
 			id, _ := strconv.Atoi(row)
 			if id != 0 {
 				ids = append(ids, id)
@@ -391,7 +391,7 @@ func (self *TaskController) Save(c *gin.Context) {
 
 		task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
 		task.NotifyTplID, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
-		task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
+		task.NotifyUserIDs = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
 
 		if task.IsNotify == 1 && task.NotifyTplID <= 0 {
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "请选择通知模板"))
@@ -474,7 +474,7 @@ func (self *TaskController) Save(c *gin.Context) {
 	task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
 	task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
 	task.NotifyTplID, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
-	task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
+	task.NotifyUserIDs = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
 	task.UpdatedID = uid
 	task.Status = 2 //审核中,超级管理员不需要
 
@@ -1095,7 +1095,7 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 		task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
 		task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
 		task.NotifyTplID, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
-		task.NotifyUserIds = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
+		task.NotifyUserIDs = strings.TrimSpace(c.DefaultPostForm("notify_user_ids", ""))
 
 		if task.IsNotify == 1 && task.NotifyTplID <= 0 {
 			// self.ajaxMsg("请选择通知模板", MSG_ERR)
@@ -1172,7 +1172,7 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 	task.IsNotify, _ = strconv.Atoi(c.DefaultPostForm("is_notify", "0"))
 	task.NotifyType, _ = strconv.Atoi(c.DefaultPostForm("notify_type", "0"))
 	task.NotifyTplID, _ = strconv.Atoi(c.DefaultPostForm("notify_tpl_id", "0"))
-	task.NotifyUserIds = strings.TrimSpace(c.PostForm("notify_user_ids"))
+	task.NotifyUserIDs = strings.TrimSpace(c.PostForm("notify_user_ids"))
 	task.UpdatedID, _ = strconv.Atoi(c.DefaultPostForm("update_id", "0"))
 	task.Status = 0 //接口不需要
 

@@ -29,33 +29,34 @@ func (t *TaskLog) TableName() string {
 	return TableName("task_log")
 }
 
-// var TaskLogFunc = func(result *worker.JobResult, t time.Time) error {
+// var TaskLogFunc = func(job *worker.Job, result *worker.JobResult) int {
 // 	log := TaskLog{
 // 		TaskID:      job.ID,
 // 		ServerID:    job.ServerID,
 // 		ServerName:  job.ServerName,
 // 		Output:      result.OutMsg,
 // 		Error:       result.ErrMsg,
-// 		ProcessTime: int(time.Now().Sub(t) / time.Millisecond),
-// 		CreatedAt:   t.Unix(),
+// 		ProcessTime: int(time.Since(job.StartAt) / time.Millisecond),
+// 		CreatedAt:   job.StartAt.Unix(),
 // 	}
-// 	return model.Add(log)
-// }
 
-// TaskLogFunc := func(result *worker.JobResult, t time.Time) error {
-// 	log := model.TaskLog{
-// 		TaskID:      job.ID,
-// 		ServerID:    job.ServerID,
-// 		ServerName:  job.ServerName,
-// 		Output:      result.OutMsg,
-// 		Error:       result.ErrMsg,
-// 		ProcessTime: int(time.Now().Sub(t) / time.Millisecond),
-// 		CreatedAt:   t.Unix(),
+// 	timeout := time.Duration(time.Hour * 24)
+// 	if job.Timeout > 0 {
+// 		timeout = time.Second * time.Duration(job.Timeout)
 // 	}
-// 	return model.Add(log)
-// }
 
-// 	return model.Add(log)
+// 	if result.IsTimeout {
+// 		log.Status = TASK_TIMEOUT
+// 		log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), result.ErrMsg)
+// 	} else if !result.IsOk {
+// 		log.Status = TASK_ERROR
+// 		log.Error = "ERROR:" + result.ErrMsg
+// 	}
+
+// 	if err := Add(log); err != nil {
+// 		fmt.Println(err.Error())
+// 	}
+// 	return log.ID
 // }
 
 // func TaskLogAdd(t *TaskLog) (int64, error) {

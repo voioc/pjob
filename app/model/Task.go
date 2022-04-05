@@ -30,11 +30,11 @@ type Task struct {
 	IsNotify      int    `xorm:"is_notify" json:"is_notify"`
 	NotifyType    int    `xorm:"notify_type" json:"notify_type"`
 	NotifyTplID   int    `xorm:"notify_tpl_id" json:"notify_tpl_id"`
-	NotifyUserIds string `xorm:"notify_user_ids" json:"notify_user_ids"`
+	NotifyUserIDs string `xorm:"notify_user_ids" json:"notify_user_ids"`
 	CreatedID     int    `xorm:"create_id" json:"created_id"`
 	UpdatedID     int    `xorm:"update_id" json:"updated_id"`
 	CreatedAt     int64  `xorm:"create_time" json:"created_at"`
-	UpdatedAt     int64  `xorm:"update_time" json:"created_at"`
+	UpdatedAt     int64  `xorm:"update_time" json:"updated_at"`
 }
 
 func (t *Task) TableName() string {

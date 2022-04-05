@@ -257,7 +257,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 
 	//是否出错通知
 	data["adminInfo"] = []int{0}
-	if task.NotifyUserIds != "0" && task.NotifyUserIds != "" {
+	if task.NotifyUserIDs != "0" && task.NotifyUserIDs != "" {
 		data["adminInfo"], _ = service.AdminS(c).AdminInfo(nil) // AllAdminInfo(task.NotifyUserIds)
 	}
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
@@ -164,34 +163,15 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 		}
 
 		// 设置回调函数
-		job.LogFunc = func(result *worker.JobResult, t time.Time) int {
-			log := model.TaskLog{
-				TaskID:      job.ID,
-				ServerID:    job.ServerID,
-				ServerName:  job.ServerName,
-				Output:      result.OutMsg,
-				Error:       result.ErrMsg,
-				ProcessTime: int(time.Since(t) / time.Millisecond),
-				CreatedAt:   t.Unix(),
-			}
+		job.SuffixFunc = func(job *worker.Job, result *worker.JobResult) {
+			TaskLogS(s.C).TaskLogFunc(job, result)
+			NotifyS(s.C).NotifyFunc(job, result)
 
-			timeout := time.Duration(time.Hour * 24)
-			if job.Timeout > 0 {
-				timeout = time.Second * time.Duration(job.Timeout)
-			}
-
-			if result.IsTimeout {
-				log.Status = model.TASK_TIMEOUT
-				log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), result.ErrMsg)
-			} else if !result.IsOk {
-				log.Status = model.TASK_ERROR
-				log.Error = "ERROR:" + result.ErrMsg
-			}
-
-			if err := model.Add(log); err != nil {
+			task.PrevTime = job.StartAt.Unix()
+			task.ExecuteTimes++
+			if err := model.Update(task.ID, task); err != nil {
 				fmt.Println(err.Error())
 			}
-			return log.ID
 		}
 
 		if task.Concurrent == 1 {

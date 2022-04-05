@@ -102,7 +102,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	// 计算总任务数量
 
 	// 即将执行的任务
-	entries := service.CronS(c).GetEntries(30)
+	entries := worker.GetEntries(30)
 	jobList := make([]map[string]interface{}, len(entries))
 	startJob := 0 //即将执行的任务
 	for k, v := range entries {

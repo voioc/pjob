@@ -6,7 +6,7 @@
     error  = "/tmp/melon.log"
 
 [job]
-    size = 100
+    pool = 1000
 
 [db.main]
     driver = "mysql"

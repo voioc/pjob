@@ -162,6 +162,10 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 			}
 		}
 
+		job.PrefixFunc = func(serverID int) bool {
+			return ServerS(s.C).Probe(serverID)
+		}
+
 		// 设置回调函数
 		job.SuffixFunc = func(job *worker.Job, result *worker.JobResult) {
 			TaskLogS(s.C).TaskLogFunc(job, result)

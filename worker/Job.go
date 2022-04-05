@@ -17,11 +17,6 @@ import (
 
 	"strconv"
 	"strings"
-
-	"encoding/json"
-
-	"github.com/astaxie/beego"
-	"github.com/voioc/cjob/notify"
 )
 
 type Job struct {
@@ -35,6 +30,7 @@ type Job struct {
 	ServerType  int                            // 执行器类型，1-ssh 2-telnet 3-agent
 	Name        string                         // 任务名称
 	Task        *model.Task                    // 任务对象
+	PrefixFunc  func(int) bool                 // 任务执行前的服务器探活
 	RunFunc     func(time.Duration) *JobResult // 执行函数
 	SuffixFunc  func(*Job, *JobResult)         // 任务执行完成
 	Timeout     int                            // 超时时间:秒
@@ -84,8 +80,9 @@ func (j *Job) agentRun() (reply *JobResult) {
 	defer client.Close()
 	reply = new(JobResult)
 
-	task := j.Task
-	err = client.Call("RpcTask.RunTask", task, &reply)
+	// task := j.Task
+	// err = client.Call("RpcTask.RunTask", task, &reply)
+	err = client.Call("RpcTask.RunTask", j.TaskID, &reply)
 	if err != nil {
 		reply.IsOk = false
 		reply.ErrMsg = "Net error:" + err.Error()
@@ -102,7 +99,7 @@ func (j *Job) Run() {
 		if !PollServer(j) {
 			return
 		} else {
-			SetCounter(strconv.Itoa(j.Task.ID))
+			SetCounter(strconv.Itoa(j.TaskID))
 		}
 	}
 
@@ -131,7 +128,7 @@ func (j *Job) Run() {
 		j.Status--
 	}()
 
-	t := time.Now()
+	// t := time.Now()
 	j.StartAt = time.Now()
 
 	timeout := time.Duration(time.Hour * 24)
@@ -159,164 +156,164 @@ func (j *Job) Run() {
 		j.SuffixFunc(j, jobResult)
 	}
 
-	// 插入日志
-	log := new(model.TaskLog)
-	log.TaskID = j.ID
-	log.ServerID = j.ServerID
-	log.ServerName = j.ServerName
-	log.Output = jobResult.OutMsg
-	log.Error = jobResult.ErrMsg
-	log.ProcessTime = int(ut)
-	log.CreatedAt = j.StartAt.Unix()
+	// // 插入日志
+	// log := new(model.TaskLog)
+	// log.TaskID = j.ID
+	// log.ServerID = j.ServerID
+	// log.ServerName = j.ServerName
+	// log.Output = jobResult.OutMsg
+	// log.Error = jobResult.ErrMsg
+	// log.ProcessTime = int(ut)
+	// log.CreatedAt = j.StartAt.Unix()
 
-	if jobResult.IsTimeout {
-		log.Status = model.TASK_TIMEOUT
-		log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), jobResult.ErrMsg)
-	} else if !jobResult.IsOk {
-		log.Status = model.TASK_ERROR
-		log.Error = "ERROR:" + jobResult.ErrMsg
-	}
+	// if jobResult.IsTimeout {
+	// 	log.Status = model.TASK_TIMEOUT
+	// 	log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), jobResult.ErrMsg)
+	// } else if !jobResult.IsOk {
+	// 	log.Status = model.TASK_ERROR
+	// 	log.Error = "ERROR:" + jobResult.ErrMsg
+	// }
 
-	if log.Status < 0 && j.Task.IsNotify == 1 {
-		if j.Task.NotifyUserIDs != "0" && j.Task.NotifyUserIDs != "" {
-			adminInfo := AllAdminInfo(j.Task.NotifyUserIDs)
-			phone := make(map[string]string, 0)
-			dingtalk := make(map[string]string, 0)
-			wechat := make(map[string]string, 0)
-			toEmail := ""
-			for _, v := range adminInfo {
-				if v.Phone != "0" && v.Phone != "" {
-					phone[v.Phone] = v.Phone
-				}
-				if v.Email != "0" && v.Email != "" {
-					toEmail += v.Email + ";"
-				}
-				if v.Dingtalk != "0" && v.Dingtalk != "" {
-					dingtalk[v.Dingtalk] = v.Dingtalk
-				}
-				if v.Wechat != "0" && v.Wechat != "" {
-					wechat[v.Wechat] = v.Wechat
-				}
-			}
-			toEmail = strings.TrimRight(toEmail, ";")
+	// if log.Status < 0 && j.Task.IsNotify == 1 {
+	// 	if j.Task.NotifyUserIDs != "0" && j.Task.NotifyUserIDs != "" {
+	// 		adminInfo := AllAdminInfo(j.Task.NotifyUserIDs)
+	// 		phone := make(map[string]string, 0)
+	// 		dingtalk := make(map[string]string, 0)
+	// 		wechat := make(map[string]string, 0)
+	// 		toEmail := ""
+	// 		for _, v := range adminInfo {
+	// 			if v.Phone != "0" && v.Phone != "" {
+	// 				phone[v.Phone] = v.Phone
+	// 			}
+	// 			if v.Email != "0" && v.Email != "" {
+	// 				toEmail += v.Email + ";"
+	// 			}
+	// 			if v.Dingtalk != "0" && v.Dingtalk != "" {
+	// 				dingtalk[v.Dingtalk] = v.Dingtalk
+	// 			}
+	// 			if v.Wechat != "0" && v.Wechat != "" {
+	// 				wechat[v.Wechat] = v.Wechat
+	// 			}
+	// 		}
+	// 		toEmail = strings.TrimRight(toEmail, ";")
 
-			TextStatus := []string{
-				"超时",
-				"错误",
-				"正常",
-			}
+	// 		TextStatus := []string{
+	// 			"超时",
+	// 			"错误",
+	// 			"正常",
+	// 		}
 
-			status := log.Status + 2
+	// 		status := log.Status + 2
 
-			title, content, taskOutput, errOutput := "", "", "", ""
+	// 		title, content, taskOutput, errOutput := "", "", "", ""
 
-			// notifyTpl, err := model.NotifyTplGetById(j.Task.NotifyTplID)
-			notifyTpl := model.NotifyTpl{}
-			if err := model.DataByID(&notifyTpl, j.Task.NotifyTplID); err != nil {
-				notifyTpl, err := model.NotifyTplGetByTplType(j.Task.NotifyType, model.NotifyTplTypeSystem)
-				if err == nil {
-					title = notifyTpl.Title
-					content = notifyTpl.Content
-				}
-			} else {
-				title = notifyTpl.Title
-				content = notifyTpl.Content
-			}
+	// 		// notifyTpl, err := model.NotifyTplGetById(j.Task.NotifyTplID)
+	// 		notifyTpl := model.NotifyTpl{}
+	// 		if err := model.DataByID(&notifyTpl, j.Task.NotifyTplID); err != nil {
+	// 			notifyTpl, err := model.NotifyTplGetByTplType(j.Task.NotifyType, model.NotifyTplTypeSystem)
+	// 			if err == nil {
+	// 				title = notifyTpl.Title
+	// 				content = notifyTpl.Content
+	// 			}
+	// 		} else {
+	// 			title = notifyTpl.Title
+	// 			content = notifyTpl.Content
+	// 		}
 
-			taskOutput = strings.Replace(log.Output, "\n", " ", -1)
-			taskOutput = strings.Replace(taskOutput, "\"", "\\\"", -1)
-			errOutput = strings.Replace(log.Error, "\n", " ", -1)
-			errOutput = strings.Replace(errOutput, "\"", "\\\"", -1)
+	// 		taskOutput = strings.Replace(log.Output, "\n", " ", -1)
+	// 		taskOutput = strings.Replace(taskOutput, "\"", "\\\"", -1)
+	// 		errOutput = strings.Replace(log.Error, "\n", " ", -1)
+	// 		errOutput = strings.Replace(errOutput, "\"", "\\\"", -1)
 
-			if title != "" {
-				title = strings.Replace(title, "{{TaskId}}", strconv.Itoa(j.Task.ID), -1)
-				title = strings.Replace(title, "{{ServerId}}", strconv.Itoa(j.ServerID), -1)
-				title = strings.Replace(title, "{{TaskName}}", j.Task.TaskName, -1)
-				title = strings.Replace(title, "{{ExecuteCommand}}", j.Task.Command, -1)
-				title = strings.Replace(title, "{{ExecuteTime}}", beego.Date(time.Unix(log.CreatedAt, 0), "Y-m-d H:i:s"), -1)
-				title = strings.Replace(title, "{{ProcessTime}}", strconv.FormatFloat(float64(log.ProcessTime)/1000, 'f', 6, 64), -1)
-				title = strings.Replace(title, "{{ExecuteStatus}}", TextStatus[status], -1)
-				title = strings.Replace(title, "{{TaskOutput}}", taskOutput, -1)
-				title = strings.Replace(title, "{{ErrorOutput}}", errOutput, -1)
-			}
+	// 		if title != "" {
+	// 			title = strings.Replace(title, "{{TaskId}}", strconv.Itoa(j.Task.ID), -1)
+	// 			title = strings.Replace(title, "{{ServerId}}", strconv.Itoa(j.ServerID), -1)
+	// 			title = strings.Replace(title, "{{TaskName}}", j.Task.TaskName, -1)
+	// 			title = strings.Replace(title, "{{ExecuteCommand}}", j.Task.Command, -1)
+	// 			title = strings.Replace(title, "{{ExecuteTime}}", beego.Date(time.Unix(log.CreatedAt, 0), "Y-m-d H:i:s"), -1)
+	// 			title = strings.Replace(title, "{{ProcessTime}}", strconv.FormatFloat(float64(log.ProcessTime)/1000, 'f', 6, 64), -1)
+	// 			title = strings.Replace(title, "{{ExecuteStatus}}", TextStatus[status], -1)
+	// 			title = strings.Replace(title, "{{TaskOutput}}", taskOutput, -1)
+	// 			title = strings.Replace(title, "{{ErrorOutput}}", errOutput, -1)
+	// 		}
 
-			if content != "" {
-				content = strings.Replace(content, "{{TaskId}}", strconv.Itoa(j.Task.ID), -1)
-				content = strings.Replace(content, "{{ServerId}}", strconv.Itoa(j.ServerID), -1)
-				content = strings.Replace(content, "{{TaskName}}", j.Task.TaskName, -1)
-				content = strings.Replace(content, "{{ExecuteCommand}}", strings.Replace(j.Task.Command, "\"", "\\\"", -1), -1)
-				content = strings.Replace(content, "{{ExecuteTime}}", beego.Date(time.Unix(log.CreatedAt, 0), "Y-m-d H:i:s"), -1)
-				content = strings.Replace(content, "{{ProcessTime}}", strconv.FormatFloat(float64(log.ProcessTime)/1000, 'f', 6, 64), -1)
-				content = strings.Replace(content, "{{ExecuteStatus}}", TextStatus[status], -1)
-				content = strings.Replace(content, "{{TaskOutput}}", taskOutput, -1)
-				content = strings.Replace(content, "{{ErrorOutput}}", errOutput, -1)
-			}
+	// 		if content != "" {
+	// 			content = strings.Replace(content, "{{TaskId}}", strconv.Itoa(j.Task.ID), -1)
+	// 			content = strings.Replace(content, "{{ServerId}}", strconv.Itoa(j.ServerID), -1)
+	// 			content = strings.Replace(content, "{{TaskName}}", j.Task.TaskName, -1)
+	// 			content = strings.Replace(content, "{{ExecuteCommand}}", strings.Replace(j.Task.Command, "\"", "\\\"", -1), -1)
+	// 			content = strings.Replace(content, "{{ExecuteTime}}", beego.Date(time.Unix(log.CreatedAt, 0), "Y-m-d H:i:s"), -1)
+	// 			content = strings.Replace(content, "{{ProcessTime}}", strconv.FormatFloat(float64(log.ProcessTime)/1000, 'f', 6, 64), -1)
+	// 			content = strings.Replace(content, "{{ExecuteStatus}}", TextStatus[status], -1)
+	// 			content = strings.Replace(content, "{{TaskOutput}}", taskOutput, -1)
+	// 			content = strings.Replace(content, "{{ErrorOutput}}", errOutput, -1)
+	// 		}
 
-			if j.Task.NotifyType == 0 && toEmail != "" {
-				//邮件
-				mailtype := "html"
-				ok := notify.SendToChan(toEmail, title, content, mailtype)
-				if !ok {
-					fmt.Println("发送邮件错误", toEmail)
-				}
-			} else if j.Task.NotifyType == 1 && len(phone) > 0 {
-				//信息
-				param := make(map[string]string)
-				err := json.Unmarshal([]byte(content), &param)
-				if err != nil {
-					fmt.Println("发送信息错误", err)
-					return
-				}
+	// 		if j.Task.NotifyType == 0 && toEmail != "" {
+	// 			//邮件
+	// 			mailtype := "html"
+	// 			ok := notify.SendToChan(toEmail, title, content, mailtype)
+	// 			if !ok {
+	// 				fmt.Println("发送邮件错误", toEmail)
+	// 			}
+	// 		} else if j.Task.NotifyType == 1 && len(phone) > 0 {
+	// 			//信息
+	// 			param := make(map[string]string)
+	// 			err := json.Unmarshal([]byte(content), &param)
+	// 			if err != nil {
+	// 				fmt.Println("发送信息错误", err)
+	// 				return
+	// 			}
 
-				ok := notify.SendSmsToChan(phone, param)
-				if !ok {
-					fmt.Println("发送信息错误", phone)
-				}
-			} else if j.Task.NotifyType == 2 && len(dingtalk) > 0 {
-				//钉钉
-				param := make(map[string]interface{})
+	// 			ok := notify.SendSmsToChan(phone, param)
+	// 			if !ok {
+	// 				fmt.Println("发送信息错误", phone)
+	// 			}
+	// 		} else if j.Task.NotifyType == 2 && len(dingtalk) > 0 {
+	// 			//钉钉
+	// 			param := make(map[string]interface{})
 
-				err := json.Unmarshal([]byte(content), &param)
-				if err != nil {
-					fmt.Println("发送钉钉错误", err)
-					return
-				}
+	// 			err := json.Unmarshal([]byte(content), &param)
+	// 			if err != nil {
+	// 				fmt.Println("发送钉钉错误", err)
+	// 				return
+	// 			}
 
-				ok := notify.SendDingtalkToChan(dingtalk, param)
-				if !ok {
-					fmt.Println("发送钉钉错误", dingtalk)
-				}
-			} else if j.Task.NotifyType == 3 && len(wechat) > 0 {
-				//微信
-				param := make(map[string]string)
-				err := json.Unmarshal([]byte(content), &param)
-				if err != nil {
-					fmt.Println("发送微信错误", err)
-					return
-				}
+	// 			ok := notify.SendDingtalkToChan(dingtalk, param)
+	// 			if !ok {
+	// 				fmt.Println("发送钉钉错误", dingtalk)
+	// 			}
+	// 		} else if j.Task.NotifyType == 3 && len(wechat) > 0 {
+	// 			//微信
+	// 			param := make(map[string]string)
+	// 			err := json.Unmarshal([]byte(content), &param)
+	// 			if err != nil {
+	// 				fmt.Println("发送微信错误", err)
+	// 				return
+	// 			}
 
-				ok := notify.SendWechatToChan(phone, param)
-				if !ok {
-					fmt.Println("发送微信错误", phone)
-				}
-			}
-		}
-	}
+	// 			ok := notify.SendWechatToChan(phone, param)
+	// 			if !ok {
+	// 				fmt.Println("发送微信错误", phone)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	// j.LogId, _ = model.TaskLogAdd(log)
+	// // j.LogId, _ = model.TaskLogAdd(log)
 
-	// if err := model.Add(log); err != nil {
+	// // if err := model.Add(log); err != nil {
+	// // 	fmt.Println(err.Error())
+	// // }
+	// // j.LogID = int64(log.ID)
+
+	// // 更新上次执行时间
+	// j.Task.PrevTime = t.Unix()
+	// j.Task.ExecuteTimes++
+	// // j.Task.Update("PrevTime", "ExecuteTimes")
+	// if err := model.Update(j.Task.ID, j.Task); err != nil {
 	// 	fmt.Println(err.Error())
 	// }
-	// j.LogID = int64(log.ID)
-
-	// 更新上次执行时间
-	j.Task.PrevTime = t.Unix()
-	j.Task.ExecuteTimes++
-	// j.Task.Update("PrevTime", "ExecuteTimes")
-	if err := model.Update(j.Task.ID, j.Task); err != nil {
-		fmt.Println(err.Error())
-	}
 }
 
 type JobResult struct {
@@ -487,7 +484,7 @@ func PollServer(j *Job) bool {
 		return false
 	}
 
-	count := GetCounter(strconv.Itoa(j.Task.ID))
+	count := GetCounter(strconv.Itoa(j.TaskID))
 	index := count % num
 	pollServerId, _ := strconv.Atoi(TaskServerIdsArr[index])
 
@@ -500,31 +497,7 @@ func PollServer(j *Job) bool {
 		return true
 	}
 
-	//判断执行器或者服务器是否存活
-	// server, _ := model.TaskServerGetById(pollServerId)
-	server := model.TaskServer{}
-	if err := model.DataByID(&server, pollServerId); err != nil {
-		fmt.Println(err.Error())
-	}
-
-	if server.Status != 0 {
-		return false
-	}
-
-	if err := TestServer(&server); err != nil {
-		server.Status = 1
-		if err := model.Update(server.ID, server); err != nil {
-			fmt.Println(err.Error())
-		}
-		return false
-	} else {
-		server.Status = 0
-		if err := model.Update(server.ID, server, true); err != nil {
-			fmt.Println(err.Error())
-		}
-	}
-
-	return true
+	return j.PrefixFunc(j.ServerID)
 }
 
 // 冗余代码

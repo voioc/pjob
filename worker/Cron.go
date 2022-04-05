@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/astaxie/beego"
+	"github.com/spf13/viper"
 	cron "github.com/voioc/cjob/crons"
 )
 
@@ -14,9 +15,10 @@ var (
 )
 
 func init() {
-	if size, _ := beego.AppConfig.Int("jobs.pool"); size > 0 {
+	if size := viper.GetInt("job.pool"); size > 0 {
 		workPool = make(chan bool, size)
 	}
+
 	mainCron = cron.New()
 	mainCron.Start()
 }

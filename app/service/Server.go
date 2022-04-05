@@ -1,10 +1,14 @@
 package service
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/define"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/libs"
 )
 
 type ServerService struct {
@@ -182,3 +186,62 @@ func (s *ServerService) ServerLists(ServerGroupIDS string) ([]define.ServerList,
 
 // 	return nil
 // }
+
+// 服务器探活服务
+func (s *ServerService) Probe(sid int) bool {
+
+	//判断执行器或者服务器是否存活
+	// server, _ := model.TaskServerGetById(pollServerId)
+	server := model.TaskServer{}
+	if err := model.DataByID(&server, sid); err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+
+	if server.Status != 0 {
+		return false
+	}
+
+	if err := s.TestServer(&server); err != nil {
+		server.Status = 1
+		if err := model.Update(server.ID, server); err != nil {
+			fmt.Println(err.Error())
+		}
+		return false
+	} else {
+		server.Status = 0
+		if err := model.Update(server.ID, server, true); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
+	return true
+}
+
+func (s *ServerService) TestServer(server *model.TaskServer) error {
+	if server.ConnectionType == 0 {
+		switch server.Type {
+		case 0:
+			//密码登录
+			return libs.RemoteCommandByPassword(server)
+		case 1:
+			//密钥登录
+			return libs.RemoteCommandByKey(server)
+		default:
+			return errors.New("未知的登录方式")
+
+		}
+	} else if server.ConnectionType == 1 {
+		if server.Type == 0 {
+			//密码登录]
+			return libs.RemoteCommandByTelnetPassword(server)
+		} else {
+			return errors.New("Telnet方式暂不支持密钥登陆！")
+		}
+
+	} else if server.ConnectionType == 2 {
+		return libs.RemoteAgent(server)
+	}
+
+	return errors.New("未知错误")
+}

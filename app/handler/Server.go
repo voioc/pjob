@@ -170,13 +170,17 @@ func (self *ServerController) AjaxTestServer(c *gin.Context) {
 
 	if server.ConnectionType == 0 {
 		if server.Type == 0 {
-			//密码登录
-			err = libs.RemoteCommandByPassword(server)
+			// 密码登录
+			if err = libs.RemoteCommandByPassword(server); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 
 		if server.Type == 1 {
 			//密钥登录
-			err = libs.RemoteCommandByKey(server)
+			if err = libs.RemoteCommandByKey(server); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 
 		if err != nil {
@@ -558,7 +562,7 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	// server, _ := service.ServerS(c).ServerByID(server[0].ID) // model.TaskServerGetById(id)
 	server[0].UpdatedAt = time.Now().Unix()
 	server[0].Status = status
-	server[0].ID = server[0].ID
+	// server[0].ID = server[0].ID
 
 	logs.Info(server)
 

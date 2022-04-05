@@ -5,7 +5,7 @@
 * @Last Modified time: 2017-06-21 13:03:06
  */
 
-package jobs
+package worker
 
 import (
 	"fmt"

@@ -1,11 +1,4 @@
-/*
-* @Author: haodaquan
-* @Date:   2017-06-21 12:54:47
-* @Last Modified by:   haodaquan
-* @Last Modified time: 2017-06-23 11:04:25
- */
-
-package jobs
+package worker
 
 import (
 	"sync"

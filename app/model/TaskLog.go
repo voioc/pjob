@@ -29,6 +29,35 @@ func (t *TaskLog) TableName() string {
 	return TableName("task_log")
 }
 
+// var TaskLogFunc = func(result *worker.JobResult, t time.Time) error {
+// 	log := TaskLog{
+// 		TaskID:      job.ID,
+// 		ServerID:    job.ServerID,
+// 		ServerName:  job.ServerName,
+// 		Output:      result.OutMsg,
+// 		Error:       result.ErrMsg,
+// 		ProcessTime: int(time.Now().Sub(t) / time.Millisecond),
+// 		CreatedAt:   t.Unix(),
+// 	}
+// 	return model.Add(log)
+// }
+
+// TaskLogFunc := func(result *worker.JobResult, t time.Time) error {
+// 	log := model.TaskLog{
+// 		TaskID:      job.ID,
+// 		ServerID:    job.ServerID,
+// 		ServerName:  job.ServerName,
+// 		Output:      result.OutMsg,
+// 		Error:       result.ErrMsg,
+// 		ProcessTime: int(time.Now().Sub(t) / time.Millisecond),
+// 		CreatedAt:   t.Unix(),
+// 	}
+// 	return model.Add(log)
+// }
+
+// 	return model.Add(log)
+// }
+
 // func TaskLogAdd(t *TaskLog) (int64, error) {
 // 	return orm.NewOrm().Insert(t)
 // }

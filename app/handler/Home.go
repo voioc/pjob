@@ -15,11 +15,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
+	"github.com/voioc/cjob/worker"
 )
 
 type HomeController struct {
@@ -106,16 +106,16 @@ func (self *HomeController) Start(c *gin.Context) {
 	jobList := make([]map[string]interface{}, len(entries))
 	startJob := 0 //即将执行的任务
 	for k, v := range entries {
-		job := v.Job.(*jobs.Job)
+		job := v.Job.(*worker.Job)
 
 		// task, _ := service.TaskS(c).TaskByID(job.GetId())
 		task := &model.Task{}
-		if err := model.DataByID(task, job.GetId()); err != nil {
+		if err := model.DataByID(task, job.GetID()); err != nil {
 			fmt.Println(err.Error())
 		}
 
 		row := make(map[string]interface{})
-		row["task_id"] = job.GetId()
+		row["task_id"] = job.GetID()
 		row["task_name"] = job.GetName()
 		row["task_group"] = groups_map[task.GroupID]
 		row["next_time"] = v.Next.Format("2006-01-02 15:04:05")

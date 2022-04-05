@@ -15,12 +15,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
+	"github.com/voioc/cjob/worker"
 
 	cron "github.com/voioc/cjob/crons"
 )
@@ -595,7 +595,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := jobs.NewJobFromTask(&task)
+	jobArr, err := worker.NewJobFromTask(&task)
 
 	if err != nil {
 		// self.ajaxMsg("创建任务失败", MSG_ERR)
@@ -604,7 +604,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 	}
 
 	for _, job := range jobArr {
-		if jobs.AddJob(task.CronSpec, job) {
+		if worker.AddJob(task.CronSpec, job) {
 			task.Status = 1
 			if err := model.Update(taskID, task); err != nil {
 				fmt.Println(err.Error())
@@ -637,7 +637,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
 		jobKey := libs.JobKey(task.ID, server_id_int)
-		jobs.RemoveJob(jobKey)
+		worker.RemoveJob(jobKey)
 	}
 
 	task.Status = 0
@@ -660,7 +660,7 @@ func (self *TaskController) AjaxRun(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := jobs.NewJobFromTask(&task)
+	jobArr, err := worker.NewJobFromTask(&task)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -694,10 +694,10 @@ func (self *TaskController) AjaxBatchStart(c *gin.Context) {
 		if err := model.DataByID(&task, id); err != nil {
 			fmt.Println(err.Error())
 		} else {
-			jobArr, err := jobs.NewJobFromTask(&task)
+			jobArr, err := worker.NewJobFromTask(&task)
 			if err == nil {
 				for _, job := range jobArr {
-					jobs.AddJob(task.CronSpec, job)
+					worker.AddJob(task.CronSpec, job)
 				}
 
 				task.Status = 1
@@ -740,7 +740,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 			for _, server_id := range TaskServerIdsArr {
 				server_id_int, _ := strconv.Atoi(server_id)
 				jobKey := libs.JobKey(task.ID, server_id_int)
-				jobs.RemoveJob(jobKey)
+				worker.RemoveJob(jobKey)
 			}
 
 			task.Status = 0
@@ -783,7 +783,7 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 		for _, server_id := range TaskServerIdsArr {
 			server_id_int, _ := strconv.Atoi(server_id)
 			jobKey := libs.JobKey(task.ID, server_id_int)
-			jobs.RemoveJob(jobKey)
+			worker.RemoveJob(jobKey)
 		}
 
 		// service.TaskS(c).Del([]int{id})
@@ -1049,7 +1049,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		}
 
 		jobskey := libs.JobKey(v.ID, serverId)
-		e := jobs.GetEntryById(jobskey)
+		e := worker.GetEntryById(jobskey)
 
 		if e != nil {
 			row["next_time"] = e.Next.Format("2006-01-02 15:04:05")
@@ -1235,15 +1235,17 @@ func (self *TaskController) ApiStart(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := jobs.NewJobFromTask(&task)
+	// 创建定时Job
+	jobs, err := service.TaskS(c).CreateJob(&task)
 	if err != nil {
 		// self.ajaxMsg("创建任务失败", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "创建任务失败"))
 		return
 	}
 
-	for _, job := range jobArr {
-		if jobs.AddJob(task.CronSpec, job) {
+	// 开启任务
+	for _, job := range jobs {
+		if worker.AddJob(task.CronSpec, job) {
 			task.Status = 1
 			// task.Update()
 			if err := model.Update(task.ID, &task); err != nil {
@@ -1279,7 +1281,7 @@ func (self *TaskController) ApiPause(c *gin.Context) {
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
 		jobKey := libs.JobKey(task.ID, server_id_int)
-		jobs.RemoveJob(jobKey)
+		worker.RemoveJob(jobKey)
 	}
 
 	task.Status = 0

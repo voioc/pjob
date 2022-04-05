@@ -12,11 +12,13 @@ import (
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	_ "github.com/voioc/cjob/common"
+	_ "github.com/voioc/cjob/build"
+
+	"github.com/voioc/cjob/app/service"
+
 	"github.com/voioc/cjob/routers"
 	"github.com/voioc/coco/cache"
 	"github.com/voioc/coco/logzap"
-	// _ "github.com/voioc/cjob/routers"
 )
 
 func main() {
@@ -24,6 +26,9 @@ func main() {
 	// db.Init()        // 初始化数据库连接
 	cache.Init()     // 初始化缓存连接
 	logzap.InitZap() // 初始化日志组件
+	// worker.InitJobs()
+
+	service.TaskS(&gin.Context{}).Loading()
 
 	r := gin.New()
 	// pprof.Register(r)

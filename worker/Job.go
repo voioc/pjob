@@ -29,17 +29,19 @@ type Job struct {
 	ID     int // taskID
 	// TaskID     string
 	TaskName   string
-	LogID      int                            // 日志记录ID
-	ServerID   int                            // 执行器信息
-	ServerName string                         // 执行器名称
-	ServerType int                            // 执行器类型，1-ssh 2-telnet 3-agent
-	Name       string                         // 任务名称
-	Task       *model.Task                    // 任务对象
-	RunFunc    func(time.Duration) *JobResult // 执行函数
-	LogFunc    func(*JobResult, time.Time) int
-	Timeout    int  // 超时时间:秒
-	Status     int  // 任务状态，大于0表示正在执行中
-	Concurrent bool // 同一个任务是否允许并行执行
+	LogID      int                             // 日志记录ID
+	ServerID   int                             // 执行器信息
+	ServerName string                          // 执行器名称
+	ServerType int                             // 执行器类型，1-ssh 2-telnet 3-agent
+	Name       string                          // 任务名称
+	Task       *model.Task                     // 任务对象
+	RunFunc    func(time.Duration) *JobResult  // 执行函数
+	LogFunc    func(*JobResult, time.Time) int // 日志函数
+	NotifyFunc func(*JobResult, time.Time) int // 通知函数
+	Timeout    int                             // 超时时间:秒
+	Status     int                             // 任务状态，大于0表示正在执行中
+	Concurrent bool                            // 同一个任务是否允许并行执行
+	IsNotify   bool                            // 是否发送失败通知
 }
 
 func (j *Job) GetStatus() int {

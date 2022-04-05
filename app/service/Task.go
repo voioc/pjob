@@ -171,8 +171,21 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 				ServerName:  job.ServerName,
 				Output:      result.OutMsg,
 				Error:       result.ErrMsg,
-				ProcessTime: int(time.Now().Sub(t) / time.Millisecond),
+				ProcessTime: int(time.Since(t) / time.Millisecond),
 				CreatedAt:   t.Unix(),
+			}
+
+			timeout := time.Duration(time.Hour * 24)
+			if job.Timeout > 0 {
+				timeout = time.Second * time.Duration(job.Timeout)
+			}
+
+			if result.IsTimeout {
+				log.Status = model.TASK_TIMEOUT
+				log.Error = fmt.Sprintf("任务执行超过 %d 秒\n----------------------\n%s\n", int(timeout/time.Second), result.ErrMsg)
+			} else if !result.IsOk {
+				log.Status = model.TASK_ERROR
+				log.Error = "ERROR:" + result.ErrMsg
 			}
 
 			if err := model.Add(log); err != nil {

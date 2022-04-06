@@ -43,6 +43,7 @@ func InitRouter(engine *gin.Engine) {
 		},
 	})
 
+	// engine.StaticFile("/favicon.ico", "./static/admin/images/favicon.ico")
 	engine.LoadHTMLGlob("views/**/*")
 
 	// engine.LoadHTMLFiles(

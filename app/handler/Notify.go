@@ -189,10 +189,11 @@ func (self *NotifyController) Table(c *gin.Context) {
 
 	StatusText := []string{
 		"<font color='red'>禁用</font>",
-		"正常",
+		"<font color='green'>正常</font>",
 	}
 
 	TplTypeText := []string{
+		"未知",
 		"邮件",
 		"信息",
 		"钉钉",

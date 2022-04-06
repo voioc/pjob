@@ -9,10 +9,10 @@ package server
 
 import (
 	"github.com/go-ini/ini"
-	"github.com/voioc/cjob/agent/common2"
+	"github.com/voioc/cjob/agent/common"
 )
 
-var C = new(common2.Conf)
+var C = new(common.Conf)
 var ConfPath string
 
 func InitConfig(path string) error {

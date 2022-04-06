@@ -59,10 +59,10 @@
         </div>
 
         <div class="layui-form-item">
-            <label class="layui-form-label mw200">执行策略</label>
+            <label class="layui-form-label mw200">执行策略(多服务)</label>
             <div class="layui-input-inline mw400">
-                <input type="radio" name="server_type" value="0" lay-filter="server_type" title="同时执行" checked>
-                <input type="radio" name="server_type" value="1" lay-filter="server_type" title="轮询执行">
+                <input type="radio" name="server_type" value="1" lay-filter="server_type" title="同时执行" checked>
+                <input type="radio" name="server_type" value="2" lay-filter="server_type" title="轮询执行">
             </div>
             <div class="layui-form-mid layui-word-aux"></div>
         </div>
@@ -153,7 +153,7 @@
                 <select name="notify_user"  lay-search xm-select="select_notify" >
                     <option value="">请选择</option>
                     {{range $k, $v := .adminInfo}}
-                        <option value="{{$v.Id}}">{{$v.RealName}}</option>
+                        <option value="{{$v.ID}}">{{$v.RealName}}</option>
                     {{end}}
                 </select>
             </div>

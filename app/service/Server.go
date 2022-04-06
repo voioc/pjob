@@ -3,12 +3,15 @@ package service
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/define"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/worker"
 )
 
 type ServerService struct {
@@ -187,13 +190,37 @@ func (s *ServerService) ServerLists(ServerGroupIDS string) ([]define.ServerList,
 // 	return nil
 // }
 
-// 服务器探活服务
-func (s *ServerService) Probe(sid int) bool {
+// 判断执行策略 count 已调度次数 sid 当前服务器id
+func (s *ServerService) Probe(job *worker.Job, count int) bool {
+	// 判断是否是当前执行器执行
+	task := model.Task{}
+	if err := model.DataByID(&task, job.TaskID); err != nil {
+		return false
+	}
 
-	//判断执行器或者服务器是否存活
+	TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
+	num := len(TaskServerIdsArr)
+
+	if num == 0 {
+		return false
+	}
+
+	index := count % num
+	pollServerID, _ := strconv.Atoi(TaskServerIdsArr[index])
+
+	if job.ServerID != pollServerID {
+		return false
+	}
+
+	// 本地服务器
+	if pollServerID == 0 {
+		return true
+	}
+
+	// 判断执行器或者服务器是否存活
 	// server, _ := model.TaskServerGetById(pollServerId)
 	server := model.TaskServer{}
-	if err := model.DataByID(&server, sid); err != nil {
+	if err := model.DataByID(&server, job.ServerID); err != nil {
 		fmt.Println(err.Error())
 		return false
 	}

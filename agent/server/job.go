@@ -17,9 +17,8 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	. "github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
-	"github.com/voioc/cjob/libs"
+	. "github.com/voioc/cjob/worker"
 )
 
 //执行句柄map
@@ -52,19 +51,19 @@ func RestJobFromTask(task *model.Task, serverId int) (*Job, error) {
 	job := ResetCommandJob(task.ID, serverId, task.TaskName, task.Command)
 	job.Task = task
 	job.Concurrent = task.Concurrent == 1
-	job.ServerId = serverId
+	job.ServerID = serverId
 	job.ServerName = "执行器"
 
 	return job, nil
 }
 
-func ResetCommandJob(id int, serverId int, name string, command string) *Job {
+func ResetCommandJob(TaskID int, serverId int, name string, command string) *Job {
 	job := &Job{
-		Id:   id,
-		Name: name,
+		TaskID: TaskID,
+		Name:   name,
 	}
 
-	job.JobKey = libs.JobKey(id, serverId)
+	// job.JobKey = libs.JobKey(id, serverId)
 	job.RunFunc = func(timeout time.Duration) (jobResult *JobResult) {
 		bufOut := new(bytes.Buffer)
 		bufErr := new(bytes.Buffer)

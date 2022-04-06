@@ -374,7 +374,8 @@ func (self *ServerController) Table(c *gin.Context) {
 	//	"密钥",
 	//}
 
-	connectionType := [3]string{
+	connectionType := [4]string{
+		"Unknown",
 		"SSH",
 		"Telnet",
 		"Agent",

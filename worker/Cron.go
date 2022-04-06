@@ -1,17 +1,20 @@
 package worker
 
 import (
+	"context"
+	"fmt"
 	"sync"
 
-	"github.com/astaxie/beego"
+	"github.com/robfig/cron/v3"
 	"github.com/spf13/viper"
-	cron "github.com/voioc/cjob/crons"
+	"github.com/voioc/coco/logzap"
 )
 
 var (
 	mainCron *cron.Cron
 	workPool chan bool
 	lock     sync.Mutex
+	pool     map[int]cron.EntryID
 )
 
 func init() {
@@ -19,7 +22,8 @@ func init() {
 		workPool = make(chan bool, size)
 	}
 
-	mainCron = cron.New()
+	pool = map[int]cron.EntryID{}
+	mainCron = cron.New(cron.WithSeconds())
 	mainCron.Start()
 }
 
@@ -27,42 +31,45 @@ func AddJob(spec string, job *Job) bool {
 	lock.Lock()
 	defer lock.Unlock()
 
-	if GetEntryById(job.JobKey) != nil {
+	if entry, _ := GetEntryByID(job.JobKey); entry != nil {
 		return false
 	}
-	err := mainCron.AddJob(spec, job)
+
+	id, err := mainCron.AddJob(spec, job)
 	if err != nil {
-		beego.Error("AddJob: ", err.Error())
+		logzap.Ex(context.Background(), "Cron ", "AddJob error: %s", err.Error())
 		return false
 	}
-	//fmt.Println(job)
+
+	pool[job.JobKey] = id
+	// fmt.Println("id: ", id)
 	return true
 }
 
-func RemoveJob(jobKey int) {
-	mainCron.RemoveJob(func(e *cron.Entry) bool {
-		if v, ok := e.Job.(*Job); ok {
-			if v.JobKey == jobKey {
-				return true
-			}
-		}
-		return false
-	})
-}
-
-func GetEntryById(jobKey int) *cron.Entry {
-	entries := mainCron.Entries()
-	for _, e := range entries {
-		if v, ok := e.Job.(*Job); ok {
-			if v.JobKey == jobKey {
-				return e
-			}
-		}
+func RemoveJob(jobKey int) error {
+	entryID, flag := pool[jobKey]
+	if !flag {
+		logzap.Ex(context.Background(), "Cron", "DeleteJob not found: %d", jobKey)
+		return fmt.Errorf("record not found: %d", jobKey)
 	}
+
+	mainCron.Remove(entryID)
+	delete(pool, jobKey)
 	return nil
 }
 
-func GetEntries(size int) []*cron.Entry {
+func GetEntryByID(jobKey int) (*cron.Entry, error) {
+	entryID, flag := pool[jobKey]
+	if !flag {
+		logzap.Ex(context.Background(), "Cron", "DeleteJob not found: %d", jobKey)
+		return nil, fmt.Errorf("record not found: %d", jobKey)
+	}
+
+	e := mainCron.Entry(entryID)
+	return &e, nil
+}
+
+func GetEntries(size int) []cron.Entry {
 	ret := mainCron.Entries()
 	if len(ret) > size {
 		return ret[:size]

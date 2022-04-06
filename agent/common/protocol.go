@@ -5,7 +5,7 @@
 ** @Last Modified by:  george hao
 ** @Last Modified time: 2018-11-29 11:14
 *************************************************************/
-package common2
+package common
 
 //配置开始 注释查看配置文件
 type Conf struct {

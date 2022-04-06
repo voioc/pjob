@@ -142,7 +142,7 @@ func (s *TaskLogService) LogDelTaskID(ids interface{}) error {
 
 func (s *TaskLogService) TaskLogFunc(job *worker.Job, result *worker.JobResult) int {
 	log := model.TaskLog{
-		TaskID:      job.ID,
+		TaskID:      job.TaskID,
 		ServerID:    job.ServerID,
 		ServerName:  job.ServerName,
 		Output:      result.OutMsg,

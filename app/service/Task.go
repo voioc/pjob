@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
+	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/worker"
 )
 
@@ -162,8 +163,8 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 			}
 		}
 
-		job.PrefixFunc = func(serverID int) bool {
-			return ServerS(s.C).Probe(serverID)
+		job.PrefixFunc = func(job *worker.Job, count int) bool {
+			return ServerS(s.C).Probe(job, count)
 		}
 
 		// 设置回调函数
@@ -182,8 +183,9 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 			job.Concurrent = true
 		}
 
+		sid, _ := strconv.Atoi(serverID)
+		job.JobKey = libs.JobKey(task.ID, sid)
 		job.ServerName = server.ServerName
-
 		jobs = append(jobs, job)
 	}
 
@@ -200,10 +202,10 @@ func (s *TaskService) Loading() {
 	for _, task := range list {
 		// 创建定时Job
 		jobs, _ := s.CreateJob(task)
-
 		// 开启任务
 		for _, job := range jobs {
 			if worker.AddJob(task.CronSpec, job) {
+				fmt.Println(job)
 				// task.Status = 1
 				// // task.Update()
 				// if err := model.Update(task.ID, &task); err != nil {

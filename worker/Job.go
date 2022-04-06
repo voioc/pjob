@@ -1,7 +1,7 @@
 package worker
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"net"
 	"net/rpc"
@@ -12,16 +12,14 @@ import (
 
 	"github.com/astaxie/beego/logs"
 	"github.com/voioc/cjob/app/model"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/coco/logzap"
 
 	"strconv"
-	"strings"
 )
 
 type Job struct {
-	JobKey      int // jobId = id*10000+serverId
-	ID          int // taskID
+	JobKey int // jobId = id*10000+serverId
+	// ID          int // taskID id*10000+serverId
 	TaskID      int
 	TaskName    string
 	LogID       int                            // 日志记录ID
@@ -30,7 +28,7 @@ type Job struct {
 	ServerType  int                            // 执行器类型，1-ssh 2-telnet 3-agent
 	Name        string                         // 任务名称
 	Task        *model.Task                    // 任务对象
-	PrefixFunc  func(int) bool                 // 任务执行前的服务器探活
+	PrefixFunc  func(*Job, int) bool           // 任务执行前的执行策略检查以及服务器探活检测
 	RunFunc     func(time.Duration) *JobResult // 执行函数
 	SuffixFunc  func(*Job, *JobResult)         // 任务执行完成
 	Timeout     int                            // 超时时间:秒
@@ -48,8 +46,11 @@ func (j *Job) GetName() string {
 	return j.Name
 }
 
-func (j *Job) GetID() int {
-	return j.ID
+func (j *Job) GetJobKey() int {
+	return j.JobKey
+}
+func (j *Job) GetTaskID() int {
+	return j.TaskID
 }
 
 func (j *Job) GetLogID() int {
@@ -94,6 +95,8 @@ func (j *Job) agentRun() (reply *JobResult) {
 }
 
 func (j *Job) Run() {
+	ctx := context.Background()
+
 	// 执行策略 1 同时执行 2 轮询
 	if j.ServerType == 2 {
 		if !PollServer(j) {
@@ -104,13 +107,13 @@ func (j *Job) Run() {
 	}
 
 	if !j.Concurrent && j.Status > 0 {
-		logzap.Wx(nil, "Worker", fmt.Sprintf("任务[%d]上一次执行尚未结束，本次被忽略。", j.JobKey))
+		logzap.Wx(ctx, "Worker", fmt.Sprintf("任务[%d]上一次执行尚未结束，本次被忽略。", j.JobKey))
 		return
 	}
 
 	defer func() {
 		if err := recover(); err != nil {
-			logzap.Ex(nil, "Worker", "%+v\n", string(debug.Stack()))
+			logzap.Ex(ctx, "Worker", "%+v\n", string(debug.Stack()))
 		}
 	}()
 
@@ -121,7 +124,7 @@ func (j *Job) Run() {
 		}()
 	}
 
-	fmt.Println(fmt.Sprintf("开始执行任务: %d", j.JobKey))
+	fmt.Printf("开始执行任务: %d \n", j.JobKey)
 
 	j.Status++
 	defer func() {
@@ -149,7 +152,7 @@ func (j *Job) Run() {
 	// 	j.LogID = j.LogFunc(jobResult, j.StartAt)
 	// }
 
-	ut := time.Now().Sub(j.StartAt) / time.Millisecond
+	ut := time.Since(j.StartAt) / time.Millisecond
 	j.ProcessTime = ut
 
 	if j.SuffixFunc != nil {
@@ -345,202 +348,183 @@ func SetCounter(key string) {
 	}
 }
 
-func NewJobFromTask(task *model.Task) ([]*Job, error) {
-	if task.ID < 1 {
-		return nil, fmt.Errorf("ToJob: 缺少id")
-	}
+// func NewJobFromTask(task *model.Task) ([]*Job, error) {
+// 	if task.ID < 1 {
+// 		return nil, fmt.Errorf("ToJob: 缺少id")
+// 	}
 
-	if task.ServerIDs == "" {
-		return nil, fmt.Errorf("任务执行失败，找不到执行的服务器")
-	}
+// 	if task.ServerIDs == "" {
+// 		return nil, fmt.Errorf("任务执行失败，找不到执行的服务器")
+// 	}
 
-	TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
-	jobArr := make([]*Job, 0)
-	for _, server_id := range TaskServerIdsArr {
-		if server_id == "0" {
-			//本地执行
-			job := NewCommandJob(task.ID, 0, task.TaskName, task.Command)
-			// job.Task = task
-			job.Concurrent = false
-			if task.Concurrent == 1 {
-				job.Concurrent = true
-			}
-			// job.Concurrent = task.Concurrent == 1
-			job.ServerID = 0
-			job.ServerName = "本地服务器"
-			jobArr = append(jobArr, job)
-		} else {
-			server_id_int, _ := strconv.Atoi(server_id)
-			// 远程执行
-			// server, _ := model.TaskServerGetById(server_id_int)
-			server := model.TaskServer{}
-			if err := model.DataByID(&server, server_id_int); err != nil {
-				fmt.Println(err.Error())
-			}
+// 	TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
+// 	jobArr := make([]*Job, 0)
+// 	for _, server_id := range TaskServerIdsArr {
+// 		if server_id == "0" {
+// 			//本地执行
+// 			job := NewCommandJob(task.ID, 0, task.TaskName, task.Command)
+// 			// job.Task = task
+// 			job.Concurrent = false
+// 			if task.Concurrent == 1 {
+// 				job.Concurrent = true
+// 			}
+// 			// job.Concurrent = task.Concurrent == 1
+// 			job.ServerID = 0
+// 			job.ServerName = "本地服务器"
+// 			jobArr = append(jobArr, job)
+// 		} else {
+// 			server_id_int, _ := strconv.Atoi(server_id)
+// 			// 远程执行
+// 			// server, _ := model.TaskServerGetById(server_id_int)
+// 			server := model.TaskServer{}
+// 			if err := model.DataByID(&server, server_id_int); err != nil {
+// 				fmt.Println(err.Error())
+// 			}
 
-			if server.Status == 2 {
-				fmt.Println("服务器已禁用")
-				continue
-			}
+// 			if server.Status == 2 {
+// 				fmt.Println("服务器已禁用")
+// 				continue
+// 			}
 
-			if server.ConnectionType == 0 { // 0 ssh 1 telnet
-				if server.Type == 0 { // 0 密码 1 私钥
-					// 密码验证登录服务器
-					job := RemoteCommandJobByPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
-					// job.Task = task
-					job.Concurrent = false
-					if task.Concurrent == 1 {
-						job.Concurrent = true
-					}
-					//job.Concurrent = task.Concurrent == 1
-					// job.ServerId = server_id_int
-					job.ServerName = server.ServerName
-					jobArr = append(jobArr, job)
-				} else {
-					job := RemoteCommandJob(task.ID, server_id_int, task.TaskName, task.Command, &server)
-					// job.Task = task
-					job.Concurrent = false
-					if task.Concurrent == 1 {
-						job.Concurrent = true
-					}
-					//job.Concurrent = task.Concurrent == 1
-					// job.ServerId = server_id_int
-					job.ServerName = server.ServerName
-					jobArr = append(jobArr, job)
-				}
-			} else if server.ConnectionType == 1 {
-				if server.Type == 0 {
-					//密码验证登录服务器
-					job := RemoteCommandJobByTelnetPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
-					// job.Task = task
-					job.Concurrent = false
-					if task.Concurrent == 1 {
-						job.Concurrent = true
-					}
-					//job.Concurrent = task.Concurrent == 1
-					// job.ServerId = server_id_int
-					job.ServerName = server.ServerName
-					jobArr = append(jobArr, job)
-				}
-			} else if server.ConnectionType == 2 {
-				//密码验证登录服务器
-				job := RemoteCommandJobByAgentPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
-				// job.Task = task
-				job.Concurrent = false
-				if task.Concurrent == 1 {
-					job.Concurrent = true
-				}
-				//job.Concurrent = task.Concurrent == 1
-				// job.ServerId = server_id_int
-				job.ServerName = server.ServerName
-				jobArr = append(jobArr, job)
+// 			if server.ConnectionType == 0 { // 0 ssh 1 telnet
+// 				if server.Type == 0 { // 0 密码 1 私钥
+// 					// 密码验证登录服务器
+// 					job := RemoteCommandJobByPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
+// 					// job.Task = task
+// 					job.Concurrent = false
+// 					if task.Concurrent == 1 {
+// 						job.Concurrent = true
+// 					}
+// 					//job.Concurrent = task.Concurrent == 1
+// 					// job.ServerId = server_id_int
+// 					job.ServerName = server.ServerName
+// 					jobArr = append(jobArr, job)
+// 				} else {
+// 					job := RemoteCommandJob(task.ID, server_id_int, task.TaskName, task.Command, &server)
+// 					// job.Task = task
+// 					job.Concurrent = false
+// 					if task.Concurrent == 1 {
+// 						job.Concurrent = true
+// 					}
+// 					//job.Concurrent = task.Concurrent == 1
+// 					// job.ServerId = server_id_int
+// 					job.ServerName = server.ServerName
+// 					jobArr = append(jobArr, job)
+// 				}
+// 			} else if server.ConnectionType == 1 {
+// 				if server.Type == 0 {
+// 					//密码验证登录服务器
+// 					job := RemoteCommandJobByTelnetPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
+// 					// job.Task = task
+// 					job.Concurrent = false
+// 					if task.Concurrent == 1 {
+// 						job.Concurrent = true
+// 					}
+// 					//job.Concurrent = task.Concurrent == 1
+// 					// job.ServerId = server_id_int
+// 					job.ServerName = server.ServerName
+// 					jobArr = append(jobArr, job)
+// 				}
+// 			} else if server.ConnectionType == 2 {
+// 				//密码验证登录服务器
+// 				job := RemoteCommandJobByAgentPassword(task.ID, server_id_int, task.TaskName, task.Command, &server)
+// 				// job.Task = task
+// 				job.Concurrent = false
+// 				if task.Concurrent == 1 {
+// 					job.Concurrent = true
+// 				}
+// 				//job.Concurrent = task.Concurrent == 1
+// 				// job.ServerId = server_id_int
+// 				job.ServerName = server.ServerName
+// 				jobArr = append(jobArr, job)
 
-			}
-		}
-	}
+// 			}
+// 		}
+// 	}
 
-	return jobArr, nil
-}
+// 	return jobArr, nil
+// }
 
 type RpcResult struct {
 	Status  int
 	Message string
 }
 
-func TestServer(server *model.TaskServer) error {
-	if server.ConnectionType == 0 {
-		switch server.Type {
-		case 0:
-			//密码登录
-			return libs.RemoteCommandByPassword(server)
-		case 1:
-			//密钥登录
-			return libs.RemoteCommandByKey(server)
-		default:
-			return errors.New("未知的登录方式")
+// func TestServer(server *model.TaskServer) error {
+// 	if server.ConnectionType == 0 {
+// 		switch server.Type {
+// 		case 0:
+// 			//密码登录
+// 			return libs.RemoteCommandByPassword(server)
+// 		case 1:
+// 			//密钥登录
+// 			return libs.RemoteCommandByKey(server)
+// 		default:
+// 			return errors.New("未知的登录方式")
 
-		}
-	} else if server.ConnectionType == 1 {
-		if server.Type == 0 {
-			//密码登录]
-			return libs.RemoteCommandByTelnetPassword(server)
-		} else {
-			return errors.New("Telnet方式暂不支持密钥登陆！")
-		}
+// 		}
+// 	} else if server.ConnectionType == 1 {
+// 		if server.Type == 0 {
+// 			//密码登录]
+// 			return libs.RemoteCommandByTelnetPassword(server)
+// 		} else {
+// 			return errors.New("Telnet方式暂不支持密钥登陆！")
+// 		}
 
-	} else if server.ConnectionType == 2 {
-		return libs.RemoteAgent(server)
-	}
+// 	} else if server.ConnectionType == 2 {
+// 		return libs.RemoteAgent(server)
+// 	}
 
-	return errors.New("未知错误")
-}
+// 	return errors.New("未知错误")
+// }
 
 func PollServer(j *Job) bool {
-	//判断是否是当前执行器执行
-	TaskServerIdsArr := strings.Split(j.Task.ServerIDs, ",")
-	num := len(TaskServerIdsArr)
-
-	if num == 0 {
-		return false
-	}
-
+	// 判断是否是当前执行器执行
 	count := GetCounter(strconv.Itoa(j.TaskID))
-	index := count % num
-	pollServerId, _ := strconv.Atoi(TaskServerIdsArr[index])
-
-	if j.ServerID != pollServerId {
-		return false
-	}
-
-	//本地服务器
-	if pollServerId == 0 {
-		return true
-	}
-
-	return j.PrefixFunc(j.ServerID)
+	return j.PrefixFunc(j, count)
 }
 
-// 冗余代码
-type adminInfo struct {
-	Id       int
-	Email    string
-	Phone    string
-	Dingtalk string
-	Wechat   string
-	RealName string
-}
+// // 冗余代码
+// type adminInfo struct {
+// 	Id       int
+// 	Email    string
+// 	Phone    string
+// 	Dingtalk string
+// 	Wechat   string
+// 	RealName string
+// }
 
-func AllAdminInfo(adminIds string) []*adminInfo {
-	Filters := make([]interface{}, 0)
-	Filters = append(Filters, "status", 1)
-	//Filters = append(Filters, "id__gt", 1)
-	var notifyUserIds []int
-	if adminIds != "0" && adminIds != "" {
-		notifyUserIdsStr := strings.Split(adminIds, ",")
-		for _, v := range notifyUserIdsStr {
-			i, _ := strconv.Atoi(v)
-			notifyUserIds = append(notifyUserIds, i)
-		}
-		Filters = append(Filters, "id__in", notifyUserIds)
-	}
-	// Result, _ := model.AdminGetList(1, 1000, Filters...)
-	Result := make([]model.Admin, 0)
-	if err := model.List(&Result, 1, 1000, Filters...); err != nil {
-		fmt.Println(err.Error())
-	}
+// func AllAdminInfo(adminIds string) []*adminInfo {
+// 	Filters := make([]interface{}, 0)
+// 	Filters = append(Filters, "status", 1)
+// 	//Filters = append(Filters, "id__gt", 1)
+// 	var notifyUserIds []int
+// 	if adminIds != "0" && adminIds != "" {
+// 		notifyUserIdsStr := strings.Split(adminIds, ",")
+// 		for _, v := range notifyUserIdsStr {
+// 			i, _ := strconv.Atoi(v)
+// 			notifyUserIds = append(notifyUserIds, i)
+// 		}
+// 		Filters = append(Filters, "id__in", notifyUserIds)
+// 	}
+// 	// Result, _ := model.AdminGetList(1, 1000, Filters...)
+// 	Result := make([]model.Admin, 0)
+// 	if err := model.List(&Result, 1, 1000, Filters...); err != nil {
+// 		fmt.Println(err.Error())
+// 	}
 
-	adminInfos := make([]*adminInfo, 0)
-	for _, v := range Result {
-		ai := adminInfo{
-			Id:       v.ID,
-			Email:    v.Email,
-			Phone:    v.Phone,
-			Dingtalk: v.Dingtalk,
-			Wechat:   v.Wechat,
-			RealName: v.RealName,
-		}
-		adminInfos = append(adminInfos, &ai)
-	}
+// 	adminInfos := make([]*adminInfo, 0)
+// 	for _, v := range Result {
+// 		ai := adminInfo{
+// 			Id:       v.ID,
+// 			Email:    v.Email,
+// 			Phone:    v.Phone,
+// 			Dingtalk: v.Dingtalk,
+// 			Wechat:   v.Wechat,
+// 			RealName: v.RealName,
+// 		}
+// 		adminInfos = append(adminInfos, &ai)
+// 	}
 
-	return adminInfos
-}
+// 	return adminInfos
+// }

@@ -7,9 +7,7 @@
 *************************************************************/
 package main
 
-import "github.com/voioc/cjob/app/model"
-
 func main() {
 
-	model.TaskTotalRunNum()
+	// model.TaskTotalRunNum()
 }

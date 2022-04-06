@@ -10,10 +10,10 @@ package main
 import (
 	"fmt"
 
+	_ "github.com/voioc/cjob/init"
+
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
-	_ "github.com/voioc/cjob/build"
-
 	"github.com/voioc/cjob/app/service"
 
 	"github.com/voioc/cjob/routers"
@@ -28,7 +28,7 @@ func main() {
 	logzap.InitZap() // 初始化日志组件
 	// worker.InitJobs()
 
-	service.TaskS(&gin.Context{}).Loading()
+	// service.TaskS(&gin.Context{}).Loading()
 
 	r := gin.New()
 	// pprof.Register(r)
@@ -93,6 +93,7 @@ func main() {
 	routers.InitRouter(r)
 
 	fmt.Println("The service is running...")
+	service.TaskS(&gin.Context{}).Loading()
 	endless.ListenAndServe(":8001", r)
 
 	// beego.Run()

@@ -595,7 +595,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := worker.NewJobFromTask(&task)
+	jobArr, err := service.TaskS(c).CreateJob(&task) // worker.NewJobFromTask(&task)
 
 	if err != nil {
 		// self.ajaxMsg("创建任务失败", MSG_ERR)
@@ -660,7 +660,7 @@ func (self *TaskController) AjaxRun(c *gin.Context) {
 		return
 	}
 
-	jobArr, err := worker.NewJobFromTask(&task)
+	jobArr, err := service.TaskS(c).CreateJob(&task) //worker.NewJobFromTask(&task)
 	if err != nil {
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 		return
@@ -694,7 +694,7 @@ func (self *TaskController) AjaxBatchStart(c *gin.Context) {
 		if err := model.DataByID(&task, id); err != nil {
 			fmt.Println(err.Error())
 		} else {
-			jobArr, err := worker.NewJobFromTask(&task)
+			jobArr, err := service.TaskS(c).CreateJob(&task) // worker.NewJobFromTask(&task)
 			if err == nil {
 				for _, job := range jobArr {
 					worker.AddJob(task.CronSpec, job)
@@ -1042,14 +1042,14 @@ func (self *TaskController) Table(c *gin.Context) {
 		row["execute_times"] = v.ExecuteTimes
 		row["cron_spec"] = v.CronSpec
 
-		TaskServerIdsArr := strings.Split(v.ServerIDs, ",")
-		serverId := 0
-		if len(TaskServerIdsArr) > 0 {
-			serverId, _ = strconv.Atoi(TaskServerIdsArr[0])
+		TaskServerIDsArr := strings.Split(v.ServerIDs, ",")
+		serverID := 0
+		if len(TaskServerIDsArr) > 0 {
+			serverID, _ = strconv.Atoi(TaskServerIDsArr[0])
 		}
 
-		jobskey := libs.JobKey(v.ID, serverId)
-		e := worker.GetEntryById(jobskey)
+		jobskey := libs.JobKey(v.ID, serverID)
+		e, _ := worker.GetEntryByID(jobskey)
 
 		if e != nil {
 			row["next_time"] = e.Next.Format("2006-01-02 15:04:05")

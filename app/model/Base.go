@@ -74,6 +74,8 @@ func ListCount(dataModel interface{}, filters ...interface{}) (int64, error) {
 			// 如果是数组则单独筛出来
 			if _, flag := filters[k+1].([]int); flag {
 				in[filters[k].(string)] = filters[k+1]
+			} else if strings.Trim(filters[k].(string), "") == "order" {
+				continue
 			} else {
 				condition = fmt.Sprintf("%s and %s %v", condition, filters[k].(string), filters[k+1])
 			}

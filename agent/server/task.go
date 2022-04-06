@@ -9,8 +9,8 @@ package server
 
 import (
 	"github.com/astaxie/beego/logs"
-	"github.com/voioc/cjob/app/jobs"
 	"github.com/voioc/cjob/app/model"
+	"github.com/voioc/cjob/worker"
 )
 
 type RpcTask struct {
@@ -22,7 +22,7 @@ type RpcResult struct {
 }
 
 //Execute once
-func (r *RpcTask) RunTask(task *model.Task, Result *jobs.JobResult) error {
+func (r *RpcTask) RunTask(task *model.Task, Result *worker.JobResult) error {
 	server_id := C.ServerId
 	job, err := RestJobFromTask(task, server_id)
 	if err != nil {

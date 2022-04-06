@@ -39,14 +39,14 @@ func runCmdWithTimeout(cmd *exec.Cmd, timeout time.Duration) (error, bool) {
 	}
 }
 
-func NewCommandJob(id int, serverID int, name string, command string) *Job {
+func NewCommandJob(TaskID int, serverID int, name string, command string) *Job {
 	job := &Job{
-		ID:       id,
+		TaskID:   TaskID,
 		Name:     name,
 		ServerID: serverID,
 	}
 
-	job.JobKey = libs.JobKey(id, serverID)
+	// job.JobKey = libs.JobKey(id, serverID)
 	job.RunFunc = func(timeout time.Duration) (jobresult *JobResult) {
 		bufOut := new(bytes.Buffer)
 		bufErr := new(bytes.Buffer)
@@ -79,14 +79,14 @@ func NewCommandJob(id int, serverID int, name string, command string) *Job {
 }
 
 //远程执行任务 密钥验证
-func RemoteCommandJob(id, serverID int, name, command string, servers *model.TaskServer) *Job {
+func RemoteCommandJob(TaskID, serverID int, name, command string, servers *model.TaskServer) *Job {
 	job := &Job{
-		ID:       id,
+		TaskID:   TaskID,
 		Name:     name,
 		ServerID: serverID,
 	}
 
-	job.JobKey = libs.JobKey(id, serverID)
+	// job.JobKey = libs.JobKey(id, serverID)
 
 	job.RunFunc = func(timeout time.Duration) (jobresult *JobResult) {
 		jobresult = new(JobResult)
@@ -173,12 +173,13 @@ func RemoteCommandJobByPassword(id int, serverID int, name string, command strin
 	)
 
 	job := &Job{
-		ID:         id,
+		// ID:         id,
 		Name:       name,
 		ServerID:   serverID,
 		ServerType: servers.ConnectionType,
 	}
-	job.JobKey = libs.JobKey(id, serverID)
+
+	// job.JobKey = libs.JobKey(id, serverID)
 	job.RunFunc = func(timeout time.Duration) (jobresult *JobResult) {
 		jobresult = new(JobResult)
 		jobresult.OutMsg = ""
@@ -233,15 +234,15 @@ func RemoteCommandJobByPassword(id int, serverID int, name string, command strin
 	return job
 }
 
-func RemoteCommandJobByTelnetPassword(id, serverID int, name, command string, servers *model.TaskServer) *Job {
+func RemoteCommandJobByTelnetPassword(TaskID, serverID int, name, command string, servers *model.TaskServer) *Job {
 
 	job := &Job{
-		ID:       id,
+		TaskID:   TaskID,
 		Name:     name,
 		ServerID: serverID,
 	}
 
-	job.JobKey = libs.JobKey(id, serverID)
+	// job.JobKey = libs.JobKey(id, serverID)
 	job.RunFunc = func(timeout time.Duration) (jobresult *JobResult) {
 		jobresult = new(JobResult)
 		jobresult.OutMsg = ""
@@ -329,16 +330,16 @@ func RemoteCommandJobByTelnetPassword(id, serverID int, name, command string, se
 	return job
 }
 
-func RemoteCommandJobByAgentPassword(id int, serverID int, name string, command string, servers *model.TaskServer) *Job {
+func RemoteCommandJobByAgentPassword(TaskID int, serverID int, name string, command string, servers *model.TaskServer) *Job {
 
 	job := &Job{
-		ID:         id,
+		TaskID:     TaskID,
 		Name:       name,
 		ServerType: servers.ConnectionType,
 		ServerID:   serverID,
 	}
 
-	job.JobKey = libs.JobKey(id, serverID)
+	// job.JobKey = libs.JobKey(id, serverID)
 	job.RunFunc = func(timeout time.Duration) *JobResult {
 		return new(JobResult)
 	}

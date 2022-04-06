@@ -1,5 +1,6 @@
-[app]
+[server]
     env = "dev"
+    port = "8001"
 
 [log]
     access = "/tmp/access.log"
@@ -22,11 +23,3 @@
     password = ""
     expire= 300
     flush=300
-    
-[geo]
-    amap_key = "99b7c33c53906ee93dc250e3d11bbb41"
-    ip138_token = "c5c250dbc1fb1bd08b1d1a8a3c0074e2"
-[riot]
-    amount = 2
-    gse ="data/riot/dict"
-    

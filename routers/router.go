@@ -43,7 +43,7 @@ func InitRouter(engine *gin.Engine) {
 		},
 	})
 
-	engine.LoadHTMLGlob("views/**/*")
+	engine.LoadHTMLGlob("app/views/**/*")
 
 	// engine.LoadHTMLFiles(
 	// 	"views/public/help.html",

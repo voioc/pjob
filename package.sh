@@ -116,7 +116,8 @@ init() {
     GIT_COMMIT_ID=`git_latest_commit`
     LDFLAGS="-w -X 'main.AppVersion=${VERSION}' -X 'main.BuildDate=`date '+%Y-%m-%d %H:%M:%S'`' -X 'main.GitCommit=${GIT_COMMIT_ID}'"
 
-    PACKAGE_DIR=${BINARY_NAME}-package
+    # PACKAGE_DIR=${BINARY_NAME}-package
+    PACKAGE_DIR=bin
     BUILD_DIR=${BINARY_NAME}-build
 
     if [[ -d ${BUILD_DIR} ]];then
@@ -205,9 +206,9 @@ run() {
 }
 
 package_ppgo_job() {
-    BINARY_NAME='PPGo_Job'
+    BINARY_NAME='job'
     MAIN_FILE="./main.go"
-    INCLUDE_FILE=("conf" "static" "views" "ppgo_job2.sql")
+    INCLUDE_FILE=("config" "app/static" "app/views" "ppgo_job2.sql")
     INCLUDE_LINUX_FILE=("run.sh")
     INCLUDE_DARWIN_FILE=("run.sh")
     INCLUDE_WINDOWS_FILE=("run.bat")

@@ -43,7 +43,7 @@ func InitRouter(engine *gin.Engine) {
 		},
 	})
 
-	engine.LoadHTMLGlob("app/views/**/*")
+	engine.LoadHTMLGlob("views/**/*")
 
 	// engine.LoadHTMLFiles(
 	// 	"views/public/help.html",
@@ -95,7 +95,7 @@ func InitRouter(engine *gin.Engine) {
 	engine.GET("/", loginC.Login)
 	engine.GET("/login", loginC.Login)
 	engine.POST("/login_in", loginC.LoginIn)
-	engine.POST("/login_out", loginC.LoginOut)
+	engine.GET("/login_out", loginC.LoginOut)
 
 	r := engine.Group("").Use(middleware.Auth())
 	{

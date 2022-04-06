@@ -18,6 +18,11 @@ func Auth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tmpCookie, _ := c.Cookie("job_cookie")
 		cookie := strings.Split(tmpCookie, "|")
+		if len(cookie) < 2 {
+			c.JSON(http.StatusOK, common.Error(c, common.ERROR_AUTH))
+			c.Abort()
+			return
+		}
 
 		key := "123456781234567812345678" // 16,24,32 位的密钥
 		ciphertext := cookie[0]

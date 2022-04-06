@@ -33,7 +33,7 @@ func main() {
 	r := gin.New()
 
 	//加载静态资源文件路径
-	r.Static("/static", "app/static")
+	r.Static("/static", "./static")
 
 	// r.LoadHTMLFiles("templates/index.html")
 	// r.GET("/detail", func(c *gin.Context) {

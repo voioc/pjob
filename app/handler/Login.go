@@ -85,7 +85,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	// fmt.Println("原文：", plaintext)
 	ciphertext, nonce := utils.AESGCMEncrypt(plaintext, key)
 
-	c.SetCookie("job_cookie", ciphertext+"|"+nonce, 7*86400, "/", "127.0.0.1", false, true)
+	c.SetCookie("job_cookie", ciphertext+"|"+nonce, 7*86400, "/", "", false, true)
 
 	// 			self.ajaxMsg("登录成功", MSG_OK)
 	// 		}
@@ -98,7 +98,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 //登出
 func (self *LoginController) LoginOut(c *gin.Context) {
 	c.SetCookie("job_cookie", "", -1, "/", "", false, true)
-	c.Redirect(302, "/home/start")
+	c.Redirect(302, "/login")
 	// self.Ctx.SetCookie("auth", "")
 	// self.redirect(beego.URLFor("LoginController.Login"))
 }

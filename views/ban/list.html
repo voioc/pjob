@@ -1,0 +1,154 @@
+{{ define "ban/list.html" }}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>{{.siteName}}</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <link rel="stylesheet" href="/static/admin/css/app.css?t=2">
+    <link rel="stylesheet" href="/static/font-awesome/css/font-awesome.min.css" media="all">
+    <script src="/static/layui/layui.js"></script>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin" style="padding-left: 20px;">
+    <div class="layui-row" style="margin-top: 20px;">
+        <div class="layui-col-xs6">
+            <a class="layui-btn layui-btn-sm" data-type="tabAdd" id="tabAdd" href="javascript:void(0)">新增</a>
+        </div>
+        <div class="layui-col-xs6 search_text">
+            <form class="layui-form" action="" onsubmit="javascript:return false;">
+                <div class="demoTable">
+                    <div class="layui-inline" style="width: 40%">
+                        <input class="layui-input" name="code" id="code" autocomplete="off" placeholder="禁用命令" >
+                    </div>
+                    <button class="layui-btn layui-btn-sm" data-type="reload">查询</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <table class="layui-hide" id="table_list" lay-filter="table_filter">
+    </table>
+
+    <script type="text/html" id="bar">
+        <!--  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a> -->
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+
+    </script>
+</div>
+<script>
+
+    layui.use(['table','form','element'], function(){
+        var table = layui.table;
+        var form = layui.form;
+        var element = layui.element;
+        var error_info = "{{.flash.error}}";
+        if(error_info){
+            layer.msg(error_info,{icon: 2,shade:0.3},function () {
+                window.history.go(-1)
+            })
+            return;
+        }
+        //方法级渲染
+        table.render({
+            elem: '#table_list'
+            ,url: '{{.uri}}/ban/table'
+            ,size: 'sm' //小尺寸的表格
+            ,cols: [[
+                // {checkbox: true, fixed: true},
+                {field:'id', title: 'ID', align:'center',sort: true, width:150}
+                ,{field:'code',title: '禁用命令'}
+                ,{field:'create_time', title: '创建时间'}
+                ,{fixed: 'right', width:160, align:'center', toolbar: '#bar'}
+            ]]
+            ,parseData: function (res) { //将原始数据解析成 table 组件所规定的数据
+                return {
+                    "code": res.code, //解析接口状态
+                    "msg": res.msg, //解析提示文本
+                    "count": res.ext.total, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            }
+            ,id: 'listReload'
+            ,page: true
+            ,height: "full-130"
+        });
+
+        var $ = layui.$, active = {
+            reload: function(){
+                table.reload('listReload', {
+                    where: {
+                        code: $('#code').val(),
+                    },
+                    page: 1
+                });
+            }
+        };
+
+
+        $("#tabAdd").on("click",function() {
+            layer.open({
+                type: 2,
+                shade: 0.3,
+                id:1,
+                title:"新增禁用命令",
+                content: '{{.uri}}/ban/add',
+                area:['500px','250px'],
+                cancel:function(index){
+                    window.location.reload();
+                    layer.close(index);
+                }
+            });
+        })
+
+        //监听工具条
+        table.on('tool(table_filter)', function(obj){
+            var data = obj.data;
+            if(obj.event === 'edit'){
+                layer.open({
+                    type: 2,
+                    shade: 0.3,
+                    id:1,
+                    title:"编辑禁用命令",
+                    content: '{{.uri}}/ban/edit?id='+data.id,
+                    area:['500px','250px'],
+                    cancel:function(index){
+                        window.location.reload();
+                        layer.close(index);
+                    }
+                });
+            } else if(obj.event === 'del'){
+                layer.confirm('真的删除【'+data.code+'】命令么', function(index){
+                    var jsData = {'id':data.id,'status':status}
+                    $.post('{{.uri}}/ban/del', jsData, function (out) {
+                        if (out.code == 0) {
+                            layer.alert(out.msg, {icon: 1},function(index){
+                                layer.close(index);
+                                window.location.reload();
+                            });
+                        } else {
+                            layer.msg(out.msg)
+                        }
+                    }, "json");
+                    // obj.del();
+                    layer.close(index);
+                })
+
+            }else{
+                layer.msg('操作不存在');
+            }
+        });
+
+        $('.demoTable .layui-btn').on('click', function(){
+            var type = $(this).data('type');
+            active[type] ? active[type].call(this) : '';
+        });
+    });
+
+</script>
+</body>
+</html>
+{{ end }}

@@ -145,7 +145,7 @@ func (self *AuthController) AjaxDel(c *gin.Context) {
 	}
 
 	auth.ID = id
-	auth.Status = 0
+	auth.Status = 2 // 删除
 	if err := service.AuthS(c).Update(auth); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))

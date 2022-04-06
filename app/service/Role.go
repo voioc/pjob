@@ -130,6 +130,49 @@ func (s *RoleService) TaskGroups(uid int, roleIDs string) (string, string) {
 	return strings.Trim(serverGroups, ","), strings.Trim(taskGroups, ",")
 }
 
+func (s *RoleService) Resources(uid int, roleIDs string) ([]int, []int) {
+	if uid == 1 || roleIDs == "0" {
+		return []int{}, []int{}
+	}
+
+	filters := make([]interface{}, 0)
+	filters = append(filters, "status = ", 1)
+
+	RoleIdsArr := strings.Split(roleIDs, ",")
+
+	RoleIds := make([]int, 0)
+	for _, v := range RoleIdsArr {
+		id, _ := strconv.Atoi(v)
+		RoleIds = append(RoleIds, id)
+	}
+
+	filters = append(filters, "id", RoleIds)
+
+	// result, _ := s.RoleList(1, 1000, filters...)
+	result := make([]model.Role, 0)
+	if err := model.List(&result, 1, 1000, filters...); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	serverGroups := []int{}
+	taskGroups := []int{}
+	for _, v := range result {
+		for _, tid := range strings.Split(v.TaskGroupIDs, ",") {
+			tidInt, _ := strconv.Atoi(tid)
+			taskGroups = append(taskGroups, tidInt)
+		}
+		for _, sid := range strings.Split(v.ServerGroupIDs, ",") {
+			sidInt, _ := strconv.Atoi(sid)
+			serverGroups = append(serverGroups, sidInt)
+		}
+
+		// serverGroups += v.ServerGroupIDs + ","
+		// taskGroups += v.TaskGroupIDs + ","
+	}
+
+	return taskGroups, serverGroups
+}
+
 // func (s *RoleService) RoleByID(id int) (*model.Role, error) {
 // 	data := &model.Role{}
 

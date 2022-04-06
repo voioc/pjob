@@ -7,6 +7,10 @@
 ***********************************************/
 package model
 
+import (
+	"fmt"
+)
+
 type Admin struct {
 	ID        int    `xorm:"id pk" json:"id"`
 	LoginName string `xorm:"login_name" json:"login_name"`
@@ -35,14 +39,22 @@ func (a *Admin) TableName() string {
 // 	return orm.NewOrm().Insert(a)
 // }
 
-// func AdminGetByName(loginName string) (*Admin, error) {
-// 	a := new(Admin)
-// 	err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("login_name", loginName).One(a)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return a, nil
-// }
+func AdminGetByName(loginName string) (*Admin, error) {
+	a := new(Admin)
+	// err := orm.NewOrm().QueryTable(TableName("uc_admin")).Filter("login_name", loginName).One(a)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	if flag, err := GetDB().Where("login_name = ?", loginName).Get(a); !flag || err != nil {
+		msg := "用户不存在"
+		if err != nil {
+			msg = err.Error()
+		}
+		return nil, fmt.Errorf(msg)
+	}
+
+	return a, nil
+}
 
 // func AdminGetList(page, pageSize int, filters ...interface{}) ([]*Admin, int64) {
 // 	offset := (page - 1) * pageSize

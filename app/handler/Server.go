@@ -342,7 +342,7 @@ func (self *ServerController) AjaxDel(c *gin.Context) {
 	}
 
 	server.UpdatedAt = time.Now().Unix()
-	server.Status = 1
+	server.Status = 2
 	server.ID = id
 
 	// TODO 查询服务器是否用于定时任务

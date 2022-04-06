@@ -127,7 +127,7 @@ func (self *BanController) AjaxDel(c *gin.Context) {
 	}
 
 	ban.UpdatedAt = time.Now().Unix()
-	ban.Status = 1
+	ban.Status = 2
 
 	if err := model.Update(ban.ID, ban, true); err != nil { // ban.Update(); err != nil {
 		// self.ajaxMsg(err.Error(), MSG_ERR)

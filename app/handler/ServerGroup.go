@@ -116,14 +116,14 @@ func (self *ServerGroupController) AjaxDel(c *gin.Context) {
 		fmt.Println(err.Error())
 	}
 
-	group.Status = 0
+	group.Status = 2
 	group.ID = group_id
 	group.UpdatedAt = time.Now().Unix()
 
-	//TODO 如果分组下有服务器 需要处理
+	// TODO 如果分组下有服务器 需要处理
 	filters := make([]interface{}, 0)
 	filters = append(filters, "group_id =", group_id)
-	filters = append(filters, "status =", 0)
+	filters = append(filters, "status =", 1)
 	// _, n, _ := service.ServerS(c).ServerList(1, 1, filters...) // model.TaskServerGetList(1, 1, filters...)
 	count, err := model.ListCount(&model.ServerGroup{}, 1, 1, filters)
 	if err != nil {

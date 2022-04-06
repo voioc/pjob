@@ -126,7 +126,7 @@ func (self *GroupController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	group.Status = 0
+	group.Status = 2
 	group.ID = groupID
 	group.UpdatedAt = time.Now().Unix()
 	//TODO 如果分组下有任务 不处理

@@ -239,6 +239,7 @@ func (self *TaskController) Detail(c *gin.Context) {
 		"<font color='green'><i class='fa fa-check-square'></i> 运行中</font>",
 		"<font color='orange'><i class='fa fa-question-circle'></i> 待审核</font>",
 		"<font color='red'><i class='fa fa-times-circle'></i> 审核失败</font>",
+		"<font color='red'><i class='fa fa-minus-square'></i> 暂停</font>",
 	}
 
 	data["TextStatus"] = TextStatus[task.Status]
@@ -401,10 +402,10 @@ func (self *TaskController) Save(c *gin.Context) {
 
 		task.CreatedAt = time.Now().Unix()
 		task.UpdatedAt = time.Now().Unix()
-		task.Status = 2 //审核中
+		task.Status = 2 // 审核中
 
 		if uid == 1 {
-			task.Status = 0 //审核中,超级管理员不需要
+			task.Status = 4 // 审核通过,超级管理员不需要
 		}
 
 		if task.TaskName == "" || task.CronSpec == "" || task.Command == "" {
@@ -485,7 +486,7 @@ func (self *TaskController) Save(c *gin.Context) {
 	}
 
 	if uid == 1 {
-		task.Status = 0
+		task.Status = 4
 	}
 
 	if _, err := cron.Parse(task.CronSpec); err != nil {
@@ -520,14 +521,14 @@ func (self *TaskController) Audit(c *gin.Context) {
 	taskID, _ := strconv.Atoi(c.DefaultPostForm("id", ""))
 
 	// taskId, _ := self.GetInt("id")
-	if taskID == 0 {
+	if taskID == 3 {
 		// self.ajaxMsg("任务不存在", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "任务不存在"))
 		return
 	}
 
 	task := &model.Task{
-		Status:    0,
+		Status:    4,
 		UpdatedID: c.GetInt("uid"),
 		UpdatedAt: time.Now().Unix(),
 	}
@@ -584,7 +585,7 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 		return
 	}
 
-	if task.Status != 0 {
+	if task.Status != 4 {
 		msg := "任务状态有误"
 		if task.Status == 2 {
 			msg = "任务正在审核中,不能启动"
@@ -604,12 +605,14 @@ func (self *TaskController) AjaxStart(c *gin.Context) {
 	}
 
 	for _, job := range jobArr {
-		if worker.AddJob(task.CronSpec, job) {
-			task.Status = 1
-			if err := model.Update(taskID, task); err != nil {
-				fmt.Println(err.Error())
-			}
+		if !worker.AddJob(task.CronSpec, job) {
+			fmt.Printf("Add Job error: %+v", job)
 		}
+	}
+
+	task.Status = 1
+	if err := model.Update(taskID, task); err != nil {
+		fmt.Println(err.Error())
 	}
 
 	// self.ajaxMsg("", MSG_OK)
@@ -640,7 +643,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 		worker.RemoveJob(jobKey)
 	}
 
-	task.Status = 0
+	task.Status = 4
 	if err := model.Update(task.ID, &task, true); err != nil {
 		fmt.Println(err.Error())
 	}
@@ -743,7 +746,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 				worker.RemoveJob(jobKey)
 			}
 
-			task.Status = 0
+			task.Status = 4
 			if err := model.Update(task.ID, task); err != nil {
 				fmt.Println(err.Error())
 			}
@@ -787,7 +790,8 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 		}
 
 		// service.TaskS(c).Del([]int{id})
-		if err := model.Del(&model.Task{}, id); err != nil {
+		task.Status = 5
+		if err := model.Update(task.ID, &task); err != nil {
 			fmt.Println(err.Error())
 		}
 
@@ -894,7 +898,7 @@ func (self *TaskController) AjaxDel(c *gin.Context) {
 	uid := c.GetInt("uid")
 	task.UpdatedAt = time.Now().Unix()
 	task.UpdatedID = uid
-	task.Status = -1
+	task.Status = 5
 	task.ID = id
 
 	//TODO 查询服务器是否用于定时任务
@@ -968,10 +972,12 @@ func (self *TaskController) Table(c *gin.Context) {
 	taskName := strings.TrimSpace(c.DefaultQuery("task_name", ""))
 
 	StatusText := []string{
-		"<font color='red'><i class='fa fa-minus-square'></i></font>",
+		"<font color='black'><i class='fa fa-minus-square'></i></font>",
 		"<font color='green'><i class='fa fa-check-square'></i></font>",
 		"<font color='orange'><i class='fa fa-question-circle'></i></font>",
 		"<font color='red'><i class='fa fa-times-circle'></i></font>",
+		"<font color='red'><i class='fa fa-minus-square'></i></font>",
+		// "<font color='red'><i class='fa fa-times-circle'></i></font>",
 	}
 
 	uid := c.GetInt("uid")
@@ -986,7 +992,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		// 审核中，审核失败
 		filters = append(filters, "status", []int{2, 3})
 	} else {
-		filters = append(filters, "status", []int{0, 1})
+		filters = append(filters, "status", []int{1, 4})
 	}
 
 	// 搜索全部
@@ -1009,7 +1015,7 @@ func (self *TaskController) Table(c *gin.Context) {
 		filters = append(filters, "task_name LIKE %"+taskName+"%", " ")
 	}
 
-	filters = append(filters, "order", "field(status, 1, 2, 3, 0), id desc")
+	filters = append(filters, "order", "field(status, 1, 2, 3, 4), id desc")
 	// result, count, _ := service.TaskS(c).TaskGetList(page, pagesize, filters...) // model.TaskGetList(page, pagesize, filters...)
 	result := make([]model.Task, 0)
 	if err := model.List(&result, page, pagesize, filters...); err != nil {

@@ -23,7 +23,7 @@ func List(dataModel interface{}, page, pageSize int, filters ...interface{}) err
 
 	in := map[string]interface{}{}
 	order := "id asc"
-	condition := " 1 = 1 "
+	condition := "1=1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
 			// 如果是数组则单独筛出来
@@ -68,7 +68,7 @@ func ListCount(dataModel interface{}, filters ...interface{}) (int64, error) {
 	// data := make([]*model.Role, 0)
 
 	in := map[string]interface{}{}
-	condition := " 1 = 1 "
+	condition := " 1=1 "
 	if len(filters) > 0 {
 		for k := 0; k < len(filters); k += 2 {
 			// 如果是数组则单独筛出来

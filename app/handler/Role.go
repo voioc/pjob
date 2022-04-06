@@ -210,7 +210,7 @@ func (self *RoleController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	role.Status = 0
+	role.Status = 2
 	role.ID = id
 	role.UpdatedAt = time.Now().Unix()
 

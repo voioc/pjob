@@ -95,8 +95,9 @@ func InitRouter(engine *gin.Engine) {
 	engine.GET("/", loginC.Login)
 	engine.GET("/login", loginC.Login)
 	engine.POST("/login_in", loginC.LoginIn)
+	engine.POST("/login_out", loginC.LoginOut)
 
-	r := engine.Group("").Use(middleware.Menu())
+	r := engine.Group("").Use(middleware.Auth())
 	{
 		homeC := handler.HomeController{}
 		r.GET("/home", homeC.Index)

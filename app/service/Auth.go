@@ -40,7 +40,7 @@ func (s *AuthService) AuthList(page, pageSize int, filters ...interface{}) ([]*m
 		return nil, 0, err
 	}
 
-	if err := model.GetDB().Where(condition).Limit(pageSize, offset).Find(&data); err != nil {
+	if err := model.GetDB().Where(condition).OrderBy("sort asc").Limit(pageSize, offset).Find(&data); err != nil {
 		return nil, 0, err
 	}
 
@@ -92,6 +92,7 @@ func (s *AuthService) Menu(uid int) (map[string][]map[string]interface{}, error)
 	// 左侧导航栏
 	filters := make([]interface{}, 0)
 	filters = append(filters, "status = ", 1)
+	// filters = append(filters, "order", "sort asc")
 
 	if uid != 1 {
 		//普通管理员
@@ -133,7 +134,7 @@ func (s *AuthService) Menu(uid int) (map[string][]map[string]interface{}, error)
 			j++
 		}
 	}
-
+	// fmt.Println(list[:i])
 	data["SideMenu1"] = list[:i]  //一级菜单
 	data["SideMenu2"] = list2[:j] //二级菜单
 

@@ -38,6 +38,7 @@ func (self *HomeController) Index(c *gin.Context) {
 
 	uid := c.GetInt("uid")
 	menu, _ := service.AuthS(c).Menu(uid)
+	// fmt.Println(menu)
 	data["SideMenu1"] = menu["SideMenu1"]
 	data["SideMenu2"] = menu["SideMenu2"]
 
@@ -59,7 +60,8 @@ func (self *HomeController) Start(c *gin.Context) {
 	data := map[string]interface{}{}
 	// 总任务数量
 	// _, count := model.TaskGetList(1, 10)
-	_, count, err := service.TaskS(c).TaskGetList(1, 10)
+	// _, count, err := service.TaskS(c).TaskGetList(1, 10)
+	count, err := model.ListCount(&model.Task{})
 	// self.Data["totalJob"] = count
 	data["totalJob"] = count
 
@@ -137,7 +139,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	for k, v := range logs {
 		// task, err := service.TaskS(c).TaskByID(v.TaskID)
 		task := model.Task{}
-		if err := model.DataByID(task, v.TaskID); err != nil {
+		if err := model.DataByID(&task, v.TaskID); err != nil {
 			fmt.Println(err.Error())
 		}
 

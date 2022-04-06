@@ -221,7 +221,7 @@ func (self *AdminController) AjaxDel(c *gin.Context) {
 		return
 	}
 
-	Admin_status := 0
+	Admin_status := 2 // 禁用
 	if status == "enable" {
 		Admin_status = 1
 	}

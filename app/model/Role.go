@@ -21,7 +21,7 @@ type Role struct {
 }
 
 func (a *Role) TableName() string {
-	return TableName("uc_role")
+	return "pp_uc_role"
 }
 
 // func RoleGetList(page, pageSize int, filters ...interface{}) ([]*Role, int64) {

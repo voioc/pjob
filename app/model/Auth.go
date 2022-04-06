@@ -24,7 +24,7 @@ type Auth struct {
 }
 
 func (a *Auth) TableName() string {
-	return TableName("uc_auth")
+	return "pp_uc_auth"
 }
 
 // func AuthGetList(page, pageSize int, filters ...interface{}) ([]Auth, int64) {

@@ -16,7 +16,7 @@ type Ban struct {
 }
 
 func (t *Ban) TableName() string {
-	return TableName("task_ban")
+	return "pp_task_ban"
 }
 
 // func (t *Ban) Update(fields ...string) error {

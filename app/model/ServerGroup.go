@@ -19,7 +19,7 @@ type ServerGroup struct {
 }
 
 func (t *ServerGroup) TableName() string {
-	return TableName("task_server_group")
+	return "pp_task_server_group"
 }
 
 // func (t *ServerGroup) Update(fields ...string) error {

@@ -38,7 +38,7 @@ type Task struct {
 }
 
 func (t *Task) TableName() string {
-	return TableName("task")
+	return "pp_task"
 }
 
 // func (t *Task) Update(fields ...string) error {

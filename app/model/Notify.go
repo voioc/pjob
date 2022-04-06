@@ -7,8 +7,6 @@
 *************************************************************/
 package model
 
-import "github.com/astaxie/beego/orm"
-
 const (
 	NotifyTplTypeSystem  = "system"
 	NotifyTplTypeDefault = "default"
@@ -29,7 +27,7 @@ type NotifyTpl struct {
 }
 
 func (t *NotifyTpl) TableName() string {
-	return TableName("notify_tpl")
+	return "pp_notify_tpl"
 }
 
 // func (t *NotifyTpl) Update(fields ...string) error {
@@ -64,15 +62,15 @@ func (t *NotifyTpl) TableName() string {
 // 	return orm.NewOrm().Insert(obj)
 // }
 
-func NotifyTplGetByTplType(tpl_type int, typestr string) (NotifyTpl, error) {
-	var obj NotifyTpl
-	err := orm.NewOrm().QueryTable(TableName("notify_tpl")).Filter("type", typestr).Filter("tpl_type", tpl_type).Filter("status", 1).Limit(1).One(&obj)
-	if err != nil {
-		return obj, err
-	}
+// func NotifyTplGetByTplType(tpl_type int, typestr string) (NotifyTpl, error) {
+// 	var obj NotifyTpl
+// 	err := orm.NewOrm().QueryTable(TableName("notify_tpl")).Filter("type", typestr).Filter("tpl_type", tpl_type).Filter("status", 1).Limit(1).One(&obj)
+// 	if err != nil {
+// 		return obj, err
+// 	}
 
-	return obj, nil
-}
+// 	return obj, nil
+// }
 
 // func NotifyTplGetById(id int) (*NotifyTpl, error) {
 // 	obj := &NotifyTpl{

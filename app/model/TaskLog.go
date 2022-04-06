@@ -26,7 +26,7 @@ type TaskLog struct {
 var RunNumCache, _ = cache.NewCache("memory", `{"interval":60}`)
 
 func (t *TaskLog) TableName() string {
-	return TableName("task_log")
+	return "pp_task_log"
 }
 
 // var TaskLogFunc = func(job *worker.Job, result *worker.JobResult) int {

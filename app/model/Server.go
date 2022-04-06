@@ -27,7 +27,7 @@ type TaskServer struct {
 }
 
 func (t *TaskServer) TableName() string {
-	return TableName("task_server")
+	return "pp_task_server"
 }
 
 // func (t *TaskServer) Update(fields ...string) error {

@@ -12,7 +12,7 @@
 [db.main]
     driver = "mysql"
     dsn = [
-        "report_rw:A#^n5pbq2+kcDZ9@tcp(rm-2ze80066x5od03dc5co.mysql.rds.aliyuncs.com:3306)/pp_job?charset=utf8&loc=Local",
+        "root:123456@tcp(127.0.0.1:3306)/pp_job?charset=utf8&loc=Local",
         # "root:123456@tcp(127.0.0.1:3306)/pp_job?charset=utf8&loc=Local",
     ]
     log = "/tmp/sql.log"

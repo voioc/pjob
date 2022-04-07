@@ -208,7 +208,7 @@ run() {
 package_ppgo_job() {
     BINARY_NAME='job'
     MAIN_FILE="./main.go"
-    INCLUDE_FILE=("config" "app/static" "app/views" "ppgo_job2.sql")
+    INCLUDE_FILE=("config" "static" "views" "ppgo_job2.sql")
     INCLUDE_LINUX_FILE=("run.sh")
     INCLUDE_DARWIN_FILE=("run.sh")
     INCLUDE_WINDOWS_FILE=("run.bat")

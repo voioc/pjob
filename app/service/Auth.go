@@ -116,7 +116,7 @@ func (s *AuthService) Menu(uid int) (map[string][]map[string]interface{}, error)
 			row["Id"] = int(v.ID)
 			row["Sort"] = v.Sort
 			row["AuthName"] = v.AuthName
-			row["AuthUrl"] = utils.URI("") + v.AuthUrl
+			row["AuthUrl"] = v.AuthUrl
 			row["Icon"] = v.Icon
 			row["Pid"] = int(v.PID)
 			list[i] = row

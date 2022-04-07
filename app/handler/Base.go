@@ -8,7 +8,6 @@
 package handler
 
 import (
-	"github.com/astaxie/beego"
 	"github.com/voioc/cjob/app/model"
 )
 
@@ -18,7 +17,7 @@ const (
 )
 
 type BaseController struct {
-	beego.Controller
+	// beego.Controller
 	controllerName string
 	actionName     string
 	user           *model.Admin

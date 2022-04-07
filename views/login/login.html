@@ -49,10 +49,10 @@
         
         form.on('submit(login)', function(data){
             var form_data = $("form").serialize();
-            $.post('{{.url}}', form_data, function (out) {
+            $.post('{{.uri}}/login_in', form_data, function (out) {
                 if (out.code == 0) {
                     layer.msg("操作成功",{icon: 1, shade:0.3, time:1000},function () {
-                        window.location.href="/home"
+                        window.location.href="{{.uri}}/home"
                     })
                 } else {
                     layer.msg(out.msg)

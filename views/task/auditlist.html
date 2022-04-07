@@ -63,7 +63,7 @@
         //方法级渲染
         table.render({
             elem: '#table_list'
-            ,url: '/task/table?status=2'
+            ,url: '{{.uri}}/task/table?status=2'
             ,size: 'sm' //小尺寸的表格
             ,cols: [[
                 {checkbox: true, fixed: true},

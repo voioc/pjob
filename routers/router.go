@@ -8,6 +8,7 @@ import (
 	"github.com/voioc/cjob/app/handler"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/middleware"
+	"github.com/voioc/cjob/utils"
 )
 
 func InitRouter(engine *gin.Engine) {
@@ -93,12 +94,12 @@ func InitRouter(engine *gin.Engine) {
 	// )
 
 	loginC := handler.LoginController{}
-	engine.GET("/", loginC.Login)
-	engine.GET("/login", loginC.Login)
-	engine.POST("/login_in", loginC.LoginIn)
-	engine.GET("/login_out", loginC.LoginOut)
+	engine.GET(utils.URI("")+"/", loginC.Login)
+	engine.GET(utils.URI("")+"/login", loginC.Login)
+	engine.POST(utils.URI("")+"/login_in", loginC.LoginIn)
+	engine.GET(utils.URI("")+"/login_out", loginC.LoginOut)
 
-	r := engine.Group("").Use(middleware.Auth())
+	r := engine.Group(utils.URI("")).Use(middleware.Auth())
 	{
 		homeC := handler.HomeController{}
 		r.GET("/home", homeC.Index)

@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"html/template"
+	// "html/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
@@ -26,17 +26,20 @@ type LoginController struct {
 }
 
 func (self *LoginController) Login(c *gin.Context) {
+	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
 	//if self.userId > 0 {
 	//	self.redirect(beego.URLFor("HomeController.Index"))
 	//}
 	// c.HTML("index", "login.html")
 
 	// data := map[string]interface{}{"url"}
-	fm := template.FuncMap{
-		"url": utils.URI("login_in"),
-	}
+	// fm := template.FuncMap{
+	// 	"url": utils.URI("login_in"),
+	// }
 
-	c.HTML(http.StatusOK, "login/login.html", fm)
+	c.HTML(http.StatusOK, "login/login.html", data)
 }
 
 //登录 TODO:XSRF过滤
@@ -98,11 +101,11 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 //登出
 func (self *LoginController) LoginOut(c *gin.Context) {
 	c.SetCookie("job_cookie", "", -1, "/", "", false, true)
-	c.Redirect(302, "/login")
+	c.Redirect(302, utils.URI(""))
 	// self.Ctx.SetCookie("auth", "")
 	// self.redirect(beego.URLFor("LoginController.Login"))
 }
 
 func (self *LoginController) NoAuth() {
-	self.Ctx.WriteString("没有权限")
+	// self.Ctx.WriteString("没有权限")
 }

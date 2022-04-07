@@ -10,7 +10,7 @@ import (
 )
 
 func URI(action string) string {
-	return action
+	return "/job"
 }
 
 func AESGCMEncrypt(plaintextStr string, keyStr string) (string, string) {

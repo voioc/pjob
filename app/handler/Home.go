@@ -31,7 +31,7 @@ func (self *HomeController) Index(c *gin.Context) {
 	data := map[string]interface{}{}
 	data["uri"] = utils.URI("")
 	data["siteName"] = "系统首页"
-	data["loginUserName"] = "管理员"
+	data["loginUserName"] = c.GetString("username")
 
 	//self.display()
 	// self.TplName = "public/main.html"

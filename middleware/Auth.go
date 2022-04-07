@@ -58,6 +58,7 @@ func Auth() gin.HandlerFunc {
 
 		// c.Set("menu", data)
 		c.Set("uid", uid)
+		c.Set("username", user.RealName)
 		c.Set("role_ids", user.RoleIDs)
 		c.Set("tg", tg) // taskgroups
 		c.Set("sg", sg) // taskgroups

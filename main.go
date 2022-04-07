@@ -9,9 +9,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/spf13/viper"
 	_ "github.com/voioc/cjob/init"
+	"github.com/voioc/cjob/utils"
 
 	"github.com/fvbock/endless"
 	"github.com/gin-gonic/gin"
@@ -30,10 +31,27 @@ func main() {
 
 	service.TaskS(&gin.Context{}).Loading()
 
+	// gin.SetMode(gin.DebugMode)
+	// gin.DefaultWriter = io.MultiWriter(os.Stdout)
+
 	r := gin.New()
+	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
+		// 自定义日志格式
+		return fmt.Sprintf("[%s] - %s \"%s %s %s %d %s \"%s\" %s\"\n",
+			param.TimeStamp.Format(time.RFC3339),
+			param.ClientIP,
+			param.Method,
+			param.Path,
+			param.Request.Proto,
+			param.StatusCode,
+			param.Latency,
+			param.Request.UserAgent(),
+			param.ErrorMessage,
+		)
+	}))
 
 	//加载静态资源文件路径
-	r.Static("/static", "./static")
+	r.Static(utils.URI("")+"/static", "./static")
 
 	// r.LoadHTMLFiles("templates/index.html")
 	// r.GET("/detail", func(c *gin.Context) {
@@ -44,8 +62,8 @@ func main() {
 
 	fmt.Println("The service is running...")
 
-	port := viper.GetString("server.port")
-	endless.ListenAndServe(":"+port, r)
+	// port := viper.GetString("server.port")
+	endless.ListenAndServe(":8001", r)
 
 	// beego.Run()
 

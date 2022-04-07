@@ -1,11 +1,11 @@
 [app]
-    env = "release"
+    env = "test"
+    port = "8080"
 
 [log]
     access = "/log/job.log"
     error  = "/log/job_error.log"
     closed = false
-
 
 [db.main]
     driver = "mysql"
@@ -18,5 +18,5 @@
     driver =  "redis"
     nodes = ["127.0.0.1:6379"]
     password = ""
-    expire = 300
-    flush = 300
+    expire= 300
+    flush=300

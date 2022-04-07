@@ -1,17 +1,21 @@
-[app]
+[server]
     env = "dev"
+    port = "8001"
 
 [log]
-    access = "/log/lemon.log"
-    error  = "/log/lemon_error.log"
-    closed = false
+    access = "/tmp/access.log"
+    error  = "/tmp/melon.log"
+
+[job]
+    pool = 1000
 
 [db.main]
     driver = "mysql"
     dsn = [
-        "root:123456@tcp(127.0.0.1:3306)/pp_job?charset=utf8&loc=Local",
+        "report_rw:A#^n5pbq2+kcDZ9@tcp(rm-2ze80066x5od03dc5co.mysql.rds.aliyuncs.com:3306)/pp_job?charset=utf8&loc=Local",
+        # "root:123456@tcp(127.0.0.1:3306)/pp_job?charset=utf8&loc=Local",
     ]
-    log = "/log/lemon_sql.log"
+    log = "/tmp/sql.log"
 
 [[cache]]
     driver =  "redis"
@@ -19,12 +23,3 @@
     password = ""
     expire= 300
     flush=300
-    
-[riot]
-    amount = 2
-    gse ="data/riot/dict"
-
-[geo]
-    amap_key = "99b7c33c53906ee93dc250e3d11bbb41"
-    ip138_token = "c5c250dbc1fb1bd08b1d1a8a3c0074e2"
-    

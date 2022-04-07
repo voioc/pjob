@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var env string = "debug"
+var env string = "dev"
 
 func init() {
 

@@ -33,7 +33,7 @@ func (self *HomeController) Index(c *gin.Context) {
 	data["siteName"] = "系统首页"
 	data["loginUserName"] = c.GetString("username")
 
-	//self.display()
+	// self.display()
 	// self.TplName = "public/main.html"
 
 	uid := c.GetInt("uid")
@@ -58,6 +58,7 @@ func (self *HomeController) Help(c *gin.Context) {
 func (self *HomeController) Start(c *gin.Context) {
 
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	// 总任务数量
 	// _, count := model.TaskGetList(1, 10)
 	// _, count, err := service.TaskS(c).TaskGetList(1, 10)

@@ -1,10 +1,3 @@
-/************************************************************
-** @Description: notify
-** @Author: george hao
-** @Date:   2019-06-26 15:17
-** @Last Modified by:  george hao
-** @Last Modified time: 2019-06-26 15:17
-*************************************************************/
 package server
 
 import (
@@ -12,14 +5,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 )
 
 //启动时注册
 func Register() error {
 	//获取本机ip以及端口 todo ip合法性判断
 	if C.TcpIp == "auto" {
-		tcpIp := libs.GetHostIp(C.IpType)
+		tcpIp := utils.GetHostIp(C.IpType)
 		if tcpIp == "" {
 			return fmt.Errorf("无法获取本机IP，请手工在配置文件里设置")
 		}
@@ -41,7 +34,7 @@ func Register() error {
 	if C.RegisterUrl == "" {
 		return fmt.Errorf("自动注册地址配置错误")
 	}
-	body, err := libs.HttpGet(C.RegisterUrl, param)
+	body, err := utils.HttpGet(C.RegisterUrl, param)
 	if err != nil {
 		return err
 	}
@@ -77,7 +70,7 @@ func Close() error {
 	if C.UpdateStatusUrl == "" {
 		return fmt.Errorf("执行器退出通知异常，请到系统中修改状态")
 	}
-	body, err := libs.HttpGet(C.UpdateStatusUrl, param)
+	body, err := utils.HttpGet(C.UpdateStatusUrl, param)
 	if err != nil {
 		return err
 	}

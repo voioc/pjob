@@ -1,10 +1,3 @@
-/************************************************************
-** @Description: notify
-** @Author: Bee
-** @Date:   2018-02-15 11:02
-** @Last Modified by:  Bee
-** @Last Modified time: 2018-02-15 11:02
-*************************************************************/
 package notify
 
 import (
@@ -15,7 +8,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 )
 
 type Dingtalk struct {
@@ -74,7 +67,7 @@ func (s *Dingtalk) SendDingtalk() error {
 		}
 
 		url := fmt.Sprintf(DingtalkUrl, v)
-		_, resErr := libs.HttpPost(url, "application/json;charset=utf-8", bytes.NewBuffer(body))
+		_, resErr := utils.HttpPost(url, "application/json;charset=utf-8", bytes.NewBuffer(body))
 		if resErr != nil {
 			log.Println(resErr)
 			return resErr

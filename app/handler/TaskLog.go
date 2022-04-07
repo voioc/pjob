@@ -16,7 +16,7 @@ import (
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 
 	"strings"
 	"time"
@@ -96,16 +96,16 @@ func (self *TaskLogController) Table(c *gin.Context) {
 	for k, v := range result {
 		row := make(map[string]interface{})
 		row["id"] = v.ID
-		row["task_id"] = libs.JobKey(v.TaskID, v.ServerID)
+		row["task_id"] = utils.JobKey(v.TaskID, v.ServerID)
 		row["start_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
 		row["process_time"] = float64(v.ProcessTime) / 1000
 
 		row["server_id"] = v.ServerID
 		row["server_name"] = v.ServerName + "#" + strconv.Itoa(v.ServerID)
 		if v.Status == 0 {
-			row["output_size"] = libs.SizeFormat(float64(len(v.Output)))
+			row["output_size"] = utils.SizeFormat(float64(len(v.Output)))
 		} else {
-			row["output_size"] = libs.SizeFormat(float64(len(v.Error)))
+			row["output_size"] = utils.SizeFormat(float64(len(v.Error)))
 		}
 		index := v.Status + 2
 		if index > 2 {
@@ -151,9 +151,9 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	row["start_time"] = time.Unix(tasklog.CreatedAt, 0).Format("2006-01-02 15:04:05")
 	row["process_time"] = float64(tasklog.ProcessTime) / 1000
 	if tasklog.Status == 0 {
-		row["output_size"] = libs.SizeFormat(float64(len(tasklog.Output)))
+		row["output_size"] = utils.SizeFormat(float64(len(tasklog.Output)))
 	} else {
-		row["output_size"] = libs.SizeFormat(float64(len(tasklog.Error)))
+		row["output_size"] = utils.SizeFormat(float64(len(tasklog.Error)))
 	}
 
 	row["server_name"] = tasklog.ServerName

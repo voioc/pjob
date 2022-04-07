@@ -7,7 +7,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/pkg/errors"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 )
 
 type WechatAjaxReturn struct {
@@ -65,7 +65,7 @@ func (s *Wechat) SendWechat() error {
 
 	for _, v := range s.Accounts {
 		s.Param["account"] = v
-		res, err := libs.HttpGet(WechatUrl, s.Param)
+		res, err := utils.HttpGet(WechatUrl, s.Param)
 
 		if err != nil {
 			log.Println(err)

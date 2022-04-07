@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -74,7 +73,7 @@ func (self *LoginController) LoginIn(c *gin.Context) {
 	}
 
 	user, err := model.AdminGetByName(username)
-	if err != nil || user.Password != libs.Md5([]byte(password+user.Salt)) {
+	if err != nil || user.Password != utils.Md5([]byte(password+user.Salt)) {
 		fmt.Println(err)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "帐号或密码错误"))
 		return

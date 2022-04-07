@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -153,7 +152,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 		}
 
 		//新增
-		pwd, salt := libs.Password(4, "")
+		pwd, salt := utils.Password(4, "")
 		Admin.Password = pwd
 		Admin.Salt = salt
 		Admin.CreatedAt = time.Now().Unix()
@@ -190,7 +189,7 @@ func (self *AdminController) AjaxSave(c *gin.Context) {
 
 	resetPwd, _ := strconv.Atoi(c.DefaultPostForm("reset_pwd", "0"))
 	if resetPwd == 1 {
-		pwd, salt := libs.Password(4, "")
+		pwd, salt := utils.Password(4, "")
 		Admin.Password = pwd
 		Admin.Salt = salt
 	}

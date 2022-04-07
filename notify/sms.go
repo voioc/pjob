@@ -14,7 +14,7 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/pkg/errors"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 )
 
 type SmsAjaxReturn struct {
@@ -72,7 +72,7 @@ func (s *Sms) SendSms() error {
 
 	for _, v := range s.Mobiles {
 		s.Param["mobile"] = v
-		res, err := libs.HttpGet(SmsUrl, s.Param)
+		res, err := utils.HttpGet(SmsUrl, s.Param)
 
 		if err != nil {
 			log.Println(err)

@@ -10,7 +10,7 @@ import (
 	"github.com/voioc/cjob/app/define"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 	"github.com/voioc/cjob/worker"
 )
 
@@ -250,10 +250,10 @@ func (s *ServerService) TestServer(server *model.TaskServer) error {
 		switch server.Type {
 		case 0:
 			//密码登录
-			return libs.RemoteCommandByPassword(server)
+			return utils.RemoteCommandByPassword(server)
 		case 1:
 			//密钥登录
-			return libs.RemoteCommandByKey(server)
+			return utils.RemoteCommandByKey(server)
 		default:
 			return errors.New("未知的登录方式")
 
@@ -261,13 +261,13 @@ func (s *ServerService) TestServer(server *model.TaskServer) error {
 	} else if server.ConnectionType == 1 {
 		if server.Type == 0 {
 			//密码登录]
-			return libs.RemoteCommandByTelnetPassword(server)
+			return utils.RemoteCommandByTelnetPassword(server)
 		} else {
 			return errors.New("Telnet方式暂不支持密钥登陆！")
 		}
 
 	} else if server.ConnectionType == 2 {
-		return libs.RemoteAgent(server)
+		return utils.RemoteAgent(server)
 	}
 
 	return errors.New("未知错误")

@@ -18,7 +18,6 @@ import (
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 	"github.com/voioc/cjob/worker"
 
@@ -639,7 +638,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 	TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
-		jobKey := libs.JobKey(task.ID, server_id_int)
+		jobKey := utils.JobKey(task.ID, server_id_int)
 		worker.RemoveJob(jobKey)
 	}
 
@@ -742,7 +741,7 @@ func (self *TaskController) AjaxBatchPause(c *gin.Context) {
 			TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
 			for _, server_id := range TaskServerIdsArr {
 				server_id_int, _ := strconv.Atoi(server_id)
-				jobKey := libs.JobKey(task.ID, server_id_int)
+				jobKey := utils.JobKey(task.ID, server_id_int)
 				worker.RemoveJob(jobKey)
 			}
 
@@ -785,7 +784,7 @@ func (self *TaskController) AjaxBatchDel(c *gin.Context) {
 
 		for _, server_id := range TaskServerIdsArr {
 			server_id_int, _ := strconv.Atoi(server_id)
-			jobKey := libs.JobKey(task.ID, server_id_int)
+			jobKey := utils.JobKey(task.ID, server_id_int)
 			worker.RemoveJob(jobKey)
 		}
 
@@ -1054,7 +1053,7 @@ func (self *TaskController) Table(c *gin.Context) {
 			serverID, _ = strconv.Atoi(TaskServerIDsArr[0])
 		}
 
-		jobskey := libs.JobKey(v.ID, serverID)
+		jobskey := utils.JobKey(v.ID, serverID)
 		e, _ := worker.GetEntryByID(jobskey)
 
 		if e != nil {
@@ -1286,7 +1285,7 @@ func (self *TaskController) ApiPause(c *gin.Context) {
 
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
-		jobKey := libs.JobKey(task.ID, server_id_int)
+		jobKey := utils.JobKey(task.ID, server_id_int)
 		worker.RemoveJob(jobKey)
 	}
 

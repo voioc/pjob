@@ -13,7 +13,7 @@ import (
 	"github.com/astaxie/beego"
 	gote "github.com/linxiaozhi/go-telnet"
 	"github.com/voioc/cjob/app/model"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -292,7 +292,7 @@ func RemoteCommandJobByTelnetPassword(TaskID, serverID int, name, command string
 			return
 		}
 
-		loginStr := libs.GbkAsUtf8(string(buf[:]))
+		loginStr := utils.GbkAsUtf8(string(buf[:]))
 		if !strings.Contains(loginStr, ">") {
 			jobresult.ErrMsg = jobresult.ErrMsg + "Login failed!"
 			jobresult.IsOk = false
@@ -312,11 +312,11 @@ func RemoteCommandJobByTelnetPassword(TaskID, serverID int, name, command string
 
 			n, err = conn.Read(buf)
 
-			out = out + libs.GbkAsUtf8(string(buf[0:n]))
+			out = out + utils.GbkAsUtf8(string(buf[0:n]))
 			if err != nil ||
 				strings.Contains(out, "'"+c+"' is not recognized as an internal or external command") ||
 				strings.Contains(out, "'"+c+"' 不是内部或外部命令，也不是可运行的程序") {
-				jobresult.ErrMsg = jobresult.ErrMsg + " " + libs.GbkAsUtf8(string(buf[0:n]))
+				jobresult.ErrMsg = jobresult.ErrMsg + " " + utils.GbkAsUtf8(string(buf[0:n]))
 				jobresult.IsOk = false
 				jobresult.OutMsg = out
 				return

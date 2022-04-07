@@ -13,6 +13,11 @@ func URI(action string) string {
 	return "/job"
 }
 
+//查看数据类型
+func DataType(i interface{}) string {
+	return fmt.Sprintf("%T", i)
+}
+
 func AESGCMEncrypt(plaintextStr string, keyStr string) (string, string) {
 	// 将明文和密钥转换为字节切片
 	plaintext := []byte(plaintextStr)

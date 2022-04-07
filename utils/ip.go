@@ -1,11 +1,4 @@
-/************************************************************
-** @Description: ip
-** @Author: george hao
-** @Date:   2019-06-27 09:20
-** @Last Modified by:  george hao
-** @Last Modified time: 2019-06-27 09:20
-*************************************************************/
-package libs
+package utils
 
 import (
 	"io/ioutil"

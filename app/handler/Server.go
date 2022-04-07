@@ -19,7 +19,6 @@ import (
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -171,14 +170,14 @@ func (self *ServerController) AjaxTestServer(c *gin.Context) {
 	if server.ConnectionType == 0 {
 		if server.Type == 0 {
 			// 密码登录
-			if err = libs.RemoteCommandByPassword(server); err != nil {
+			if err = utils.RemoteCommandByPassword(server); err != nil {
 				fmt.Println(err.Error())
 			}
 		}
 
 		if server.Type == 1 {
 			//密钥登录
-			if err = libs.RemoteCommandByKey(server); err != nil {
+			if err = utils.RemoteCommandByKey(server); err != nil {
 				fmt.Println(err.Error())
 			}
 		}
@@ -198,7 +197,7 @@ func (self *ServerController) AjaxTestServer(c *gin.Context) {
 			return
 		}
 
-		if err = libs.RemoteCommandByTelnetPassword(server); err != nil {
+		if err = utils.RemoteCommandByTelnetPassword(server); err != nil {
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return
 		}
@@ -206,7 +205,7 @@ func (self *ServerController) AjaxTestServer(c *gin.Context) {
 		c.JSON(http.StatusOK, common.Success(c))
 		return
 	} else if server.ConnectionType == 2 {
-		if err := libs.RemoteAgent(server); err != nil {
+		if err := utils.RemoteAgent(server); err != nil {
 			// self.ajaxMsg(err.Error(), MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, err.Error()))
 			return

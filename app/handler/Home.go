@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 	"github.com/voioc/cjob/worker"
 )
@@ -154,7 +153,7 @@ func (self *HomeController) Start(c *gin.Context) {
 		row["id"] = v.ID
 		row["start_time"] = time.Unix(v.CreatedAt, 0).Format("2006-01-02 15:04:05")
 		row["process_time"] = float64(v.ProcessTime) / 1000
-		row["output_size"] = libs.SizeFormat(float64(len(v.Output)))
+		row["output_size"] = utils.SizeFormat(float64(len(v.Output)))
 		row["error"] = v.Error // v.Error[0:100]
 		row["status"] = v.Status
 		errLogs[k] = row
@@ -218,7 +217,7 @@ func (self *HomeController) Start(c *gin.Context) {
 	data["cpuNum"] = runtime.NumCPU()
 
 	//系统运行信息
-	info := libs.SystemInfo(model.StartTime)
+	info := utils.SystemInfo(model.StartTime)
 	data["sysInfo"] = info
 
 	data["pageTitle"] = "系统概况"

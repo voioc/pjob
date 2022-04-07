@@ -1,11 +1,4 @@
-/************************************************************
-** @Description: server
-** @Author: george hao
-** @Date:   2019-07-02 11:16
-** @Last Modified by:  george hao
-** @Last Modified time: 2019-07-02 11:16
-*************************************************************/
-package libs
+package utils
 
 import (
 	"fmt"

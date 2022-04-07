@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
+	"github.com/voioc/cjob/utils"
 	"github.com/voioc/cjob/worker"
 )
 
@@ -184,7 +184,7 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 		}
 
 		sid, _ := strconv.Atoi(serverID)
-		job.JobKey = libs.JobKey(task.ID, sid)
+		job.JobKey = utils.JobKey(task.ID, sid)
 		job.ServerName = server.ServerName
 		jobs = append(jobs, job)
 	}

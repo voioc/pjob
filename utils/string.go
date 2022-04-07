@@ -1,20 +1,13 @@
-/**********************************************
-** @Des: This file ...
-** @Author: haodaquan
-** @Date:   2017-09-08 00:24:25
-** @Last Modified by:   haodaquan
-** @Last Modified time: 2017-09-17 10:12:06
-***********************************************/
-
-package libs
+package utils
 
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/axgle/mahonia"
 	"math/rand"
 	"regexp"
 	"time"
+
+	"github.com/axgle/mahonia"
 )
 
 var emailPattern = regexp.MustCompile("[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?")

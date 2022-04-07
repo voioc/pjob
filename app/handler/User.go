@@ -17,7 +17,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/libs"
 	"github.com/voioc/cjob/utils"
 )
 
@@ -79,7 +78,7 @@ func (self *UserController) AjaxSave(c *gin.Context) {
 	resetPwd := strings.TrimSpace(c.PostForm("reset_pwd"))
 	if resetPwd == "1" {
 		pwdOld := strings.TrimSpace(c.PostForm("password_old"))
-		pwdOldMd5 := libs.Md5([]byte(pwdOld + admin.Salt))
+		pwdOldMd5 := utils.Md5([]byte(pwdOld + admin.Salt))
 		if admin.Password != pwdOldMd5 {
 			// self.ajaxMsg("旧密码错误", MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "旧密码错误"))
@@ -100,7 +99,7 @@ func (self *UserController) AjaxSave(c *gin.Context) {
 			return
 		}
 
-		pwd, salt := libs.Password(4, pwdNew1)
+		pwd, salt := utils.Password(4, pwdNew1)
 		admin.Password = pwd
 		admin.Salt = salt
 	}

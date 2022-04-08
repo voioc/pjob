@@ -21,7 +21,7 @@ import (
 	"github.com/voioc/cjob/utils"
 	"github.com/voioc/cjob/worker"
 
-	cron "github.com/voioc/cjob/crons"
+	"github.com/robfig/cron/v3"
 )
 
 type TaskController struct {
@@ -415,7 +415,10 @@ func (self *TaskController) Save(c *gin.Context) {
 			return
 		}
 
-		if _, err := cron.Parse(task.CronSpec); err != nil {
+		// specParser := NewParser(Second | Minute | Hour | Dom | Month | Dow)
+		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+		// sched, err := specParser.Parse("0 0 15 */3 *")
+		if _, err := parser.Parse(task.CronSpec); err != nil {
 			// self.ajaxMsg("cron表达式无效", MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
 			return
@@ -488,7 +491,8 @@ func (self *TaskController) Save(c *gin.Context) {
 		task.Status = 4
 	}
 
-	if _, err := cron.Parse(task.CronSpec); err != nil {
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	if _, err := parser.Parse(task.CronSpec); err != nil {
 		// self.ajaxMsg("cron表达式无效", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
 		return
@@ -634,7 +638,7 @@ func (self *TaskController) AjaxPause(c *gin.Context) {
 		return
 	}
 
-	//移出任务
+	// 移出任务
 	TaskServerIdsArr := strings.Split(task.ServerIDs, ",")
 	for _, server_id := range TaskServerIdsArr {
 		server_id_int, _ := strconv.Atoi(server_id)
@@ -1133,7 +1137,8 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 
 		var id int64
 		var err error
-		if _, err = cron.Parse(task.CronSpec); err != nil {
+		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+		if _, err = parser.Parse(task.CronSpec); err != nil {
 			// self.ajaxMsg("cron表达式无效", MSG_ERR)
 			c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
 			return
@@ -1200,7 +1205,8 @@ func (self *TaskController) ApiTask(c *gin.Context) {
 		return
 	}
 
-	if _, err := cron.Parse(task.CronSpec); err != nil {
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	if _, err := parser.Parse(task.CronSpec); err != nil {
 		// self.ajaxMsg("cron表达式无效", MSG_ERR)
 		c.JSON(http.StatusOK, common.Error(c, MSG_ERR, "cron表达式无效"))
 		return

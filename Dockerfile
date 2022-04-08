@@ -1,29 +1,29 @@
-FROM public-env-mirror-service-registry.cn-beijing.cr.aliyuncs.com/dist/golang:1.16
+FROM golang:1.16-alpine as builder
 
-WORKDIR /tmp/job
+WORKDIR /www/job
 # 准备工作
 #RUN export 
-COPY go.mod .
-COPY go.sum .
+COPY go.mod ./
+COPY go.sum ./
 COPY . .
 
-#加入git访问权限
-# COPY .netrc /root/.netrc
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+  apk add --no-cache ca-certificates tzdata
 
 # 编译
-# RUN go env -w GOPRIVATE=codeup.aliyun.com
-RUN go env
-RUN GOPROXY="https://goproxy.cn" GO111MODULE=on go build -o /www/job/job .
-#RUN go build -o ./out/go-sample-app .
+RUN CGO_ENABLED=0 GOPROXY="https://goproxy.cn" GO111MODULE=on go build -ldflags "-s -w" -o job
 RUN chmod +x /www/job/job
 
-# ARG envType=test
-# COPY config/config_${envType}.toml config/env.toml
-COPY config /www/job/config/
-COPY static /www/job/static/
-COPY views /www/job/views/
+FROM alpine as runner
+COPY --from=builder /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /www/job/job /www/job/
+COPY --from=builder /www/job/config/config_dev.toml /www/job/config/config.toml
+COPY --from=builder /www/job/static /www/job/static/
+COPY --from=builder /www/job/views /www/job/views/
 
 # 执行编译生成的二进制文件
-CMD ["./www/job/job"]
+CMD ["/www/job/job", "-c", "/www/job/config/config.toml"]
+
 # 暴露端口
-EXPOSE 8001
+# EXPOSE 8001

@@ -1,6 +1,6 @@
 [server]
     env = "dev"
-    port = "8001"
+    port = "8010"
 
 [log]
     access = "/tmp/access.log"
@@ -23,3 +23,25 @@
     password = ""
     expire= 300
     flush=300
+
+[email]
+    host = "smtp.sina.com"
+    port = "25"
+    user = ""
+    password = ""
+    from = ""
+
+# 短信通知方式配置
+[sms]
+url = "http://xx.com/api/tools/send_sms"
+# pool = 10
+
+# 钉钉通知配置
+[ding]
+url = "https://oapi.dingtalk.com/robot/send?access_token=%s"
+# pool = 10
+
+# 微信通知方式配置
+[wechat]
+url = "http://xx.com/api/tools/send_wechat"
+# pool = 10

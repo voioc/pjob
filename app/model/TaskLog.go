@@ -7,10 +7,6 @@
 
 package model
 
-import (
-	"github.com/astaxie/beego/cache"
-)
-
 type TaskLog struct {
 	ID          int    `xorm:"id pk" json:"id"`
 	TaskID      int    `xorm:"task_id" json:"task_id"`
@@ -23,7 +19,7 @@ type TaskLog struct {
 	CreatedAt   int64  `xorm:"create_time" json:"created_at"`
 }
 
-var RunNumCache, _ = cache.NewCache("memory", `{"interval":60}`)
+// var RunNumCache, _ = cache.NewCache("memory", `{"interval":60}`)
 
 func (t *TaskLog) TableName() string {
 	return "pp_task_log"

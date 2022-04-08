@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/common"
-	"github.com/voioc/cjob/notify"
 	"github.com/voioc/cjob/worker"
 )
 
@@ -247,7 +246,7 @@ func (s *NotifyService) NotifyFunc(job *worker.Job, result *worker.JobResult) in
 			if task.NotifyType == 1 && toEmail != "" {
 				// 邮件
 				mailtype := "html"
-				ok := notify.SendToChan(toEmail, title, content, mailtype)
+				ok := SendToChan(toEmail, title, content, mailtype)
 				if !ok {
 					fmt.Println("发送邮件错误", toEmail)
 				}
@@ -260,7 +259,7 @@ func (s *NotifyService) NotifyFunc(job *worker.Job, result *worker.JobResult) in
 					return 1
 				}
 
-				ok := notify.SendSmsToChan(phone, param)
+				ok := SendSmsToChan(phone, param)
 				if !ok {
 					fmt.Println("发送信息错误", phone)
 				}
@@ -274,7 +273,7 @@ func (s *NotifyService) NotifyFunc(job *worker.Job, result *worker.JobResult) in
 					return 1
 				}
 
-				ok := notify.SendDingtalkToChan(dingtalk, param)
+				ok := SendDingtalkToChan(dingtalk, param)
 				if !ok {
 					fmt.Println("发送钉钉错误", dingtalk)
 				}
@@ -287,7 +286,7 @@ func (s *NotifyService) NotifyFunc(job *worker.Job, result *worker.JobResult) in
 					return 1
 				}
 
-				ok := notify.SendWechatToChan(phone, param)
+				ok := SendWechatToChan(phone, param)
 				if !ok {
 					fmt.Println("发送微信错误", phone)
 				}

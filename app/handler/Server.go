@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/gin-gonic/gin"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/cjob/app/service"
@@ -564,7 +563,7 @@ func (self *ServerController) ApiStatus(c *gin.Context) {
 	server[0].Status = status
 	// server[0].ID = server[0].ID
 
-	logs.Info(server)
+	// logs.Info(server)
 
 	//TODO 查询执行器是否正在使用中
 	if err := model.Update(server[0].ID, server[0]); err != nil { // server.Update(); err != nil {

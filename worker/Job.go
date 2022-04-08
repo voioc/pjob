@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/voioc/cjob/app/model"
 	"github.com/voioc/coco/logzap"
 
@@ -67,7 +66,7 @@ func (j *Job) agentRun() (reply *JobResult) {
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", server.ServerIP, server.Port))
 	reply = new(JobResult)
 	if err != nil {
-		logs.Error("Net error:", err)
+		logzap.Ex(context.Background(), "Net error:", err.Error())
 		reply.IsOk = false
 		reply.ErrMsg = "Net error:" + err.Error()
 		reply.IsTimeout = false

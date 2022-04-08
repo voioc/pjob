@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	_ "github.com/voioc/cjob/init"
+	"github.com/spf13/viper"
+	_ "github.com/voioc/cjob/common"
 	"github.com/voioc/cjob/utils"
 
 	"github.com/fvbock/endless"
@@ -55,8 +56,8 @@ func main() {
 
 	fmt.Println("The service is running...")
 
-	// port := viper.GetString("server.port")
-	endless.ListenAndServe(":8001", r)
+	port := viper.GetString("server.port")
+	endless.ListenAndServe(":"+port, r)
 
 	// beego.Run()
 

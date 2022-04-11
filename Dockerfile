@@ -21,9 +21,10 @@ COPY --from=builder /www/job/job /www/job/
 COPY --from=builder /www/job/config/config_dev.toml /www/job/config/config.toml
 COPY --from=builder /www/job/static /www/job/static/
 COPY --from=builder /www/job/views /www/job/views/
+WORKDIR /www/job
 
 # 执行编译生成的二进制文件
 CMD ["/www/job/job", "-c", "/www/job/config/config.toml"]
 
 # 暴露端口
-# EXPOSE 8001
+EXPOSE 8001

@@ -18,12 +18,6 @@ import (
 var env string = "dev"
 
 func init() {
-
-	// 初始化数据模型
-	// model.Init(StartTime)
-	// model.Init(time.Now().Unix())
-	// jobs.InitJobs()
-
 	viper.SetDefault("envType", env)
 
 	// 获取当前环境变量

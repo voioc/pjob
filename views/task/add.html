@@ -203,8 +203,6 @@
             });
         });
 
-
-
         form.on('radio(is_notify)', function (data) {
             if (data.value == 1) {
                 $(".notify").show()
@@ -214,7 +212,6 @@
         });
 
         form.on('submit(sub)', function (data) {
-
             var form_data = data.field;
 
             //选择执行器
@@ -256,7 +253,6 @@
                     return false;
                 }
             }
-
 
             $.post('{{.uri}}/task/save', form_data, function (out) {
                 if (out.code == 0) {

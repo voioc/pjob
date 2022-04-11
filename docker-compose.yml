@@ -15,7 +15,7 @@ services:
     # Link to containers in another service
     depends_on:
       - db
-    command: ["./wait-for-it.sh", "db:3306", "--", "./PPGo_Job"]
+    command: ["./wait-for-it.sh", "db:3306", "--", "./job"]
     # sync workspace folder with /go
   db:
     image: mysql:5.7

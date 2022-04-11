@@ -12,13 +12,6 @@ PPGo_Job从v1.0开源以来，得到众多技术朋友的支持和欢迎，已�
 吸收使用者的建议和意见，不断改进和优化，目前已经上线了20余个版本，9个稳定版本（生产环境部署完成后才发布新版本）。
 
 
-码云地址：https://gitee.com/georgehao/PPGo_Job
-Github地址:https://github.com/george518/PPGo_Job
-
-文档地址：http://www.haodaquan.com/topics/1###
-Wiki:https://github.com/george518/PPGo_Job/wiki
-
-
 二、架构 
 ----
 ![](http://www.haodaquan.com/Uploads/editormd/2019-07-06/156240332990478.png)

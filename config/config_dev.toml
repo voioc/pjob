@@ -1,6 +1,6 @@
 [server]
     env = "dev"
-    port = "8010"
+    port = 8080
 
 [log]
     access = "/tmp/access.log"

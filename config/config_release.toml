@@ -1,5 +1,6 @@
-[app]
+[server]
     env = "release"
+    port = 8080
 
 [log]
     access = "/log/job.log"

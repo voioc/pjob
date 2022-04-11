@@ -1,6 +1,6 @@
-[app]
+[server]
     env = "test"
-    port = "8080"
+    port = 8080
 
 [log]
     access = "/log/job.log"

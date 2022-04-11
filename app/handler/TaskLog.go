@@ -81,6 +81,7 @@ func (self *TaskLogController) Table(c *gin.Context) {
 	}
 
 	filters = append(filters, "task_id =", taskID)
+	filters = append(filters, "order", "id desc")
 
 	// result, count, _ := service.TaskLogS(c).LogList(page, pageSize, filters...) // model.TaskLogGetList(page, pageSize, filters...)
 	result := make([]model.TaskLog, 0)

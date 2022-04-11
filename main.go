@@ -25,9 +25,6 @@ func main() {
 
 	service.TaskS(&gin.Context{}).Loading()
 
-	// gin.SetMode(gin.DebugMode)
-	// gin.DefaultWriter = io.MultiWriter(os.Stdout)
-
 	r := gin.New()
 	r.Use(gin.LoggerWithFormatter(func(param gin.LogFormatterParams) string {
 		// 自定义日志格式

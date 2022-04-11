@@ -81,7 +81,7 @@
                 <input type="radio" name="concurrent" lay-verify="concurrent" value="1" title="否"  {{if eq .task.Concurrent 1}}checked{{end}}>
 
             </div>
-            <div class="layui-form-mid layui-word-aux"><i class="fa fa-info-circle" aria-hidden="true" id="des"></i></div>
+            <div class="layui-form-mid layui-word-aux"><a id="des"><i class="fa fa-info-circle" aria-hidden="true" ></i></a></div>
         </div>
 
         <div class="layui-form-item">
@@ -166,7 +166,7 @@
 </div>
 <script>
     layui.config({
-        base:'/static/admin/js/'
+        base:'{{.uri}}/static/admin/js/'
     }).extend({
         formSelects: 'formSelects-v3'
     }).use(['form','element','layer','jquery','formSelects'],function(){
@@ -197,9 +197,9 @@
             return;
         }
 
-        $("#des").on('click',function () {
+        $("#des").mouseenter(function () {
             layer.tips('设为“是”的话，如果该任务在上一个时间点还没执行完，则略过不执行', '#des', {
-                tips: [1, '#0FA6D8'] //还可配置颜色
+                tips: [1, '#663FF'],time:3000 //还可配置颜色
             });
         })
 

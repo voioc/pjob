@@ -44,7 +44,10 @@ var INFO = map[int]string{
 	ERROR_AUTH:    "鉴权失败",
 }
 
-const (
-	PERPAGE    = 20
-	JWT_SECRET = "XSpeUFjJ"
-)
+var TextStatus = []string{
+	"<font color='red'><i class='fa fa-minus-square'></i> 暂停</font>",
+	"<font color='green'><i class='fa fa-check-square'></i> 运行中</font>",
+	"<font color='orange'><i class='fa fa-question-circle'></i> 待审核</font>",
+	"<font color='red'><i class='fa fa-times-circle'></i> 审核失败</font>",
+	"<font color='red'><i class='fa fa-minus-square'></i> 暂停</font>",
+}

@@ -41,6 +41,7 @@ func (self *TaskLogController) List(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
 	data["pageTitle"] = "日志管理 - " + task.TaskName + "(#" + strconv.Itoa(task.ID) + ")"
 	data["task_id"] = task.ID
 
@@ -145,6 +146,8 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 	}
 
 	data := map[string]interface{}{}
+	data["uri"] = utils.URI("")
+
 	row := make(map[string]interface{})
 	row["id"] = tasklog.ID
 	row["task_id"] = tasklog.TaskID
@@ -178,14 +181,7 @@ func (self *TaskLogController) Detail(c *gin.Context) {
 		return
 	}
 
-	TextStatus := []string{
-		"<font color='red'><i class='fa fa-minus-square'></i> 暂停</font>",
-		"<font color='green'><i class='fa fa-check-square'></i> 运行中</font>",
-		"<font color='orange'><i class='fa fa-check-square'></i> 待审核</font>",
-		"<font color='blue'><i class='fa fa-times-circle'></i> 审核失败</font>",
-	}
-
-	data["TextStatus"] = TextStatus[task.Status]
+	data["TextStatus"] = common.TextStatus[task.Status]
 	data["CreateTime"] = time.Unix(task.CreatedAt, 0).Format("2006-01-02 15:04:05")
 	data["UpdateTime"] = time.Unix(task.UpdatedAt, 0).Format("2006-01-02 15:04:05")
 	data["task"] = task

@@ -163,30 +163,32 @@ func (s *TaskService) CreateJob(task *model.Task) ([]*worker.Job, error) {
 			}
 		}
 
-		job.PrefixFunc = func(job *worker.Job, count int) bool {
-			return ServerS(s.C).Probe(job, count)
-		}
-
-		// 设置回调函数
-		job.SuffixFunc = func(job *worker.Job, result *worker.JobResult) {
-			TaskLogS(s.C).TaskLogFunc(job, result)
-			NotifyS(s.C).NotifyFunc(job, result)
-
-			task.PrevTime = job.StartAt.Unix()
-			task.ExecuteTimes++
-			if err := model.Update(task.ID, task); err != nil {
-				fmt.Println(err.Error())
+		if job != nil {
+			job.PrefixFunc = func(job *worker.Job, count int) bool {
+				return ServerS(s.C).Probe(job, count)
 			}
-		}
 
-		if task.Concurrent == 1 {
-			job.Concurrent = true
-		}
+			// 设置回调函数
+			job.SuffixFunc = func(job *worker.Job, result *worker.JobResult) {
+				TaskLogS(s.C).TaskLogFunc(job, result)
+				NotifyS(s.C).NotifyFunc(job, result)
 
-		sid, _ := strconv.Atoi(serverID)
-		job.JobKey = utils.JobKey(task.ID, sid)
-		job.ServerName = server.ServerName
-		jobs = append(jobs, job)
+				task.PrevTime = job.StartAt.Unix()
+				task.ExecuteTimes++
+				if err := model.Update(task.ID, task); err != nil {
+					fmt.Println(err.Error())
+				}
+			}
+
+			if task.Concurrent == 1 {
+				job.Concurrent = true
+			}
+
+			sid, _ := strconv.Atoi(serverID)
+			job.JobKey = utils.JobKey(task.ID, sid)
+			job.ServerName = server.ServerName
+			jobs = append(jobs, job)
+		}
 	}
 
 	return jobs, nil
